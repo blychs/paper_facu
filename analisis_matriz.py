@@ -24,8 +24,8 @@ import xarray as xr
 
 # %run ./funciones.ipynb
 
-# + jupyter={"outputs_hidden": true}
-df_raw = pd.read_csv('04122020_matriz_medidas_valores_apreciables.csv', index_col=0, skiprows=[1,2])
+# +
+df_raw = pd.read_csv('14122020_matriz_medidas_valores_apreciables.csv', index_col=0, skiprows=[1,2])
 #df['PM2.5 (ug/m3)'] = df['PM2.5 (mg/m3)']*1000 * (df['PM2.5 (mg/m3)'] < 1) * (df['PM2.5 (mg/m3)'] > 0)
 
 ############# Remove outliers ############
@@ -172,18 +172,12 @@ plt.show()
 (df['V'] * 100).plot()
 (df['S'] - df['SO4'] * 0.33).plot()
 
-# + jupyter={"outputs_hidden": true}
-for i in (mass_closure(data_df=df) / df['PM2.5']):
-    print(i)
+# +
+j=0
+for i in (mass_closure(data_df=df[0:40]) / df['PM2.5'][0:40]):
+     j += 1
+     print('Filtro ' + str(j) + ' = ' + str(i))
     
-print('\n\n\n' + str((mass_closure(data_df=df) / df['PM2.5']).mean()))
+print('\n\n\n' + str((mass_closure(data_df=df[0:40]) / df['PM2.5'][0:40]).mean()))
         
-        ######### Metodo de Malm 1994
-        #geological_minerals = (2.20 * data_df['Al'] + 2.49 * data_df['Si'] +
-        #                       1.63 * data_df['Ca'] + 1.94 * data_df['Ti'] +
-        #                       2.42 * data_df['Fe'])
         
-# -
-
-for i in df:
-    print('data_df2[\'' + i + '\']' + ' + ', end='')

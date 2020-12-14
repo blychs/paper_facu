@@ -62,7 +62,6 @@ def mass_closure(data_df, method='Chow_1996'):
     mass_closure = 0
     data_df2 = data_df.fillna(0)
     data_df2['Si'] = 0 * data_df2['Na']
-    data_df2['Al'] = 0 * data_df2['Al']
     
     if method == 'Macias_1981':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4SO3']
@@ -99,6 +98,7 @@ def mass_closure(data_df, method='Chow_1996'):
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
         salt = 0 * data_df2['Na']
+
         # Como placeholder
         trace_elements = (data_df2['Cl'] + data_df2['Na'] + data_df2['K'] +
                           data_df2['Ti'] + data_df2['V'] + data_df2['Cr'] +
@@ -120,10 +120,6 @@ def mass_closure(data_df, method='Chow_1996'):
         others = 0 * data_df2['Na']
         
     if method == 'Chow_1996':
-        ##### FALTA EXCEPTUAR ALUMINIO, Silicio
-        data_df2['Al'] = 0 * data_df2['Ca']
-        data_df2['Si'] = 0 * data_df2['Ca']
-        ########
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
