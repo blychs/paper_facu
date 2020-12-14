@@ -24,7 +24,7 @@ import xarray as xr
 
 # %run ./funciones.ipynb
 
-# +
+# + jupyter={"outputs_hidden": true}
 df_raw = pd.read_csv('04122020_matriz_medidas_valores_apreciables.csv', index_col=0, skiprows=[1,2])
 #df['PM2.5 (ug/m3)'] = df['PM2.5 (mg/m3)']*1000 * (df['PM2.5 (mg/m3)'] < 1) * (df['PM2.5 (mg/m3)'] > 0)
 
@@ -33,7 +33,7 @@ df = df_raw.mask(df_raw.sub(df_raw.mean()).div(df_raw.std()).abs().gt(3))
 display(df)
 
 
-# +
+# + jupyter={"outputs_hidden": true}
 display(df.corr())
 df.corr().to_csv('correlacion_todo.csv')
 
@@ -53,8 +53,8 @@ plt.show()
 print('Test de normalidad ln(PM2.5), p-valor:')
 print(stats.normaltest(log_PM25, axis=0, nan_policy='omit').pvalue)
 #df.plot(y=['C Elemental (ug/cm2)'], xlim=(0,36), ylim=(0,0.75))
-# -
 
+# + jupyter={"outputs_hidden": true}
 not_lognormal = []
 for i in df:
     p_is_lognormal = test_lognormality(df[i])
@@ -64,14 +64,14 @@ for i in df:
 print('\n\n')
 print(not_lognormal)
 
-# +
-#for i in df:
-#    if is_numeric_dtype(df[i]):
-#        #plt.figure(figsize=(20,10))
-#        df.plot(y=i, label=i, xlim=(0, 96))
-#        plt.show()
-# -
+# + jupyter={"outputs_hidden": true}
+for i in df:
+    if is_numeric_dtype(df[i]):
+        #plt.figure(figsize=(20,10))
+        df.plot(y=i, label=i, xlim=(0, 96))
+        plt.show()
 
+# + jupyter={"outputs_hidden": true}
 #df['C Orgánico'].plot(label='Orgánico')
 (df['C Elemental'] * 8).plot(label='Elemental * 16')
 (df['PM2.5']).plot(label='PM2.5', xlim=(0,70))
@@ -86,7 +86,7 @@ plt.show()
 plt.legend()
 plt.show()
 
-# +
+# + jupyter={"outputs_hidden": true}
 #df['C Orgánico'].plot(label='Orgánico')
 fraccion_org = (df['C Orgánico']*1.4) / df['PM2.5']
 fraccion_elemental = df['C Elemental'] / df['PM2.5']
@@ -96,15 +96,15 @@ plt.show()
 print(fraccion_org.mean())
 
 #print(fraccion_elemental.mean())
-# -
 
+# + jupyter={"outputs_hidden": true}
 fraccion_NO3 = df['NO3'] / df['PM2.5']
 (fraccion_NO3).plot(label='NO3/PM2.5')
 plt.legend()
 plt.show()
 print(fraccion_NO3.mean())
 
-# +
+# + jupyter={"outputs_hidden": true}
 for i in df:
     print(i)
     print(df[i].mean()/df['PM2.5'].mean())
@@ -116,7 +116,7 @@ for i in df:
 masa_explicada = (masa_explicada - df['PM2.5'].mean() - df['C Total'].mean())/(df['PM2.5'].mean())
 print('masa explicada = ', str(masa_explicada))
 
-# +
+# + jupyter={"outputs_hidden": true}
 #(df['C Total'] *1.4 * 2.5).plot(label='Orgánico')
 #(df['Na'] * 10).plot(label='Na')
 (df['S']).plot(label='S', xlim=(0,40))
@@ -142,6 +142,9 @@ plt.show()
 
 # -
 
+
+
+# + jupyter={"outputs_hidden": true}
 especies_corr_int = [['NO3', 'S', 'PM2.5'],
                           ['S', 'Ca', 'Zn', 'PM2.5', 'NH4'], ['Na', 'Fe'],
                           ['C Orgánico', 'Sb'], ['Ca', 'Sr'], ['Cr', 'Ni', 'Ni.1'],
@@ -155,41 +158,21 @@ for i in especies_corr_int:
             df[j].plot(label=j, xlim=(0,40))
     plt.legend()
     plt.show()
+# -
 
 #df.corr().where(df.corr() > 0.8).to_csv('correlacion_grande.csv')
 corr_matrix(df, minimum=0.8).to_csv('correlacion_grande.csv')
 
+# + jupyter={"outputs_hidden": true}
 graph_all_corr(df)
 
+# + jupyter={"outputs_hidden": true}
 plt.plot((df['S'] - df['SO4'] * 0.33), df['V'], 'yo')
 plt.show()
 (df['V'] * 100).plot()
 (df['S'] - df['SO4'] * 0.33).plot()
 
-
-# +
-def mass_closure(data_df, method='Chow_1996'):
-    mass_closure = 0
-    data_df2 = data_df.fillna(0)
-    if method == 'Chow_1996':
-        ##### FALTA EXCEPTUAR ALUMINIO, Silicio
-        data_df2['Al'] = 0 * data_df2['Ca']
-        data_df2['Si'] = 0 * data_df2['Ca']
-        ########
-        inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
-        organic_matter = data_df2['C Orgánico'] * 1.4
-        elemental_C = data_df2['C Elemental']
-        geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
-                               1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
-        salt = data_df2['Na'] + data_df2['Cl']
-        trace_elements = data_df2['V'] #Terminar
-        others = data_df2['Na'] * 0
-    
-    
-    mass_closure = (inorganic_ions + organic_matter + elemental_C + geological_minerals +
-                    salt + trace_elements + others)
-    return mass_closure
-
+# + jupyter={"outputs_hidden": true}
 for i in (mass_closure(data_df=df) / df['PM2.5']):
     print(i)
     

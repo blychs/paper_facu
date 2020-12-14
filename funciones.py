@@ -23,10 +23,13 @@ import xarray as xr
 
 
 def corr_matrix(df, minimum=-1, maximum=1):
+    '''Calcula matriz de correlación y devuelve los valores entre las corr
+    máximas y mínimas'''
     return df.corr().where(df.corr() >= minimum).where(df.corr() <= maximum)
 
 
 def test_lognormality(data_array, treshold=0):
+    ''''''
     return stats.normaltest(np.log(data_array.where(data_array > treshold)), axis=0, nan_policy='omit').pvalue
 
 
@@ -51,6 +54,7 @@ def graph_all_corr(df):
 def mass_closure(data_df, method='Chow_1996'):
     mass_closure = 0
     data_df2 = data_df.fillna(0)
+    data_df2['Si'] = 0 * data_df2['Na']
     
     if method == 'Macias_1981':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4SO3']
