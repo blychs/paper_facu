@@ -109,7 +109,7 @@ def mass_closure(data_df, method='Chow_1996'):
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
         salt = data_df2['Na'] + data_df2['Cl']
         trace_elements = data_df2['V'] #Terminar
-        others = data_df2['Na'] * 0
+        others = 0 * data_df2['Na']
         
     if method == 'Andrews_2000':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
@@ -118,9 +118,63 @@ def mass_closure(data_df, method='Chow_1996'):
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'] +
                                1.67 * data_df2['Ti'])
-    
+        salt = 0 * data_df2['Na']
+        trace_elements = data_df2['V'] #Terminar
+        others = 0 * data_df2['Na']
         
-
+    if method == 'Malm_200':
+        inorganic_ions = 1.125 * data_df2['S'] + 1.29 * data_df2['NO3']
+        organic_mass = 1.4 * data_df2['C Orgánico']
+        elemental_C = data_df2['C Elemental']
+        geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
+                               1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
+                               2.42 * data_df2['Fe'])
+        salt = 0 * data_df2['Na']
+        trace_elements = 0 * data_df2['Na']
+        others = 0 * data_df2['Na']
+    
+    if method == 'Maenhaut_2002':
+        inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
+        organic_mass = 1.4 * data_df2['C Orgánico']
+        elemental_C = data_df2['C Elemental']
+        geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
+                               1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
+                               2.42 * data_df2['Fe'])
+        salt = data_df2['Cl'] + 1.4486 * data_df2['Na']
+        trace_elements = 0 * data_df2['Na'] ### Terminar
+        others = data_df['K'] - 0.6 * data_df['Fe']
+        
+    if method == 'DeBell_2006':
+        inorganic_ions = 4.125 * data_df2['S'] + 1.29 * data_df2['NO3']
+        organic_mass = 1.8 * data_df2['C Orgánico']
+        elemental_C = data_df2['C Elemental']
+        geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
+                               1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
+                               2.42 * data_df2['Fe'])
+        salt = 0 * data_df2['Na']
+        trace_elements = 0 * data_df2['Na']
+        others = 0 * data_df2['Na']
+        
+    if method == 'Hand_2011':
+        inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
+        organic_mass = 1.8 * data_df2['C Orgánico']
+        elemental_C = data_df2['C Elemental']
+        geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
+                               1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
+                               2.42 * data_df2['Fe'])
+        salt = 1.8 * data_df2['Cl']
+        trace_elements = 0 * data_df2['Na']
+        others = 0 * data_df2['Na']
+        
+    if method == 'Simon_2011':
+        inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4NO3']
+        organic_mass = 1.8 * data_df2['C Orgánico']
+        elemental_C = data_df2['C Elemental']
+        geological_minerals = (3.48 * data_df2['Si'] + 1.63 * data_df2['Ca'] +
+                               2.42 * data_df2['Fe'] + 1.94 * data_df2['Ti'])
+        salt = 1.8 * data_df2['Cl']
+        trace_elements = 0 * data_df2['Na']
+        others = 1.2 * (data_df['K'] - 0.6 * data_df['Fe'])
     
     mass_closure = (inorganic_ions + organic_mass + elemental_C + geological_minerals +
                     salt + trace_elements + others)
