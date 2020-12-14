@@ -183,3 +183,7 @@ print('\n\n\n' + str((mass_closure(data_df=df) / df['PM2.5']).mean()))
         #                       1.63 * data_df['Ca'] + 1.94 * data_df['Ti'] +
         #                       2.42 * data_df['Fe'])
         
+# -
+
+for i in df:
+    print('data_df2[\'' + i + '\']' + ' + ', end='')
