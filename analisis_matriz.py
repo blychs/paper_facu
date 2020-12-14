@@ -164,7 +164,7 @@ for i in especies_corr_int:
 corr_matrix(df, minimum=0.8).to_csv('correlacion_grande.csv')
 
 # + jupyter={"outputs_hidden": true}
-graph_all_corr(df)
+# graph_all_corr(df)
 
 # + jupyter={"outputs_hidden": true}
 plt.plot((df['S'] - df['SO4'] * 0.33), df['V'], 'yo')
