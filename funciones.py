@@ -35,20 +35,25 @@ def test_lognormality(data_array, treshold=0):
 
 def graph_all_corr(df):
     for i in df:
-        if is_numeric_dtype(df[i]):
+        if (not df[i].isna().all()) and is_numeric_dtype(df[i]):
             for j in df:
-                if is_numeric_dtype(df[j]):
-                    idx = np.isfinite(df[i]) & np.isfinite(df[j])
-                    coef = np.polyfit(df[i][idx],df[j][idx],1)
-                    print(str(coef[0]), 'x +', str(coef[1]))
-                    poly1d_fn = np.poly1d(coef)
-                    correlation_fig = plt.plot(df[i],df[j], 'yo', df[i], poly1d_fn(df[i]), 'k')
-                    plt.legend(iter(correlation_fig), ('Values', 'Linear fit'))
-                    #plt.plot(df[i], df[i], 'r--')
-                    plt.xlabel(i)
-                    plt.ylabel(j)
-                    plt.savefig('corr_' + i + '_' + j + '.png')
-                    plt.show()
+                print('i ==' + i + ', j ==' + j)
+                if (not df[j].isna().all()) and is_numeric_dtype(df[j]):
+                    try:
+                        idx = np.isfinite(df[i]) & np.isfinite(df[j])
+                        coef = np.polyfit(df[i][idx],df[j][idx],1)
+                        print(str(coef[0]), 'x +', str(coef[1]))
+                        poly1d_fn = np.poly1d(coef)
+                    except:
+                        print('No se pudo hacer i ==' + i + ', j == ' + j)
+                    else:
+                        correlation_fig = plt.plot(df[i],df[j], 'yo', df[i], poly1d_fn(df[i]), 'k')
+                        plt.legend(iter(correlation_fig), ('Values', 'Linear fit'))
+                        #plt.plot(df[i], df[i], 'r--')
+                        plt.xlabel(i)
+                        plt.ylabel(j)
+                        plt.savefig('corr_' + i + '_' + j + '.png')
+                        plt.show()
 
 # +
 # df.keys() = ['Cl', 'NO3', 'SO4', 'Na', 'NH4', 'C Orgánico', 'C Elemental', 'C Total',
@@ -99,7 +104,6 @@ def mass_closure(data_df, method='Chow_1996'):
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
         salt = 0 * data_df2['Na']
 
-        # Como placeholder
         trace_elements = (data_df2['Cl'] + data_df2['Na'] + data_df2['K'] +
                           data_df2['Ti'] + data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
