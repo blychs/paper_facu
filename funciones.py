@@ -55,6 +55,26 @@ def graph_all_corr(df):
                         plt.savefig('corr_' + i + '_' + j + '.png')
                         plt.show()
 
+
+def comparacion_tecnicas(df, elemento):
+    try:
+        idx = np.isfinite(df[elemento]) & np.isfinite(df[elemento + '.1'])
+        coef = np.polyfit(df[elemento][idx], df[elemento + '.1'][idx],1)
+        coeficients = str(coef[0]), 'x + ', str(coef[1])
+        poly1d_fn = np.poly1d(coef)
+    except:
+        print('No se pudo hacer i == ' + elemento)
+    else:
+        fig, ax = plt.subplots()
+        correlation_fig = plt.plot(df[elemento], df[elemento + '.1'],
+                                   'yo', df[elemento], poly1d_fn(df[elemento]), 'k', axes=ax)
+        ax.text(0.1, 0.9,
+                str(coef[0].round(2)) +  'x + ' + str(coef[1].round(4)), transform=ax.transAxes)
+        plt.xlabel(elemento + ' (TXRF)')
+        plt.ylabel(elemento + ' (ICP-MS)')
+        return(ax)
+        
+
 # +
 # df.keys() = ['Cl', 'NO3', 'SO4', 'Na', 'NH4', 'C Orgánico', 'C Elemental', 'C Total',
        # 'S', 'Cl.1', 'K', 'Ca', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Ni', 'Cu', 'Zn',
@@ -63,7 +83,7 @@ def graph_all_corr(df):
     
 
 
-def mass_closure(data_df, method='Chow_1996'):
+def mass_closure(data_df, equation='Chow_1996'):
     mass_closure = 0
     data_df2 = data_df.fillna(0)
     data_df2['Si'] = 0 * data_df2['Na']
