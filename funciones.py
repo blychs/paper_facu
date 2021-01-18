@@ -33,7 +33,7 @@ def test_lognormality(data_array, treshold=0):
     return stats.normaltest(np.log(data_array.where(data_array > treshold)), axis=0, nan_policy='omit').pvalue
 
 
-def graph_all_corr(df):
+def graph_all_corr(df, output_dir='./'):
     for i in df:
         if (not df[i].isna().all()) and is_numeric_dtype(df[i]):
             for j in df:
@@ -52,7 +52,7 @@ def graph_all_corr(df):
                         #plt.plot(df[i], df[i], 'r--')
                         plt.xlabel(i)
                         plt.ylabel(j)
-                        plt.savefig('corr_' + i + '_' + j + '.png')
+                        plt.savefig(output_dir + 'corr_' + i + '_' + j + '.png')
                         plt.show()
 
 
@@ -73,7 +73,7 @@ def comparacion_tecnicas(df, elemento):
         plt.xlabel(elemento + ' (TXRF)')
         plt.ylabel(elemento + ' (ICP-MS)')
         return(ax)
-        
+
 
 # +
 # df.keys() = ['Cl', 'NO3', 'SO4', 'Na', 'NH4', 'C Orgánico', 'C Elemental', 'C Total',
@@ -88,7 +88,7 @@ def mass_closure(data_df, equation='Chow_1996'):
     data_df2 = data_df.fillna(0)
     data_df2['Si'] = 0 * data_df2['Na']
     
-    if method == 'Macias_1981':
+    if equation == 'Macias_1981':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4SO3']
         organic_mass = 1.5 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -100,7 +100,7 @@ def mass_closure(data_df, equation='Chow_1996'):
                           1.08 * data_df2['Pb'])
         others = 0 * data_df2['Na']
       
-    if method == 'Solomon_1989':
+    if equation == 'Solomon_1989':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -116,7 +116,7 @@ def mass_closure(data_df, equation='Chow_1996'):
                           data_df2['Sb'])
         others = 0 * data_df2['Na']
 
-    if method == 'Chow_1994':
+    if equation == 'Chow_1994':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -132,7 +132,7 @@ def mass_closure(data_df, equation='Chow_1996'):
                           data_df2['Sb'])
         others = 0 * data_df2['Na']
     
-    if method == 'Malm_1994':
+    if equation == 'Malm_1994':
         inorganic_ions = 4.125 * data_df2['S']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -143,7 +143,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         trace_elements = 0 * data_df2['Na']
         others = 0 * data_df2['Na']
         
-    if method == 'Chow_1996':
+    if equation == 'Chow_1996':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -157,7 +157,7 @@ def mass_closure(data_df, equation='Chow_1996'):
                           data_df2['Sb'])
         others = 0 * data_df2['Na']
         
-    if method == 'Andrews_2000':
+    if equation == 'Andrews_2000':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -173,7 +173,7 @@ def mass_closure(data_df, equation='Chow_1996'):
                           data_df2['Sb'])
         others = 0 * data_df2['Na']
         
-    if method == 'Malm_2000':
+    if equation == 'Malm_2000':
         inorganic_ions = 1.125 * data_df2['S'] + 1.29 * data_df2['NO3']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -184,7 +184,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         trace_elements = 0 * data_df['Na']
         others = 0 * data_df2['Na']
     
-    if method == 'Maenhaut_2002':
+    if equation == 'Maenhaut_2002':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -199,7 +199,7 @@ def mass_closure(data_df, equation='Chow_1996'):
                           data_df2['Sb'])  # CHEQUEAR
         others = data_df['K'] - 0.6 * data_df['Fe']
         
-    if method == 'DeBell_2006':
+    if equation == 'DeBell_2006':
         inorganic_ions = 4.125 * data_df2['S'] + 1.29 * data_df2['NO3']
         organic_mass = 1.8 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -210,7 +210,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         trace_elements = 0 * data_df2['Na']
         others = 0 * data_df2['Na']
         
-    if method == 'Hand_2011':
+    if equation == 'Hand_2011':
         inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
         organic_mass = 1.8 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']
@@ -221,7 +221,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         trace_elements = 0 * data_df2['Na']
         others = 0 * data_df2['Na']
         
-    if method == 'Simon_2011':
+    if equation == 'Simon_2011':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4NO3']
         organic_mass = 1.8 * data_df2['C Orgánico']
         elemental_C = data_df2['C Elemental']

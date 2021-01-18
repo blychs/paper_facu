@@ -95,11 +95,13 @@ for i in df:
 print('\n\n')
 print(not_lognormal)
 
-for i in df:
-    if is_numeric_dtype(df[i]):
-        #plt.figure(figsize=(20,10))
-        df.plot(y=i, label=i, xlim=(0, 96))
-        plt.show()
+# +
+#for i in df:
+#    if is_numeric_dtype(df[i]):
+#        #plt.figure(figsize=(20,10))
+#        df.plot(y=i, label=i, xlim=(0, 96))
+#        plt.show()
+# -
 
 #df['C Orgánico'].plot(label='Orgánico')
 (df['C Elemental'] * 8).plot(label='Elemental * 16')
@@ -172,26 +174,28 @@ print('masa explicada = ', str(masa_explicada))
 
 
 
-especies_corr_int = [['NO3', 'S', 'PM2.5'],
-                          ['S', 'Ca', 'Zn', 'PM2.5', 'NH4'], ['Na', 'Fe'],
-                          ['C Orgánico', 'Sb'], ['Ca', 'Sr'], ['Cr', 'Ni', 'Ni.1'],
-                          ['Mn', 'Mn.1'], ['Pb', 'Zn'], ['Pb.1', 'Sb'],
-                          ['Mn', 'Ti']]
-for i in especies_corr_int:
-    for j in i:
-        if j == 'PM2.5':
-            (df[j]*0.1).plot(label=j + ' * 0.1', xlim=(0,40))
-        else:
-            df[j].plot(label=j, xlim=(0,40))
-    plt.legend()
-    plt.show()
+# +
+#especies_corr_int = [['NO3', 'S', 'PM2.5'],
+#                          ['S', 'Ca', 'Zn', 'PM2.5', 'NH4'], ['Na', 'Fe'],
+#                          ['C Orgánico', 'Sb'], ['Ca', 'Sr'], ['Cr', 'Ni', 'Ni.1'],
+#                          ['Mn', 'Mn.1'], ['Pb', 'Zn'], ['Pb.1', 'Sb'],
+#                          ['Mn', 'Ti']]
+#for i in especies_corr_int:
+#    for j in i:
+#        if j == 'PM2.5':
+#            (df[j]*0.1).plot(label=j + ' * 0.1', xlim=(0,40))
+#        else:
+#            df[j].plot(label=j, xlim=(0,40))
+#    plt.legend()
+#    plt.show()
+# -
 
 #df.corr().where(df.corr() > 0.8).to_csv('correlacion_grande.csv')
 corr_matrix(df, minimum=0.8).to_csv('correlacion_grande.csv')
 
 # +
 # Correlaciones de todo con todo
-# graph_all_corr(df)
+# graph_all_corr(df, correlaciones)
 # -
 
 plt.plot((df['S'] - df['SO4'] * 0.33), df['V'], 'yo')
@@ -205,7 +209,7 @@ methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000'
 
 for k in methods:
     print('\n', k)
-    mass_closure_fraction = (mass_closure(data_df=df[0:40], method=k) / df['PM2.5'][0:40])
+    mass_closure_fraction = (mass_closure(data_df=df[0:40], equation=k) / df['PM2.5'][0:40])
     print(mass_closure_fraction)
     #for i in range(0, len(mass_closure_fraction)):
     #    print(mass_closure_fraction[0])
@@ -214,6 +218,6 @@ for k in methods:
 
 for i in methods:
     print('\n\n',i)
-    print(str((mass_closure(data_df=df[0:40], method=i) / df['PM2.5'][0:40]).mean()))
+    print(str((mass_closure(data_df=df[0:40], equation=i) / df['PM2.5'][0:40]).mean()))
         
         
