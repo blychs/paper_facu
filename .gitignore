@@ -1,0 +1,13 @@
+*.csv
+*.png
+*.tex
+*.zip
+*.ods
+*.xlsx
+elsarticle*
+*.ipynb
+*.docx
+README
+lista_latex
+doc
+manifest.txt
