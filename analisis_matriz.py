@@ -25,7 +25,7 @@ import xarray as xr
 # %run ./funciones.ipynb
 
 # +
-df_raw = pd.read_csv('20210105_matriz_medidas_valores_apreciables.csv', index_col=0, skiprows=[1,2])[0:94]
+df_raw = pd.read_csv('20210218_matriz_frankestein.csv', index_col=0, skiprows=[1,2])[0:94]
 #df['PM2.5 (ug/m3)'] = df['PM2.5 (mg/m3)']*1000 * (df['PM2.5 (mg/m3)'] < 1) * (df['PM2.5 (mg/m3)'] > 0)
 
 ############# Remove outliers ############
@@ -86,14 +86,21 @@ plt.show()
 # -
 
 not_lognormal = []
-for i in df:
-    if not df[i].isna().all() and i != 'Se.1': 
-        p_is_lognormal = test_lognormality(df[i])
-        print(i, str(p_is_lognormal))
-        if p_is_lognormal < 0.01:
-            not_lognormal.append(i)
+lognormality_nan = []
+with open('lognormalidad.txt', 'w') as lognorm:
+    for i in df:
+        if not df[i].isna().all() and i != 'Se.1': 
+            p_is_lognormal = test_lognormality(df[i])
+            print(i, str(p_is_lognormal))
+            if p_is_lognormal < 0.01:
+                not_lognormal.append(i)
+            elif p_is_lognormal != p_is_lognormal: #Check if it's np.nan
+                lognormality_nan.append(i)
+        lognorm.write(i +' '+ str(p_is_lognormal) + '\n')
+    lognorm.write('No son lognormales ' + str(not_lognormal) + '\n')
+    lognorm.write('No hay valores suficientes para evaluar' + str(lognormality_nan) + '\n')
 print('\n\n')
-print(not_lognormal)
+print('No son lognormales ' + str(not_lognormal))
 
 # +
 #for i in df:
@@ -191,6 +198,7 @@ print('masa explicada = ', str(masa_explicada))
 # -
 
 #df.corr().where(df.corr() > 0.8).to_csv('correlacion_grande.csv')
+correlacion = (c)
 corr_matrix(df, minimum=0.8).to_csv('correlacion_grande.csv')
 
 # +

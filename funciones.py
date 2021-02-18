@@ -30,7 +30,12 @@ def corr_matrix(df, minimum=-1, maximum=1):
 
 def test_lognormality(data_array, treshold=0):
     ''''''
-    return stats.normaltest(np.log(data_array.where(data_array > treshold)), axis=0, nan_policy='omit').pvalue
+    try:
+        pvalor = stats.normaltest(np.log(data_array.where(
+                                  data_array > treshold)), axis=0, nan_policy='omit').pvalue
+    except:
+        pvalor = np.nan
+    return pvalor
 
 
 def graph_all_corr(df, output_dir='./'):
