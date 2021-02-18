@@ -32,9 +32,9 @@ df_raw = pd.read_csv('20210218_matriz_frankestein.csv', index_col=0, skiprows=[1
 df = df_raw.mask(df_raw.sub(df_raw.mean()).div(df_raw.std()).abs().gt(3))
 
 df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2])
-# -
 
 
+# + jupyter={"outputs_hidden": true}
 #print(df_tecnicas['Ti'])
 # %run ./funciones.ipynb
 lista_elementos = ['Ti', 'Mn', 'Ni', 'Zn', 'Pb']
@@ -42,7 +42,7 @@ for i in lista_elementos:
     ax = comparacion_tecnicas(df_tecnicas, i)
     plt.show()
 
-# +
+# + jupyter={"outputs_hidden": true}
 #display(df.corr())
 df.corr().to_csv('correlacion_todo.csv')
 
@@ -83,8 +83,8 @@ log_SO4 = np.log(df['Ca'])
 log_SO4.hist(bins=20)
 plt.title('ln(Ca)')
 plt.show()
-# -
 
+# + jupyter={"outputs_hidden": true}
 not_lognormal = []
 lognormality_nan = []
 with open('lognormalidad.txt', 'w') as lognorm:
@@ -108,8 +108,8 @@ print('No son lognormales ' + str(not_lognormal))
 #        #plt.figure(figsize=(20,10))
 #        df.plot(y=i, label=i, xlim=(0, 96))
 #        plt.show()
-# -
 
+# + jupyter={"outputs_hidden": true}
 #df['C Orgánico'].plot(label='Orgánico')
 (df['C Elemental'] * 8).plot(label='Elemental * 16')
 (df['PM2.5']).plot(label='PM2.5', xlim=(0,70))
@@ -124,7 +124,7 @@ plt.show()
 plt.legend()
 plt.show()
 
-# +
+# + jupyter={"outputs_hidden": true}
 #df['C Orgánico'].plot(label='Orgánico')
 fraccion_org = (df['C Orgánico']*1.4) / df['PM2.5']
 fraccion_elemental = df['C Elemental'] / df['PM2.5']
@@ -134,15 +134,15 @@ plt.show()
 print(fraccion_org.mean())
 
 #print(fraccion_elemental.mean())
-# -
 
+# + jupyter={"outputs_hidden": true}
 fraccion_NO3 = df['NO3'] / df['PM2.5']
 (fraccion_NO3).plot(label='NO3/PM2.5')
 plt.legend()
 plt.show()
 print(fraccion_NO3.mean())
 
-# +
+# + jupyter={"outputs_hidden": true}
 for i in df:
     if 'KED' not in i:
         print(i)
@@ -154,8 +154,8 @@ for i in df:
         masa_explicada += df[i].mean()
 masa_explicada = (masa_explicada - df['PM2.5'].mean() - df['C Total'].mean())/(df['PM2.5'].mean())
 print('masa explicada = ', str(masa_explicada))
-# -
 
+# + [markdown] jupyter={"source_hidden": true}
 # (df['C Total'] *1.4 * 2.5).plot(label='Orgánico')
 # (df['Na'] * 10).plot(label='Na')
 # (df['S']).plot(label='S', xlim=(0,40))
@@ -178,6 +178,7 @@ print('masa explicada = ', str(masa_explicada))
 # df['Sb'].plot(label='Sb')
 # plt.legend()
 # plt.show()
+# -
 
 
 
@@ -195,23 +196,25 @@ print('masa explicada = ', str(masa_explicada))
 #            df[j].plot(label=j, xlim=(0,40))
 #    plt.legend()
 #    plt.show()
-# -
 
+# + jupyter={"outputs_hidden": true}
 #df.corr().where(df.corr() > 0.8).to_csv('correlacion_grande.csv')
-correlacion = (c)
-corr_matrix(df, minimum=0.8).to_csv('correlacion_grande.csv')
+correlacion = corr_matrix(df)
+correlacion.to_csv('correlacion.csv')
+keys = correlacion.keys()
 
-# +
-# Correlaciones de todo con todo
-# graph_all_corr(df, correlaciones)
+df[keys[0]]
 # -
+
+# Correlaciones de todo con todo
+graph_all_corr(df, 'correlaciones/')
 
 plt.plot((df['S'] - df['SO4'] * 0.33), df['V'], 'yo')
 plt.show()
 (df['V'] * 100).plot()
 (df['S'] - df['SO4'] * 0.33).plot()
 
-# +
+# + jupyter={"outputs_hidden": true}
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
 

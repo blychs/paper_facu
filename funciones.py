@@ -39,25 +39,27 @@ def test_lognormality(data_array, treshold=0):
 
 
 def graph_all_corr(df, output_dir='./'):
-    for i in df:
-        if (not df[i].isna().all()) and is_numeric_dtype(df[i]):
-            for j in df:
-                print('i ==' + i + ', j ==' + j)
-                if (not df[j].isna().all()) and is_numeric_dtype(df[j]):
+    keys = df.keys()
+    for i in range(0, len(keys)):
+        if (not df[keys[i]].isna().all()) and is_numeric_dtype(df[keys[i]]):
+            for j in range(i + 1, len(keys)):
+                print('i == ' + keys[i] + ', j == ' + keys[j])
+                if (not df[keys[j]].isna().all()) and is_numeric_dtype(df[keys[j]]):
                     try:
-                        idx = np.isfinite(df[i]) & np.isfinite(df[j])
-                        coef = np.polyfit(df[i][idx],df[j][idx],1)
+                        idx = np.isfinite(df[keys[i]]) & np.isfinite(df[keys[j]])
+                        coef = np.polyfit(df[keys[i]][idx],df[keys[j]][idx],1)
                         print(str(coef[0]), 'x +', str(coef[1]))
                         poly1d_fn = np.poly1d(coef)
                     except:
-                        print('No se pudo hacer i ==' + i + ', j == ' + j)
+                        print('No se pudo hacer i ==' + keys[i] + ', j == ' + keys[j])
                     else:
-                        correlation_fig = plt.plot(df[i],df[j], 'yo', df[i], poly1d_fn(df[i]), 'k')
+                        correlation_fig = plt.plot(df[keys[i]],df[keys[j]], 'yo',
+                                                   df[keys[i]], poly1d_fn(df[keys[i]]), 'k')
                         plt.legend(iter(correlation_fig), ('Values', 'Linear fit'))
                         #plt.plot(df[i], df[i], 'r--')
-                        plt.xlabel(i)
-                        plt.ylabel(j)
-                        plt.savefig(output_dir + 'corr_' + i + '_' + j + '.png')
+                        plt.xlabel(keys[i])
+                        plt.ylabel(keys[j])
+                        plt.savefig(output_dir + 'corr_' + keys[i] + '_' + keys[j] + '.png')
                         plt.show()
 
 
