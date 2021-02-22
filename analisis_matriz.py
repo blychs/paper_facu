@@ -15,78 +15,68 @@
 # ---
 
 # +
-import numpy as np
-from scipy import stats
-import matplotlib.pyplot as plt
-import pandas as pd
-from pandas.api.types import is_numeric_dtype
-import xarray as xr
+import numpy as np # librería de cálculo numérico
+from scipy import stats # librería estadística
+import matplotlib.pyplot as plt # para gráficos
+import pandas as pd # para tablas (tipo spreadsheets)
+from pandas.api.types import is_numeric_dtype # chequeos de tipo numérico
+import xarray as xr # es como una extensión de Pandas para usar varias dimensiones
+                    # y hacer cálculos con vectores
 
+# Funciones que creé yo
 # %run ./funciones.ipynb
 
 # +
-df_raw = pd.read_csv('20210218_matriz_frankestein.csv', index_col=0, skiprows=[1,2])[0:94]
-#df['PM2.5 (ug/m3)'] = df['PM2.5 (mg/m3)']*1000 * (df['PM2.5 (mg/m3)'] < 1) * (df['PM2.5 (mg/m3)'] > 0)
+df_raw = pd.read_csv('20210218_matriz_frankestein.csv', index_col=0, skiprows=[1,2])[0:94] # Matriz CSV curada
 
 ############# Remove outliers ############
-df = df_raw.mask(df_raw.sub(df_raw.mean()).div(df_raw.std()).abs().gt(3))
+# Elimino outliers de la matriz definido como aquello que está a más de 3 sigmas 
+# (falta pasar a log)
+df = df_raw.mask(df_raw.sub(df_raw.mean()).div(df_raw.std()).abs().gt(3)) 
 
 df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2])
 
 
-# + jupyter={"outputs_hidden": true}
-#print(df_tecnicas['Ti'])
-# %run ./funciones.ipynb
-lista_elementos = ['Ti', 'Mn', 'Ni', 'Zn', 'Pb']
-for i in lista_elementos:
-    ax = comparacion_tecnicas(df_tecnicas, i)
-    plt.show()
+# +
+# Ploteo de elementos claves que queramos ver para comparar técnicas
+# (modificar lista_elementos si se quiere cambiar cuáles)
+###########
+# lista_elementos = ['Ti', 'Mn', 'Ni', 'Zn', 'Pb']
+# for i in lista_elementos:
+#     ax = comparacion_tecnicas(df_tecnicas, i)
+#   plt.show()
+# -
 
-# + jupyter={"outputs_hidden": true}
-#display(df.corr())
+# CÁLCULO DE MATRIZ DE CORRELACIONES
 df.corr().to_csv('correlacion_todo.csv')
 
+# +
+# CÁLCULO DE LOGNORMALIDAD Y GRÁFICOS DE HISTOGRAMAS CLAVE
+
+#Histogramas de la versión lineal
 df.plot(y=['C Orgánico', 'C Elemental', 'C Total', 'PM2.5'], ylim=(0,20))
 df.hist('C Orgánico', bins=20)
 df.hist('C Elemental', bins=20)
 df.hist('C Total', bins=20)
 plt.show()
-log_PM25 = np.log(df['PM2.5'].where(df['PM2.5']>0.1))
-log_PM25.hist(bins=20)
-plt.title('ln(PM2.5)')
-plt.show()
+
+# Histogramas logarítmicos seleccionados
+lista_de_elementos = ['PM2.5' ,'SO4', 'Pb', 'Ca']
+for i in lista_de_elementos:
+    log_i = np.log(df[i])
+    log_i.hist(bins=20)
+    plt.title('ln(' + i + ')')
+    plt.show()
+
+
+# +
+not_lognormal = []
+lognormality_nan = []
 
 ### This function tests the null hypothesis that a sample comes from a normal distribution.
 ### It is based onD’Agostino and Pearson’s [1], [2] test that combines skew and kurtosis 
 ### to produce an omnibus test of normality.
-print('Test de normalidad ln(PM2.5), p-valor:')
-print(stats.normaltest(log_PM25, axis=0, nan_policy='omit').pvalue)
-#df.plot(y=['C Elemental (ug/cm2)'], xlim=(0,36), ylim=(0,0.75))
 
-df.hist('SO4', bins=20)
-plt.show()
-log_SO4 = np.log(df['SO4'])
-log_SO4.hist(bins=20)
-plt.title('ln(SO4)')
-plt.show()
-
-df.hist('Pb', bins=20)
-plt.show()
-log_SO4 = np.log(df['Pb'])
-log_SO4.hist(bins=20)
-plt.title('ln(Pb)')
-plt.show()
-
-df.hist('Ca', bins=20)
-plt.show()
-log_SO4 = np.log(df['Ca'])
-log_SO4.hist(bins=20)
-plt.title('ln(Ca)')
-plt.show()
-
-# + jupyter={"outputs_hidden": true}
-not_lognormal = []
-lognormality_nan = []
 with open('lognormalidad.txt', 'w') as lognorm:
     for i in df:
         if not df[i].isna().all() and i != 'Se.1': 
@@ -108,8 +98,8 @@ print('No son lognormales ' + str(not_lognormal))
 #        #plt.figure(figsize=(20,10))
 #        df.plot(y=i, label=i, xlim=(0, 96))
 #        plt.show()
+# -
 
-# + jupyter={"outputs_hidden": true}
 #df['C Orgánico'].plot(label='Orgánico')
 (df['C Elemental'] * 8).plot(label='Elemental * 16')
 (df['PM2.5']).plot(label='PM2.5', xlim=(0,70))
@@ -124,7 +114,7 @@ plt.show()
 plt.legend()
 plt.show()
 
-# + jupyter={"outputs_hidden": true}
+# +
 #df['C Orgánico'].plot(label='Orgánico')
 fraccion_org = (df['C Orgánico']*1.4) / df['PM2.5']
 fraccion_elemental = df['C Elemental'] / df['PM2.5']
@@ -134,15 +124,15 @@ plt.show()
 print(fraccion_org.mean())
 
 #print(fraccion_elemental.mean())
+# -
 
-# + jupyter={"outputs_hidden": true}
 fraccion_NO3 = df['NO3'] / df['PM2.5']
 (fraccion_NO3).plot(label='NO3/PM2.5')
 plt.legend()
 plt.show()
 print(fraccion_NO3.mean())
 
-# + jupyter={"outputs_hidden": true}
+# +
 for i in df:
     if 'KED' not in i:
         print(i)
@@ -197,7 +187,7 @@ print('masa explicada = ', str(masa_explicada))
 #    plt.legend()
 #    plt.show()
 
-# + jupyter={"outputs_hidden": true}
+# +
 #df.corr().where(df.corr() > 0.8).to_csv('correlacion_grande.csv')
 correlacion = corr_matrix(df)
 correlacion.to_csv('correlacion.csv')
@@ -214,7 +204,7 @@ plt.show()
 (df['V'] * 100).plot()
 (df['S'] - df['SO4'] * 0.33).plot()
 
-# + jupyter={"outputs_hidden": true}
+# +
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
 
