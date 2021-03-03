@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.7.1
+#       jupytext_version: 1.10.2
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -29,7 +29,8 @@ def corr_matrix(df, minimum=-1, maximum=1):
 
 
 def test_lognormality(data_array, treshold=0):
-    ''''''
+    '''testea si es lognormal usando un método basado en D'Agostino y Pearson,
+    que tiene en cuenta la distosión y kurtosis para producir el test'''
     try:
         pvalor = stats.normaltest(np.log(data_array.where(
                                   data_array > treshold)), axis=0, nan_policy='omit').pvalue
@@ -39,6 +40,7 @@ def test_lognormality(data_array, treshold=0):
 
 
 def graph_all_corr(df, output_dir='./'):
+    '''Grafica correlación de todo con todo y la imprime'''
     keys = df.keys()
     for i in range(0, len(keys)):
         if (not df[keys[i]].isna().all()) and is_numeric_dtype(df[keys[i]]):
@@ -93,7 +95,7 @@ def comparacion_tecnicas(df, elemento):
 def mass_closure(data_df, equation='Chow_1996'):
     mass_closure = 0
     data_df2 = data_df.fillna(0)
-    data_df2['Si'] = 0 * data_df2['Na']
+    data_df2['Si'] = 2.4729 * data_df2['Al']
     
     if equation == 'Macias_1981':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4SO3']
@@ -240,4 +242,5 @@ def mass_closure(data_df, equation='Chow_1996'):
     
     mass_closure = (inorganic_ions + organic_mass + elemental_C + geological_minerals +
                     salt + trace_elements + others)
-    return mass_closure
+    return (mass_closure, inorganic_ions, organic_mass, elemental_C,
+            geological_minerals, salt, trace_elements, others)
