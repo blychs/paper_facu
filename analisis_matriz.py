@@ -20,7 +20,7 @@ from scipy import stats # librería estadística
 import matplotlib.pyplot as plt # para gráficos
 import pandas as pd # para tablas (tipo spreadsheets)
 from pandas.api.types import is_numeric_dtype # chequeos de tipo numérico
-import xarray as xr # es como una extensión de Pandas para usar varias dimensiones
+# import xarray as xr # es como una extensión de Pandas para usar varias dimensiones
                     # y hacer cálculos con vectores
 
 # Funciones que creé yo
@@ -50,7 +50,7 @@ df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2
 # CÁLCULO DE MATRIZ DE CORRELACIONES
 df.corr().to_csv('correlacion_todo.csv')
 
-# +
+# + tags=[]
 # CÁLCULO DE LOGNORMALIDAD Y GRÁFICOS DE HISTOGRAMAS CLAVE
 
 #Histogramas de la versión lineal
@@ -102,7 +102,7 @@ print('No son lognormales ' + str(not_lognormal))
 # +
 #Ploteo de carbonosas y SO4
 
-(df['C Elemental'] * 8).plot(label='Elemental * 16')
+(df['C Elemental'] * 8).plot(label='Elemental * 8')
 (df['PM2.5']).plot(label='PM2.5', xlim=(0,70))
 plt.legend()
 plt.show()
