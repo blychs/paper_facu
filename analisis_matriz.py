@@ -35,7 +35,10 @@ df_raw = pd.read_csv('20210218_matriz_frankestein.csv', index_col=0, skiprows=[1
 df = df_raw.mask(df_raw.sub(df_raw.mean()).div(df_raw.std()).abs().gt(3)) 
 
 df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2])
+# -
 
+
+display(df)
 
 # +
 # Ploteo de elementos claves que queramos ver para comparar técnicas
@@ -54,7 +57,7 @@ df.corr().to_csv('correlacion_todo.csv')
 # CÁLCULO DE LOGNORMALIDAD Y GRÁFICOS DE HISTOGRAMAS CLAVE
 
 #Histogramas de la versión lineal
-df.plot(y=['C Orgánico', 'C Elemental', 'C Total', 'PM2.5'], ylim=(0,20))
+df.plot(y=['C Orgánico', 'C Elemental', 'C Total', 'PM2.5'], ylim=(0,30))
 df.hist('C Orgánico', bins=20)
 df.hist('C Elemental', bins=20)
 df.hist('C Total', bins=20)
@@ -64,7 +67,7 @@ plt.show()
 lista_de_elementos = ['PM2.5' ,'SO4', 'Pb', 'Ca']
 for i in lista_de_elementos:
     log_i = np.log(df[i])
-    log_i.hist(bins=20)
+    log_i.hist(bins=10)
     plt.title('ln(' + i + ')')
     plt.show()
 
@@ -82,7 +85,7 @@ with open('lognormalidad.txt', 'w') as lognorm:
         if not df[i].isna().all() and i != 'Se.1': 
             p_is_lognormal = test_lognormality(df[i])
             print(i, str(p_is_lognormal))
-            if p_is_lognormal < 0.01:
+            if p_is_lognormal < 0.05:
                 not_lognormal.append(i)
             elif p_is_lognormal != p_is_lognormal: #Check if it's np.nan
                 lognormality_nan.append(i)
@@ -228,11 +231,13 @@ for k in methods:
         fig1, ax1 = plt.subplots()
         ax1.pie(sizes, labels=labels)
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        plt.savefig('')
+        plt.savefig('imagenes/tortas/torta_filtro_' + 
+                    str(df.index[j]) + '_metodo_' + k + '.eps')
         plt.show()
-# -
 
+# + jupyter={"outputs_hidden": true} tags=[]
 # Correlaciones de todo con todo
 graph_all_corr(df, 'correlaciones/')
+# -
 
 
