@@ -93,7 +93,7 @@ def comparacion_tecnicas(df, elemento):
 
 
 def mass_closure(data_df, equation='Chow_1996'):
-    mass_closure = 0
+    closure = 0
     data_df2 = data_df.fillna(0)
     data_df2['Si'] = 2.4729 * data_df2['Al']
     
@@ -230,6 +230,18 @@ def mass_closure(data_df, equation='Chow_1996'):
         trace_elements = 0 * data_df2['Na']
         others = 0 * data_df2['Na']
         
+    if equation == 'Hand_2011_mod':
+        inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
+        # organic_mass = 1.8 * data_df2['C Orgánico']
+        organic_mass = 2.08 * data_df2['C Orgánico']
+        elemental_C = data_df2['C Elemental']
+        geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
+                               1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
+                               2.42 * data_df2['Fe'])
+        salt = 1.8 * data_df2['Cl']
+        trace_elements = 0 * data_df2['Na']
+        others = 0 * data_df2['Na']
+        
     if equation == 'Simon_2011':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4NO3']
         organic_mass = 1.8 * data_df2['C Orgánico']
@@ -240,7 +252,46 @@ def mass_closure(data_df, equation='Chow_1996'):
         trace_elements = 0 * data_df2['Na']
         others = 1.2 * (data_df['K'] - 0.6 * data_df['Fe'])
     
-    mass_closure = (inorganic_ions + organic_mass + elemental_C + geological_minerals +
+    closure = (inorganic_ions + organic_mass + elemental_C + geological_minerals +
                     salt + trace_elements + others)
-    return (mass_closure, inorganic_ions, organic_mass, elemental_C,
-            geological_minerals, salt, trace_elements, others)
+    unexplained = data_df2['PM2.5'] - closure
+    return (closure, inorganic_ions, organic_mass, elemental_C,
+            geological_minerals, salt, trace_elements, others, unexplained)
+
+
+# -
+
+class Filtro:
+    '''Clase que contiene los 
+    datos relevantes de los filtros'''
+    def __init__(self, da):
+        self.mass = da['PM2.5']
+        self.Cl = da['Cl']
+        self.NO3 = da['NO3']
+        self.Na = da['Na']
+        self.NH4 = da['NH4']
+        self.SO4 = da['SO4']
+    
+    def Solomon_1989(self, value='inorganic_ions'):
+        if value == 'inorganic_ions':
+            return self.SO4 + self.NO3 + self.NH4
+        
+    def Chow_1994(self, value='inorganic_ions'):
+        if value == 'inorganic_ions':
+            return self.SO4 + self.NO3 + self.NH4
+        
+    def Chow_1996(self, value='inorganic_ions'):
+        if value == 'inorganic_ions':
+            return self.SO4 + self.NO3 + self.NH4
+        
+    def Andews_2000(self, value='inorganic_ions'):
+        if value == 'inorganic_ions':
+            return self.SO4 + self.NO3 + self.NH4
+        
+    def Maenhaut_2002(self, value='inorganic_ions'):
+        if value == 'inorganic_ions':
+            return self.SO4 + self.NO3 + self.NH4
+        
+    def Hand_2011(self, value='inorganic_ions'):
+        if value == 'inorganic_ions':
+            return 1.375 * self.SO4 + 1.29 * self.NO3
