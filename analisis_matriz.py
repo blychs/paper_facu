@@ -29,7 +29,7 @@ from pandas.api.types import is_numeric_dtype # chequeos de tipo numérico
 # #%matplotlib widget
 
 
-df_raw = pd.read_excel('20210509_matriz_36_fin.xlsx', index_col=0, skiprows=[1,2]) # Matriz CSV curada
+df_raw = pd.read_excel('20210511_matriz_36_fin.xlsx', index_col=0, skiprows=[1,2]) # Matriz CSV curada
 
 ############# Remove outliers ############
 # Elimino outliers de la matriz definido como aquello que está a más de 3 sigmas 
@@ -181,7 +181,7 @@ plt.show()
 (df['V'] * 100).plot()
 (df['S'] - df['SO4'] * 0.33).plot()
 
-# + jupyter={"outputs_hidden": true} tags=[]
+# + tags=[]
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
 
@@ -196,16 +196,18 @@ methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000'
 
         
 for i in methods:
-    print('\n\n',i)
-    print(str((mass_closure(data_df=df, equation=i)[0] / df['PM2.5']).mean()))
-    print('inorganic_ions ', (mass_closure(data_df=df, equation=i)[1] / df['PM2.5']).mean())
-    print('organic_mass ', (mass_closure(data_df=df, equation=i)[2] / df['PM2.5']).mean())
-    print('EC ', (mass_closure(data_df=df, equation=i)[3] / df['PM2.5']).mean())
-    print('geological_minerals ', (mass_closure(data_df=df, equation=i)[4] / df['PM2.5']).mean())
-    print('seasalt ', (mass_closure(data_df=df, equation=i)[5] / df['PM2.5']).mean())
-    print('trace_elements ', (mass_closure(data_df=df, equation=i)[6] / df['PM2.5']).mean())
-    print('others ', (mass_closure(data_df=df, equation=i)[7] / df['PM2.5']).mean())
-    print('unexplained ', (mass_closure(data_df=df, equation=i)[8] / df['PM2.5']).mean())
+    print('\n\n'+ str(i))
+    mass = mass_closure(data_df=df, equation=i)
+    print('Total explained mass = ', (mass[0] / df['PM2.5']).mean().round(3) * 100, '%')
+    for key in mass[1].keys():
+        print(key, '=', ((mass[1][key] / df['PM2.5']).mean() * 100).round(1), '%')
+#    print('organic_mass ', (mass_closure(data_df=df, equation=i)[2] / df['PM2.5']).mean())
+#    print('EC ', (mass_closure(data_df=df, equation=i)[3] / df['PM2.5']).mean())
+#    print('geological_minerals ', (mass_closure(data_df=df, equation=i)[4] / df['PM2.5']).mean())
+#    print('seasalt ', (mass_closure(data_df=df, equation=i)[5] / df['PM2.5']).mean())
+#    print('trace_elements ', (mass_closure(data_df=df, equation=i)[6] / df['PM2.5']).mean())
+#    print('others ', (mass_closure(data_df=df, equation=i)[7] / df['PM2.5']).mean())
+#    print('unexplained ', (mass_closure(data_df=df, equation=i)[8] / df['PM2.5']).mean())
     
 
 # closure, inorganic_ions, organic_mass, elemental_C,
@@ -253,7 +255,7 @@ print('\n\nHand 2011 mod\ncumplen =', cumplen, '\nescapan =', escapan, '\nson na
 
 
 style='o-'
-ax, figure = plt.subplots(figsize=(15,7.5))
+ax, figure = plt.subplots(figsize=(12,6))
 (mass_closure(data_df=df, equation='Hand_2011')[0] / df['PM2.5']).plot(style=style, label='Hand')
 ((mass_closure(data_df=df, equation='Hand_2011_mod')[0] / df['PM2.5']).plot(style=style, color='r', label='Hand modif'))
 #((mass_closure(data_df=df, equation='DeBell_2006')[0] / df['PM2.5']).plot(style='o-', color='g', label='DeBell'))
