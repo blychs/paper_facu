@@ -18,6 +18,7 @@
 import numpy as np # librería de cálculo numérico
 from scipy import stats # librería estadística
 import matplotlib.pyplot as plt # para gráficos
+from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd # para tablas (tipo spreadsheets)
 from pandas.api.types import is_numeric_dtype # chequeos de tipo numérico
 # import xarray as xr # es como una extensión de Pandas para usar varias dimensiones
@@ -25,21 +26,21 @@ from pandas.api.types import is_numeric_dtype # chequeos de tipo numérico
 
 # Funciones que creé yo
 # %run ./funciones.ipynb
+# #%matplotlib widget
 
-# +
-df_raw = pd.read_excel('20210511_matriz_36_fin.xlsx', index_col=0, skiprows=[1,2]) # Matriz CSV curada
+
+df_raw = pd.read_excel('20210509_matriz_36_fin.xlsx', index_col=0, skiprows=[1,2]) # Matriz CSV curada
 
 ############# Remove outliers ############
 # Elimino outliers de la matriz definido como aquello que está a más de 3 sigmas 
 # (falta pasar a log)
 df_log = np.log(df_raw)
 #df = df_raw.mask(df_raw.sub(df_raw.mean()).div(df_raw.std()).abs().gt(3)) 
-df = df_raw.mask(df_log.sub(df_log.mean()).div(df_log.std()).abs().gt(3)) 
+df = df_raw.mask(df_log.sub(df_log.mean()).div(df_log.std()).abs().gt(9)) 
 
 df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2])
 
-
-# + tags=[]
+# + tags=[] jupyter={"outputs_hidden": true}
 print(df['C Orgánico'])
 
 # + jupyter={"source_hidden": true} tags=[]
@@ -51,12 +52,12 @@ print(df['C Orgánico'])
 #    ax = comparacion_tecnicas(df_tecnicas, i)
 #    plt.show()
 
-# + tags=[]
+# + tags=[] jupyter={"source_hidden": true, "outputs_hidden": true}
 # CÁLCULO DE MATRIZ DE CORRELACIONES
 df.corr().to_csv('correlacion_todo.csv')
 df.plot(label='')
 
-# + tags=[] jupyter={"outputs_hidden": true}
+# + tags=[] jupyter={"outputs_hidden": true, "source_hidden": true}
 # CÁLCULO DE LOGNORMALIDAD Y GRÁFICOS DE HISTOGRAMAS CLAVE
 
 #Histogramas de la versión lineal
@@ -75,7 +76,7 @@ for i in lista_de_elementos:
     plt.show()
 
 
-# +
+# + jupyter={"source_hidden": true, "outputs_hidden": true} tags=[]
 not_lognormal = []
 lognormality_nan = []
 
@@ -104,8 +105,8 @@ print('No son lognormales ' + str(not_lognormal))
 #        #plt.figure(figsize=(20,10))
 #        df.plot(y=i, label=i, xlim=(0, 96))
 #        plt.show()
-# -
 
+# + jupyter={"outputs_hidden": true} tags=[]
 df.plot.scatter('PM2.5', 'C Total')
 plt.show()
 df.plot.scatter('PM2.5', 'C Elemental')
@@ -117,7 +118,7 @@ plt.show()
 df.plot.scatter('PM2.5', 'Cl')
 plt.show()
 
-# +
+# + jupyter={"outputs_hidden": true} tags=[]
 #Ploteo de carbonosas y SO4
 
 (df['C Elemental'] * 8).plot(label='Elemental * 8')
@@ -133,7 +134,7 @@ plt.show()
 plt.legend()
 plt.show()
 
-# +
+# + jupyter={"outputs_hidden": true} tags=[]
 # Fracción de orgánico y de elemental
 fraccion_org = (df['C Orgánico']*1.4) / df['PM2.5']
 fraccion_elemental = df['C Elemental'] / df['PM2.5']
@@ -144,7 +145,7 @@ print(fraccion_org.mean())
 
 #print(fraccion_elemental.mean())
 
-# +
+# + tags=[] jupyter={"outputs_hidden": true}
 
 fraccion_NO3 = df['NO3'] / df['PM2.5']
 (fraccion_NO3).plot(label='NO3/PM2.5')
@@ -152,7 +153,7 @@ plt.legend()
 plt.show()
 print(fraccion_NO3.mean())
 
-# +
+# + tags=[]
 ###### NO SÉ QUÉ ES ESTO, PASA POR NO COMENTAR#####
 # for i in df:
 #     if 'KED' not in i:
@@ -166,15 +167,6 @@ print(fraccion_NO3.mean())
 # masa_explicada = (masa_explicada - df['PM2.5'].mean() - df['C Total'].mean())/(df['PM2.5'].mean())
 # print('masa explicada = ', str(masa_explicada))
 ##################################
-# -
-
-
-
-
-
-
-
-
 # +
 
 correlacion = corr_matrix(df)
@@ -189,7 +181,7 @@ plt.show()
 (df['V'] * 100).plot()
 (df['S'] - df['SO4'] * 0.33).plot()
 
-# +
+# + jupyter={"outputs_hidden": true} tags=[]
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
 
@@ -261,7 +253,7 @@ print('\n\nHand 2011 mod\ncumplen =', cumplen, '\nescapan =', escapan, '\nson na
 
 
 style='o-'
-ax, figure = plt.subplots(figsize=(20,10))
+ax, figure = plt.subplots(figsize=(15,7.5))
 (mass_closure(data_df=df, equation='Hand_2011')[0] / df['PM2.5']).plot(style=style, label='Hand')
 ((mass_closure(data_df=df, equation='Hand_2011_mod')[0] / df['PM2.5']).plot(style=style, color='r', label='Hand modif'))
 #((mass_closure(data_df=df, equation='DeBell_2006')[0] / df['PM2.5']).plot(style='o-', color='g', label='DeBell'))
@@ -270,6 +262,8 @@ plt.legend()
 
 plt.plot([38,120], [1+criterio, 1+criterio])
 plt.plot([38,120], [1-criterio, 1-criterio])
+plt.xticks(np.arange(30,120, 10))
+plt.grid()
 plt.show()
 
 # -
@@ -277,7 +271,7 @@ plt.show()
 value = ((mass_closure(data_df=df, equation='Hand_2011')[0]) / df['PM2.5'])[41]
 print(np.isnan(value))
 
-# + tags=[] jupyter={"outputs_hidden": true}
+# + tags=[]
 # Tortas
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
@@ -334,3 +328,49 @@ for i in range(len(lista_keys)):
     df_PM25_norm.plot(label='PM2.5')
     plt.legend()
     plt.show()
+
+# +
+# fig = plt.figure(figsize=(10, 10))
+# ax = fig.add_subplot(111, projection='3d')
+# ax.plot(df['NO3'], df['Cl'], df['Na'], 'o')
+# ax.set_xlabel(r'NO$_3^-$')
+# ax.set_ylabel(r'Cl$^-$')
+# ax.set_zlabel(r'Na$^+$')
+# plt.show()
+# 
+# plt.figure(figsize=(10,8))
+# plt.scatter(df['NO3'], df['Cl'], c=df['Na'], cmap='viridis')
+# plt.xlabel('NO3')
+# plt.xlim(0, 1.5)
+# plt.ylim(0, 0.4)
+# plt.ylabel('Cl')
+# plt.colorbar()
+# plt.show()
+# 
+# 
+# plt.figure(figsize=(10,8))
+# plt.scatter(df['Na'], df['NO3'], c=np.log10(df['Cl']), cmap='viridis')
+# plt.xlabel('Na')
+# #plt.xlim(0, 1.5)
+# plt.ylim(0, 1.5)
+# plt.ylabel('NO3')
+# plt.colorbar()
+# plt.show()
+# 
+valores_cloro = np.arange(0.4, 0.0, -0.05)
+
+fig, axs = plt.subplots(4, 2, figsize=(10, 20))
+iterador = 0
+for i in valores_cloro:
+    limite = i.round(3)
+    cond1 = df['Cl'] >= limite
+    cond2 = df['NO3'] <= 1.5
+    ax = axs[iterador // 2, iterador % 2]
+    ax.plot(df['Na'].where(cond1).where(cond2), df['NO3'].where(cond1).where(cond2), 'o', label=r'Cl $\geq$ ' + str(limite))
+    ax.set_ylim(0, 1.5)
+    ax.set_xlim(0, 0.7)
+    ax.set_xlabel('Na$^+$')
+    ax.set_ylabel('NO$_3^-$')
+    ax.legend()
+    iterador += 1
+plt.show()
