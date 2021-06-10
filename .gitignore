@@ -1,4 +1,3 @@
-*.csv
 *.png
 *.tex
 *.zip
@@ -7,7 +6,13 @@
 elsarticle*
 *.ipynb
 *.docx
+*.eps
+*.sh
 README
 lista_latex
 doc
 manifest.txt
+/access
+/stats
+/.ipynb_checkpoints
+/imagenes
