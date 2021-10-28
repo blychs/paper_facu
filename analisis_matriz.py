@@ -29,7 +29,7 @@ from pandas.api.types import is_numeric_dtype # chequeos de tipo numérico
 # #%matplotlib widget
 
 
-df_raw = pd.read_excel('20210511_matriz_36_fin.xlsx', index_col=0, skiprows=[1,2]) # Matriz CSV curada
+df_raw = pd.read_excel('20210621_matriz_total.xlsx', index_col=0, skiprows=[1,2])[36:] # Matriz CSV curada
 
 ############# Remove outliers ############
 # Elimino outliers de la matriz definido como aquello que está a más de 3 sigmas 
@@ -40,24 +40,16 @@ df = df_raw.mask(df_log.sub(df_log.mean()).div(df_log.std()).abs().gt(9))
 
 df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2])
 
-# + tags=[] jupyter={"outputs_hidden": true}
-print(df['C Orgánico'])
+# + tags=[]
+display(df)
 
-# + jupyter={"source_hidden": true} tags=[]
-## Ploteo de elementos claves que queramos ver para comparar técnicas
-## (modificar lista_elementos si se quiere cambiar cuáles)
-###########
-#lista_elementos = ['Ti', 'Mn', 'Ni', 'Zn', 'Pb']
-#for i in lista_elementos:
-#    ax = comparacion_tecnicas(df_tecnicas, i)
-#    plt.show()
-
-# + tags=[] jupyter={"source_hidden": true, "outputs_hidden": true}
+# + tags=[]
 # CÁLCULO DE MATRIZ DE CORRELACIONES
 df.corr().to_csv('correlacion_todo.csv')
-df.plot(label='')
+df.plot(legend=True)
+plt.show()
 
-# + tags=[] jupyter={"outputs_hidden": true, "source_hidden": true}
+# + tags=[]
 # CÁLCULO DE LOGNORMALIDAD Y GRÁFICOS DE HISTOGRAMAS CLAVE
 
 #Histogramas de la versión lineal
@@ -76,7 +68,7 @@ for i in lista_de_elementos:
     plt.show()
 
 
-# + jupyter={"source_hidden": true, "outputs_hidden": true} tags=[]
+# + tags=[]
 not_lognormal = []
 lognormality_nan = []
 
@@ -89,7 +81,7 @@ with open('lognormalidad.txt', 'w') as lognorm:
         if not df[i].isna().all() and i != 'Se.1': 
             p_is_lognormal = test_lognormality(df[i])
             print(i, str(p_is_lognormal))
-            if p_is_lognormal < 0.05:
+            if p_is_lognormal < 0.01:
                 not_lognormal.append(i)
             elif p_is_lognormal != p_is_lognormal: #Check if it's np.nan
                 lognormality_nan.append(i)
@@ -106,7 +98,7 @@ print('No son lognormales ' + str(not_lognormal))
 #        df.plot(y=i, label=i, xlim=(0, 96))
 #        plt.show()
 
-# + jupyter={"outputs_hidden": true} tags=[]
+# + tags=[]
 df.plot.scatter('PM2.5', 'C Total')
 plt.show()
 df.plot.scatter('PM2.5', 'C Elemental')
@@ -118,7 +110,7 @@ plt.show()
 df.plot.scatter('PM2.5', 'Cl')
 plt.show()
 
-# + jupyter={"outputs_hidden": true} tags=[]
+# + tags=[]
 #Ploteo de carbonosas y SO4
 
 (df['C Elemental'] * 8).plot(label='Elemental * 8')
@@ -134,7 +126,7 @@ plt.show()
 plt.legend()
 plt.show()
 
-# + jupyter={"outputs_hidden": true} tags=[]
+# + tags=[]
 # Fracción de orgánico y de elemental
 fraccion_org = (df['C Orgánico']*1.4) / df['PM2.5']
 fraccion_elemental = df['C Elemental'] / df['PM2.5']
@@ -145,7 +137,7 @@ print(fraccion_org.mean())
 
 #print(fraccion_elemental.mean())
 
-# + tags=[] jupyter={"outputs_hidden": true}
+# + tags=[]
 
 fraccion_NO3 = df['NO3'] / df['PM2.5']
 (fraccion_NO3).plot(label='NO3/PM2.5')
@@ -183,7 +175,7 @@ plt.show()
 
 # + tags=[]
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
-           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Hand_2011_mod']
 
 #for k in methods:
 #    print('\n', k)
@@ -198,18 +190,30 @@ methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000'
 for i in methods:
     print('\n\n'+ str(i))
     mass = mass_closure(data_df=df, equation=i)
-    print('Total explained mass = ', (mass[0] / df['PM2.5']).mean().round(3) * 100, '%')
+    print('Total explained mass = ', ((mass[0] / df['PM2.5']).mean()* 100).round(1), '%')
     for key in mass[1].keys():
         print(key, '=', ((mass[1][key] / df['PM2.5']).mean() * 100).round(1), '%')
-#    print('organic_mass ', (mass_closure(data_df=df, equation=i)[2] / df['PM2.5']).mean())
-#    print('EC ', (mass_closure(data_df=df, equation=i)[3] / df['PM2.5']).mean())
-#    print('geological_minerals ', (mass_closure(data_df=df, equation=i)[4] / df['PM2.5']).mean())
-#    print('seasalt ', (mass_closure(data_df=df, equation=i)[5] / df['PM2.5']).mean())
-#    print('trace_elements ', (mass_closure(data_df=df, equation=i)[6] / df['PM2.5']).mean())
-#    print('others ', (mass_closure(data_df=df, equation=i)[7] / df['PM2.5']).mean())
-#    print('unexplained ', (mass_closure(data_df=df, equation=i)[8] / df['PM2.5']).mean())
-    
 
+
+
+mass = mass_closure(data_df=df, equation='Hand_2011')[1]
+labels = []
+sizes = []
+
+for x, y in mass.items():
+    labels.append(x)
+    sizes.append(y.mean())
+
+
+print(labels)
+labels_sty = ['II', 'OM', 'EC', 'GM', 'SSA', 'S/E']
+# Plot
+plt.figure(figsize=(4.5,5))
+plt.pie(sizes, labels=labels_sty)
+
+plt.axis('equal')
+plt.savefig('imagenes/torta_media_hand.pdf')
+plt.show()
 # closure, inorganic_ions, organic_mass, elemental_C,
 #geological_minerals, salt, trace_elements, others, unexplained =
 
@@ -217,55 +221,53 @@ for i in methods:
 
 
 # +
-escapan = 0
-cumplen = 0
-son_nan = 0
-criterio = 0.2
-for i in range(38,120):
-    value = ((mass_closure(data_df=df, equation='Hand_2011')[0]) / df['PM2.5'])[i]
-    if (1-criterio) < value < (1+criterio):
-#        print('Filtro', i, value)
-        cumplen += 1
-    elif np.isnan(value):
-#        print('Filtro', i, 'is nan')
-        son_nan +=1
-    else:
-#        print('Filtro', i, value, 'escapa')
-        escapan += 1
-
-print('Hand 2011\ncumplen =', cumplen, '\nescapan =', escapan, '\nson nan =', son_nan)
-
-escapan = 0
-cumplen = 0
-son_nan = 0
-criterio = 0.2
-for i in range(38,120):
-    value = ((mass_closure(data_df=df, equation='Hand_2011_mod')[0]) / df['PM2.5'])[i]
-    if (1-criterio) < value < (1+criterio):
-#        print('Filtro', i, value)
-        cumplen += 1
-    elif np.isnan(value):
-#        print('Filtro', i, 'is nan')
-        son_nan +=1
-    else:
-#        print('Filtro', i, value, 'escapa')
-        escapan += 1
-
-print('\n\nHand 2011 mod\ncumplen =', cumplen, '\nescapan =', escapan, '\nson nan =', son_nan)
 
 
-style='o-'
-ax, figure = plt.subplots(figsize=(12,6))
-(mass_closure(data_df=df, equation='Hand_2011')[0] / df['PM2.5']).plot(style=style, label='Hand')
-((mass_closure(data_df=df, equation='Hand_2011_mod')[0] / df['PM2.5']).plot(style=style, color='r', label='Hand modif'))
+methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Hand_2011_mod']
+
+for m in methods:
+    escapan = 0
+    escapan_defecto = 0
+    escapan_exceso = 0
+    cumplen = 0
+    son_nan = 0
+    criterio = 0.2
+    for i in range(38,120):
+        value = ((mass_closure(data_df=df, equation=m)[0]) / df['PM2.5'])[i]
+        if (1-criterio) < value < (1+criterio):
+#           print('Filtro', i, value)
+            cumplen += 1
+        elif np.isnan(value):
+#           print('Filtro', i, 'is nan')
+            son_nan +=1
+        else:
+#            print('Filtro', i, value, 'escapa')
+            escapan += 1
+            if (1+criterio) < value:
+                escapan_exceso += 1
+            else:
+                escapan_defecto += 1
+    print(m + '\ncumplen =', cumplen, '\nescapan =', escapan,
+          '\n\tpor defecto =', escapan_defecto, '\n\tpor exceso =', escapan_exceso,
+          '\nson nan =', son_nan, '\n')
+
+
+style='.-'
+ax, figure = plt.subplots()
+hand = (mass_closure(data_df=df, equation='Hand_2011')[0] / df['PM2.5'])
+hand_mod = (mass_closure(data_df=df, equation='Hand_2011_mod')[0] / df['PM2.5'])
+plt.plot(df.)
+            
 #((mass_closure(data_df=df, equation='DeBell_2006')[0] / df['PM2.5']).plot(style='o-', color='g', label='DeBell'))
 #((mass_closure(data_df=df, equation='Malm_2000')[0] / df['PM2.5']).plot(style='o-', color='k', label='Malm'))
 plt.legend()
 
-plt.plot([38,120], [1+criterio, 1+criterio])
-plt.plot([38,120], [1-criterio, 1-criterio])
+plt.plot([38,120], [1+criterio, 1+criterio], 'k:')
+plt.plot([38,120], [1-criterio, 1-criterio], 'k:')
 plt.xticks(np.arange(30,120, 10))
-plt.grid()
+#plt.grid()
+plt.savefig('imagenes/reconstruccion_masica_hand2011.pdf')
 plt.show()
 
 # -
@@ -278,25 +280,23 @@ print(np.isnan(value))
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
 
-labels = 'II', 'OM', 'EC','GM', 'Sea S', 'TE', 'O', 'NC'
-
 #sizes = (mass_closure(data_df=df.iloc[1], equation=k)[1:])
 for k in methods:
     print(k)
     for j in range(len(df)):
-        print(j)
-        sizes = (mass_closure(data_df=df.iloc[j], equation=k)[1:])
-   # print(len(sizes))
-    #explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+        print(df.index[j])
+        sizes = (mass_closure(data_df=df.iloc[j], equation=k)[1])
+        labels = list(sizes.keys())
+        values = list(sizes.values())
         try:
             fig1, ax1 = plt.subplots()
-            ax1.pie(sizes, labels=labels)
+            ax1.pie(values, labels=labels)
             ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
             plt.savefig('imagenes/tortas/torta_filtro_' + 
                         str(df.index[j]) + '_metodo_' + k + '.eps')
             plt.show()
         except:
-            print('no se pudo hacer', j)
+            print('no se pudo hacer', df.index[j])
 
 # + tags=[]
 # Correlaciones de todo con todo
@@ -330,8 +330,43 @@ for i in range(len(lista_keys)):
     df_PM25_norm.plot(label='PM2.5')
     plt.legend()
     plt.show()
+# -
+
+(df['C Elemental'] / df['C Orgánico']).plot()
 
 # +
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(df['NO3'], df['Cl'], df['Na'], 'o')
+ax.set_xlabel(r'NO$_3^-$')
+ax.set_ylabel(r'Cl$^-$')
+ax.set_zlabel(r'Na$^+$')
+plt.show()
+
+plt.figure(figsize=(10,8))
+plt.scatter(df['NO3'], df['Cl'], c=df['Na'], cmap='viridis')
+plt.xlabel('NO3')
+plt.xlim(0, 1.5)
+plt.ylim(0, 0.4)
+plt.ylabel('Cl')
+plt.colorbar()
+plt.show()
+
+
+plt.figure(figsize=(5,4))
+plt.scatter(df['Na'], df['NO3'], c=np.log10(df['Cl']), cmap='viridis')
+plt.xlabel('Na')
+#plt.xlim(0, 1.5)
+plt.ylim(0, 1.5)
+plt.ylabel('NO3')
+cbar = plt.colorbar()
+cbar.set_label('log(Cl)')
+plt.savefig('imagenes/3d_na.pdf')
+plt.show()
+
+
+
+# + tags=[]
 # fig = plt.figure(figsize=(10, 10))
 # ax = fig.add_subplot(111, projection='3d')
 # ax.plot(df['NO3'], df['Cl'], df['Na'], 'o')
