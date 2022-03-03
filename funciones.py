@@ -118,7 +118,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
         # Pide que sean por XRF salvo Na+ y Mg++, que deberían ser por AAS. No es el caso en ninguno
-        trace_elements = (data_df2['Cl'] + data_df2['Na'] + data_df2['K'] +
+        trace_elements = (data_df2['Cl'] + data_df2['Na total'] + data_df2['K'] +
                           data_df2['Ti'] + data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +
@@ -135,7 +135,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         elemental_C = data_df2['C Elemental']
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
-        trace_elements = (data_df2['Cl'] + data_df2['Na'] + data_df2['K'] +
+        trace_elements = (data_df2['Cl'] + data_df2['Na total'] + data_df2['K'] +
                           data_df2['Ti'] + data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +
@@ -163,7 +163,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         elemental_C = data_df2['C Elemental']
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
-        salt = data_df2['Na'] + data_df2['Cl']
+        salt = data_df2['Na total'] + data_df2['Cl']
         trace_elements = (data_df2['Ti'] + data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +
@@ -181,7 +181,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'] +
                                1.67 * data_df2['Ti'])
-        trace_elements = (data_df2['Cl'] + data_df2['Na'] + data_df2['K'] +
+        trace_elements = (data_df2['Cl'] + data_df2['Na total'] + data_df2['K'] +
                           data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +
@@ -209,7 +209,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
-        salt = data_df2['Cl'] + 1.4486 * data_df2['Na']
+        salt = data_df2['Cl'] + 1.4486 * data_df2['Na.1']
         trace_elements =(data_df2['K'] +  data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +

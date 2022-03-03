@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.10.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -226,6 +226,9 @@ plt.show()
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Hand_2011_mod']
 
+labels = ['Solomon 1989', 'Chow 1994', 'Malm 1994', 'Chow 1996', 'Andrews 2000',
+         'Malm 2000', 'Maenhaut 2002', 'DeBell 2006', 'Hand 2011', 'Hand 2011 mod']
+
 for m in methods:
     escapan = 0
     escapan_defecto = 0
@@ -254,7 +257,7 @@ for m in methods:
 
 
 style='.-'
-ax, figure = plt.subplots()
+figure, ax = plt.subplots()
 hand = ((mass_closure(data_df=df, equation='Hand_2011')[0] / df['PM2.5'])).plot(style=style, label='Hand 2011')
 hand_mod = (mass_closure(data_df=df, equation='Hand_2011_mod')[0] / df['PM2.5']).plot(style=style, color='r', label='Hand 2011 mod')
             
@@ -269,12 +272,43 @@ plt.hlines(1.2, xmin=df.index[0], xmax=df.index[-1], color='k', linestyles=':')
 plt.savefig('imagenes/reconstruccion_masica_hand2011.pdf')
 plt.show()
 
+
+
+
+# +
+methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Hand_2011_mod']
+
+labels = ['Solomon 1989', 'Chow 1994', 'Malm 1994', 'Chow 1996', 'Andrews 2000',
+         'Malm 2000', 'Maenhaut 2002', 'DeBell 2006', 'Hand 2011', 'Hand 2011 mod']
+
+figs, axs = plt.subplots(2, 5, figsize=(16,5))
+for i in range(len(methods) - 1):
+    style='.-'
+    xax = i%2
+    yax = int(i/2)
+    axs[xax, yax].plot((mass_closure(data_df=df, equation=methods[i])[0] / df['PM2.5']), label=labels[i])
+    axs[xax, yax].set_title(labels[i])
+
+    axs[xax, yax].hlines(.8, xmin=df.index[0], xmax=df.index[-1], color='k', linestyles=':')
+    axs[xax, yax].hlines(1.2, xmin=df.index[0], xmax=df.index[-1], color='k', linestyles=':')
+
+for ax in axs.flat:
+    ax.set(xlabel='Date', ylabel='Fraction explained')
+    ax.tick_params(labelrotation=45)
+
+# Hide x labels and tick labels for top plots and y ticks for right plots.
+for ax in axs.flat:
+    ax.label_outer()
+#plt.setp(axs.xaxis.get_majorticklabels(), rotation=45)
+
+
 # -
 
 value = ((mass_closure(data_df=df, equation='Hand_2011')[0]) / df['PM2.5'])[41]
 print(np.isnan(value))
 
-# + tags=[] jupyter={"outputs_hidden": true}
+# + tags=[]
 # Tortas
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
