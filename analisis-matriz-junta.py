@@ -124,7 +124,7 @@ for i in range(1, len(keys)-1):
         plt.savefig(f'corr_nuevas/{keys[i]}_vs_{keys[j]}.png')
         plt.show()
 
-# + jupyter={"outputs_hidden": true} tags=[]
+# + tags=[]
 for i in df.keys():
     df[i].plot(label=i)
     plt.legend()
@@ -132,7 +132,7 @@ for i in df.keys():
 
 # +
 df['Sr'] = 0
-df['S'] = df['SO4']
+df['S'] = df['SO4'] * 1/3 #1/3 = Mr S / Mr SO4
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002',
            'DeBell_2006',
@@ -176,16 +176,20 @@ for i in methods:
     for key in mass[1].keys():
         print(key, '=', ((mass[1][key] / df['PM2.5']).mean() * 100).round(1), '%') 
 
-plt.figure(figsize=[20,10])
+
+
+# -
+
+plt.figure(figsize=[19,10])
 ((reconstruccion_masica['Hand_2011'][0])/df['PM2.5']).plot(style='o-', label='Hand')
 ((reconstruccion_masica['Hand_2011_mod'][0])/df['PM2.5']).plot(style='o-', label='Hand_mod')
 ((reconstruccion_masica['DeBell_2006'][0])/df['PM2.5']).plot(style='o-', label='DeBelle')
-plt.plot([0,120],[0.8,0.8], ':')
-plt.plot([0,120],[1.2,1.2], ':')
+#plt.plot([0,120],[0.8,0.8], ':')
+#plt.plot([0,120],[1.2,1.2], ':')
+plt.grid(axis='y', markevery=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0])
 plt.legend()
 plt.show()
 plt.plot(df['PM2.5'], reconstruccion_masica['Hand_2011'][0]/df['PM2.5'], 'o')
 plt.xlabel('PM2.5')
 plt.ylabel('Fracción explicada')
 plt.show()
-
