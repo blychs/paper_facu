@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.10.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -209,7 +209,7 @@ def mass_closure(data_df, equation='Chow_1996'):
         geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
-        salt = data_df2['Cl'] + 1.4486 * data_df2['Na.1']
+        salt = data_df2['Cl'] + 1.4486 * data_df2['Na total']
         trace_elements =(data_df2['K'] +  data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +
