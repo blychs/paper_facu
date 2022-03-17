@@ -29,12 +29,16 @@ import xarray as xr # es como una extensión de Pandas para usar varias dimensio
 # + tags=[]
 #Carga datos
 
-df = pd.read_excel("Matriz.xlsx", sheet_name="valores", skiprows=[1,2], decimal=',').replace('#VALUE!', np.nan).replace("#DIV/0!", np.nan)
+df = pd.read_excel("Matriz.xlsx", sheet_name="valores", skiprows=[1,2], decimal=',').replace('#VALUE!', np.nan).replace("#DIV/0!", np.nan)[0:-2]
 #df = df.where(df > 0)
 df['Date'] = pd.to_datetime(df['Date'], format="%Y-%m-%d %H:%M:%S")
 
+df_normal = df.where(df['E. Regional binario'] == 'no')
+df_evento = df.where(df['E. Regional binario'] == 'si')
 
-# +
+
+
+# + jupyter={"source_hidden": true} tags=[]
 #Carga meteorologia
 obsbaires = pd.read_csv('../../doctorado/paper_laura/ARCAL_ISH/obsbaires.csv', delimiter=';') # obsbaires2 es abrir y volver a cerrar en excel para que ponga bien los delimiters, si no mezcla ; y ,
 obsbaires = obsbaires[(obsbaires['date[yyyymmddHHMM]'] >= 201904031200)]
@@ -101,7 +105,7 @@ matriz_de_corr = matriz_de_corr.copy().round(decimals=2)
 
 matriz_de_corr.to_csv('matriz_de_corr.csv', float_format='%g')
 
-# + jupyter={"source_hidden": true} tags=[]
+# + tags=[] jupyter={"source_hidden": true}
 df['PM2.5'].plot(style='.-')
 df['C Orgánico'].plot(style='.-')
 df['C Total'].plot(style='.-')
@@ -112,36 +116,45 @@ plt.xlabel('PM2.5')
 plt.ylabel('OC')
 print(df.keys())
 
-# + tags=[]
+# + tags=[] jupyter={"source_hidden": true}
 keys = df.keys()
 
-for i in range(1, len(keys)-1):
+for i in range(4, len(keys)-1):
     for j in range(i+1, len(keys)-1):
-        plt.scatter(df[keys[i]], df[keys[j]])
+        plt.scatter(df_normal[keys[i]], df_normal[keys[j]])
+        plt.scatter(df_evento[keys[i]], df_evento[keys[j]])
         plt.grid()
         plt.xlabel(keys[i])
         plt.ylabel(keys[j])
         plt.savefig(f'corr_nuevas/{keys[i]}_vs_{keys[j]}.png')
         plt.show()
 
-# + tags=[]
-for i in df.keys():
+# + tags=[] jupyter={"source_hidden": true}
+for i in df.keys()[4:]:
     df[i].plot(label=i)
     plt.legend()
     plt.show()
 
-# +
+# + tags=[]
 df['Sr'] = 0
 df['S'] = df['SO4'] * 1/3 #1/3 = Mr S / Mr SO4
+df_normal['Sr'] = 0
+df_normal['S'] = df['SO4'] * 1/3 
+df_evento['Sr'] = 0
+df_evento['S'] = df['SO4'] * 1/3 
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002',
            'DeBell_2006',
            'Hand_2011', 'Hand_2011_mod']
 
 reconstruccion_masica = {}
+reconstruccion_masica_normal = {}
+reconstruccion_masica_evento = {}
 
 for i in methods:
     reconstruccion_masica[i] = mass_closure(df, i)
+    reconstruccion_masica_normal[i] = mass_closure(df_normal, i)
+    reconstruccion_masica_evento[i] = mass_closure(df_evento, i)
 
 for m in methods:
     escapan = 0
@@ -151,7 +164,7 @@ for m in methods:
     son_nan = 0
     criterio = 0.2
     for i in range(len(df)):
-        value = ((mass_closure(data_df=df, equation=m)[0]) / df['PM2.5'])[i]
+        value = ((mass_closure(data_df=df_normal, equation=m)[0]) / df_normal['PM2.5'])[i]
         if (1-criterio) < value < (1+criterio):
 #           print('Filtro', i, value)
             cumplen += 1
@@ -181,15 +194,22 @@ for i in methods:
 # -
 
 plt.figure(figsize=[19,10])
-((reconstruccion_masica['Hand_2011'][0])/df['PM2.5']).plot(style='o-', label='Hand')
-((reconstruccion_masica['Hand_2011_mod'][0])/df['PM2.5']).plot(style='o-', label='Hand_mod')
-((reconstruccion_masica['DeBell_2006'][0])/df['PM2.5']).plot(style='o-', label='DeBelle')
-#plt.plot([0,120],[0.8,0.8], ':')
-#plt.plot([0,120],[1.2,1.2], ':')
-plt.grid(axis='y', markevery=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0])
+#display(df)
+#display(df_normal)
+#for i in reconstruccion_masica.keys():
+for i in ['Hand_2011']:
+    ((reconstruccion_masica[i][0])/df['PM2.5']).plot(style='o-', label=i)
+    ((reconstruccion_masica_normal[i][0])/df['PM2.5']).plot(style='o', label=f'{i} normal')
+    ((reconstruccion_masica_evento[i][0])/df['PM2.5']).plot(style='o', label=f'{i} evento')
+plt.yticks(np.arange(0, 2.8, step=0.2))
+plt.grid(axis='y')
 plt.legend()
 plt.show()
-plt.plot(df['PM2.5'], reconstruccion_masica['Hand_2011'][0]/df['PM2.5'], 'o')
+plt.plot(df['PM2.5'], reconstruccion_masica_evento['Hand_2011'][0]/df['PM2.5'], 'o')
 plt.xlabel('PM2.5')
 plt.ylabel('Fracción explicada')
 plt.show()
+
+# Correlaciones con meteorologia
+print(obsbaires.keys())
+
