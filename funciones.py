@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.10.2
+#       jupytext_version: 1.13.8
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -96,6 +96,7 @@ def mass_closure(data_df, equation='Chow_1996'):
     closure = 0
     data_df2 = data_df.fillna(0)
     data_df2['Si'] = 2.4729 * data_df2['Al']
+    data_df2['uSi'] = 2.4729 * data_df2['uAl'] * 2 # Ese * 2 es solo para agrandar la incert Si
     
     if equation == 'Macias_1981':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4SO3']
@@ -110,6 +111,10 @@ def mass_closure(data_df, equation='Chow_1996'):
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                        'trace_elements': trace_elements}
+        
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                       'trace_elements_unc': trace_elements_unc}
       
     if equation == 'Solomon_1989':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
@@ -129,6 +134,10 @@ def mass_closure(data_df, equation='Chow_1996'):
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'trace_elements': trace_elements}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements_unc': trace_elements_unc}
+        
     if equation == 'Chow_1994':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
@@ -146,6 +155,10 @@ def mass_closure(data_df, equation='Chow_1996'):
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'trace_elements': trace_elements}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements': trace_elements_unc}
+        
     if equation == 'Malm_1994':
         inorganic_ions = 4.125 * data_df2['S']
         organic_mass = 1.4 * data_df2['C Orgánico']
@@ -154,8 +167,12 @@ def mass_closure(data_df, equation='Chow_1996'):
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
         
-        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
-                      'elemental_C': elemental_C, 'geological_minerals': geological_minerals}
+        categories = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc}
+        
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc_unc': geological_minerals_unc,
+                      'trace_elements_unc': trace_elements_unc}
         
     if equation == 'Chow_1996':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
@@ -174,6 +191,10 @@ def mass_closure(data_df, equation='Chow_1996'):
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'salt': salt, 'trace_elements': trace_elements}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements_unc': trace_elements_unc}
+        
     if equation == 'Andrews_2000':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
@@ -191,6 +212,10 @@ def mass_closure(data_df, equation='Chow_1996'):
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'trace_elements': trace_elements}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements_unc': trace_elements_unc}
+        
     if equation == 'Malm_2000':
         inorganic_ions = 1.125 * data_df2['S'] + 1.29 * data_df2['NO3']
         organic_mass = 1.4 * data_df2['C Orgánico']
@@ -202,6 +227,10 @@ def mass_closure(data_df, equation='Chow_1996'):
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals}
     
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements_unc': trace_elements_unc}
+        
     if equation == 'Maenhaut_2002':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
         organic_mass = 1.4 * data_df2['C Orgánico']
@@ -221,6 +250,10 @@ def mass_closure(data_df, equation='Chow_1996'):
               'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
               'salt': salt, 'trace_elements': trace_elements, 'others': others}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass': organic_mass_unc, 
+                      'elemental_C': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements': trace_elements_unc}
+        
     if equation == 'DeBell_2006':
         inorganic_ions = 4.125 * data_df2['S'] + 1.29 * data_df2['NO3']
         organic_mass = 1.8 * data_df2['C Orgánico']
@@ -232,33 +265,93 @@ def mass_closure(data_df, equation='Chow_1996'):
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements_unc': trace_elements_unc}
+        
     if equation == 'Hand_2011':
         inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
+        inorganic_ions_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 )
         organic_mass = 1.8 * data_df2['C Orgánico']
-        elemental_C = data_df2['C Elemental']
+        organic_mass_unc = 1.8 * data_df2['uC Orgánico'] # Un solo elemento
+        elemental_C = data_df2['C Elemental'] # Un solo elemento
+        elemental_C_unc = data_df2['uC Elemental']
         geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
+        geological_minerals_unc = np.sqrt((2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
+                               (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
+                               (2.42 * data_df2['uFe'])**2)
         salt = 1.8 * data_df2['Cl']
+        salt_unc = 1.8 * data_df2['uCl'] # Un solo elemento
         
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'salt': salt}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc}
+        
+        closure_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 + 
+                                       (1.8 * data_df2['uC Orgánico'])**2 +
+                                       data_df2['uC Elemental']**2 +
+                                       (2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
+                                       (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
+                                       (2.42 * data_df2['uFe'])**2 +
+                                       (1.8 * data_df2['uCl'])**2 )
+        
     if equation == 'Hand_2011_mod':
         inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
-        # organic_mass = 1.8 * data_df2['C Orgánico']
-        organic_mass = 2.08 * data_df2['C Orgánico']
-        elemental_C = data_df2['C Elemental']
+        inorganic_ions_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 )
+        organic_mass = 1.8 * data_df2['C Orgánico']
+        organic_mass_unc = np.sqrt( (1.8 * data_df2['uC Orgánico']) ** 2 + (0.2 * data_df2['C Orgánico']) ** 2 )
+        elemental_C = data_df2['C Elemental'] # Un solo elemento
+        elemental_C_unc = data_df2['uC Elemental']
         geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
+        geological_minerals_unc = np.sqrt((2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
+                               (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
+                               (2.42 * data_df2['uFe'])**2)
         salt = 1.8 * data_df2['Cl']
-
-        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
-              'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
-              'salt': salt}
+        salt_unc = 1.8 * data_df2['uCl'] # Un solo elemento
         
+        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
+                      'salt': salt}
+        
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc}
+        
+        closure_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 + 
+                                       (1.8 * data_df2['uC Orgánico'])**2 +
+                                       organic_mass_unc**2 +     # CHEQUEAR
+                                       (2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
+                                       (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
+                                       (2.42 * data_df2['uFe'])**2 +
+                                       (1.8 * data_df2['uCl'])**2 )
+        
+#    if equation == 'Hand_2011_mod':
+#        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
+#                      'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
+#                      'trace_elements': trace_elements}
+#        inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
+#        # organic_mass = 1.8 * data_df2['C Orgánico']
+#        organic_mass = 2.0 * data_df2['C Orgánico']
+#        elemental_C = data_df2['C Elemental']
+#        geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
+#                               1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
+#                               2.42 * data_df2['Fe'])
+#        salt = 1.8 * data_df2['Cl']
+#
+#        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
+#              'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
+#              'salt': salt}
+#        
+#        categories = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+#                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+#                      'trace_elements_unc': trace_elements_unc}
+#        
     if equation == 'Simon_2011':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4NO3']
         organic_mass = 1.8 * data_df2['C Orgánico']
@@ -272,45 +365,45 @@ def mass_closure(data_df, equation='Chow_1996'):
               'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
               'salt': salt, 'others': others}
         
+        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
+                      'trace_elements_unc': trace_elements_unc}
+        
     closure = sum(categories.values())
     categories['unexplained'] = data_df2['PM2.5'] - closure
-    return (closure, categories)
+    categories_unc['unexplained'] = data_df2['PM2.5'] * np.nan
+    return closure, categories, categories_unc, closure_unc
 
 
 
-# -
 
-class Filtro:
-    '''Clase que contiene los 
-    datos relevantes de los filtros'''
-    def __init__(self, da):
-        self.mass = da['PM2.5']
-        self.Cl = da['Cl']
-        self.NO3 = da['NO3']
-        self.Na = da['Na']
-        self.NH4 = da['NH4']
-        self.SO4 = da['SO4']
-    
-    def Solomon_1989(self, value='inorganic_ions'):
-        if value == 'inorganic_ions':
-            return self.SO4 + self.NO3 + self.NH4
-        
-    def Chow_1994(self, value='inorganic_ions'):
-        if value == 'inorganic_ions':
-            return self.SO4 + self.NO3 + self.NH4
-        
-    def Chow_1996(self, value='inorganic_ions'):
-        if value == 'inorganic_ions':
-            return self.SO4 + self.NO3 + self.NH4
-        
-    def Andews_2000(self, value='inorganic_ions'):
-        if value == 'inorganic_ions':
-            return self.SO4 + self.NO3 + self.NH4
-        
-    def Maenhaut_2002(self, value='inorganic_ions'):
-        if value == 'inorganic_ions':
-            return self.SO4 + self.NO3 + self.NH4
-        
-    def Hand_2011(self, value='inorganic_ions'):
-        if value == 'inorganic_ions':
-            return 1.375 * self.SO4 + 1.29 * self.NO3
+# +
+# class Filtro(object):
+#     '''Clase que contiene los 
+#     datos relevantes de los filtros'''
+#     def __init__(self, da):
+# 
+#     
+#     def Solomon_1989(self, value='inorganic_ions'):
+#         if value == 'inorganic_ions':
+#             return self.SO4 + self.NO3 + self.NH4
+#         
+#     def Chow_1994(self, value='inorganic_ions'):
+#         if value == 'inorganic_ions':
+#             return self.SO4 + self.NO3 + self.NH4
+#         
+#     def Chow_1996(self, value='inorganic_ions'):
+#         if value == 'inorganic_ions':
+#             return self.SO4 + self.NO3 + self.NH4
+#         
+#     def Andews_2000(self, value='inorganic_ions'):
+#         if value == 'inorganic_ions':
+#             return self.SO4 + self.NO3 + self.NH4
+#         
+#     def Maenhaut_2002(self, value='inorganic_ions'):
+#         if value == 'inorganic_ions':
+#             return self.SO4 + self.NO3 + self.NH4
+#         
+#     def Hand_2011(self, value='inorganic_ions'):
+#         if value == 'inorganic_ions':
+#             return 1.375 * self.SO4 + 1.29 * self.NO3

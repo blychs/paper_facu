@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.10.2
+#       jupytext_version: 1.13.8
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -29,16 +29,25 @@ import xarray as xr # es como una extensión de Pandas para usar varias dimensio
 # + tags=[]
 #Carga datos
 
-df = pd.read_excel("Matriz.xlsx", sheet_name="valores", skiprows=[1,2], decimal=',').replace('#VALUE!', np.nan).replace("#DIV/0!", np.nan)[0:-2]
+df_conc = pd.read_excel("PMF_BA_CONCyUNC.xlsx", decimal=',').replace(-999., np.nan)
 #df = df.where(df > 0)
-df['Date'] = pd.to_datetime(df['Date'], format="%Y-%m-%d %H:%M:%S")
+df_conc['date'] = pd.to_datetime(df_conc['date'], format="%Y-%m-%d %H:%M:%S")
 
-df_normal = df.where(df['E. Regional binario'] == 'no')
-df_evento = df.where(df['E. Regional binario'] == 'si')
+#df_unc = pd.read_excel("PMF_BA_completo.xlsx", sheet_name="UNC", decimal=',').replace(-999., np.nan)
+#df_unc['date'] = pd.to_datetime(df_unc['date'], format="%Y-%m-%d %H:%M:%S")
+
+df_conc = df_conc.rename(columns={'PM2,5': 'PM2.5'})
+#df_unc = df_unc.rename(columns={'PM2,5': 'PM2.5'})
+
+display(df_conc)
+#display(df_unc)
+
+#df_normal = df.where(df['E. Regional binario'] == 'no')
+#df_evento = df.where(df['E. Regional binario'] == 'si')
 
 
 
-# + jupyter={"source_hidden": true} tags=[]
+# + tags=[] jupyter={"source_hidden": true}
 #Carga meteorologia
 obsbaires = pd.read_csv('../../doctorado/paper_laura/ARCAL_ISH/obsbaires.csv', delimiter=';') # obsbaires2 es abrir y volver a cerrar en excel para que ponga bien los delimiters, si no mezcla ; y ,
 obsbaires = obsbaires[(obsbaires['date[yyyymmddHHMM]'] >= 201904031200)]
@@ -129,19 +138,20 @@ for i in range(4, len(keys)-1):
         plt.savefig(f'corr_nuevas/{keys[i]}_vs_{keys[j]}.png')
         plt.show()
 
-# + tags=[] jupyter={"source_hidden": true}
+# + tags=[]
 for i in df.keys()[4:]:
     df[i].plot(label=i)
     plt.legend()
     plt.show()
 
-# + tags=[]
-df['Sr'] = 0
-df['S'] = df['SO4'] * 1/3 #1/3 = Mr S / Mr SO4
-df_normal['Sr'] = 0
-df_normal['S'] = df['SO4'] * 1/3 
-df_evento['Sr'] = 0
-df_evento['S'] = df['SO4'] * 1/3 
+# + tags=[] jupyter={"outputs_hidden": true}
+df_conc['Sr'] = 0
+df_conc['S'] = df_conc['SO4'] * 1/3 #1/3 = Mr S / Mr SO4
+df_conc['Hg'] = df_conc['SO4'] * 0
+# df_conc_normal['Sr'] = 0
+# df_conc_normal['S'] = df_conc['SO4'] * 1/3 
+# df_conc_evento['Sr'] = 0
+# df_conc_evento['S'] = df_conc['SO4'] * 1/3 
 methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002',
            'DeBell_2006',
@@ -152,9 +162,9 @@ reconstruccion_masica_normal = {}
 reconstruccion_masica_evento = {}
 
 for i in methods:
-    reconstruccion_masica[i] = mass_closure(df, i)
-    reconstruccion_masica_normal[i] = mass_closure(df_normal, i)
-    reconstruccion_masica_evento[i] = mass_closure(df_evento, i)
+    reconstruccion_masica[i] = mass_closure(df_conc, i)
+    #reconstruccion_masica_normal[i] = mass_closure(df_conc_normal, i)
+    #reconstruccion_masica_evento[i] = mass_closure(df_conc_evento, i)
 
 for m in methods:
     escapan = 0
@@ -163,8 +173,8 @@ for m in methods:
     cumplen = 0
     son_nan = 0
     criterio = 0.2
-    for i in range(len(df)):
-        value = ((mass_closure(data_df=df_normal, equation=m)[0]) / df_normal['PM2.5'])[i]
+    for i in range(len(df_conc)):
+        value = ((mass_closure(data_df=df_conc, equation=m)[0]) / df_conc['PM2.5'])[i]
         if (1-criterio) < value < (1+criterio):
 #           print('Filtro', i, value)
             cumplen += 1
@@ -184,32 +194,75 @@ for m in methods:
 
 for i in methods:
     print('\n\n'+ str(i))
-    mass = mass_closure(data_df=df, equation=i)
-    print('Total explained mass = ', ((mass[0] / df['PM2.5']).mean()* 100).round(1), '%')
+    mass = mass_closure(data_df=df_conc, equation=i)
+    print('Total explained mass = ', round((mass[0] / df_conc['PM2.5']).mean()* 100, 1), '%')
     for key in mass[1].keys():
-        print(key, '=', ((mass[1][key] / df['PM2.5']).mean() * 100).round(1), '%') 
+        print(key, '=', round((mass[1][key] / df_conc['PM2.5']).mean() * 100, 1), '%') 
 
 
 
-# -
 
+# + jupyter={"outputs_hidden": true, "source_hidden": true} tags=[]
 plt.figure(figsize=[19,10])
 #display(df)
 #display(df_normal)
 #for i in reconstruccion_masica.keys():
-for i in ['Hand_2011']:
-    ((reconstruccion_masica[i][0])/df['PM2.5']).plot(style='o-', label=i)
-    ((reconstruccion_masica_normal[i][0])/df['PM2.5']).plot(style='o', label=f'{i} normal')
-    ((reconstruccion_masica_evento[i][0])/df['PM2.5']).plot(style='o', label=f'{i} evento')
+for i in ['Hand_2011', 'DeBell_2006']:
+    ((reconstruccion_masica[i][0])/df_conc['PM2.5']).plot(style='o-', label=i)
+    #((reconstruccion_masica_normal[i][0])/df_conc['PM2.5']).plot(style='o', label=f'{i} normal')
+    #((reconstruccion_masica_evento[i][0])/df_conc['PM2.5']).plot(style='o', label=f'{i} evento')
 plt.yticks(np.arange(0, 2.8, step=0.2))
 plt.grid(axis='y')
 plt.legend()
 plt.show()
-plt.plot(df['PM2.5'], reconstruccion_masica_evento['Hand_2011'][0]/df['PM2.5'], 'o')
-plt.xlabel('PM2.5')
-plt.ylabel('Fracción explicada')
+#plt.plot(df['PM2.5'], reconstruccion_masica_evento['Hand_2011'][0]/df_conc['PM2.5'], 'o')
+#plt.xlabel('PM2.5')
+#plt.ylabel('Fracción explicada')
+#plt.show()
+
+# + jupyter={"outputs_hidden": true} tags=[]
+plt.figure(figsize=[19,10])
+df_unc['Sr'] = 0
+df_unc['S'] = df_unc['SO4'] * 1/3 #1/3 = Mr S / Mr SO4
+df_unc['Hg'] = df_unc['SO4'] * 0
+
+unc_reconstruccion_masica = {}
+
+for i in methods:
+    unc_reconstruccion_masica[i] = mass_closure_error(df_conc, df_unc, i)
+
+for i in ['Hand_2011']:
+    ((reconstruccion_masica[i][0])/df_conc['pm2.5']).plot(style='o-', label=i)
+    ((unc_reconstruccion_masica[i][0])/df_conc['pm2.5']).plot(style='o-', label=i)
+    #((reconstruccion_masica_normal[i][0])/df_conc['PM2.5']).plot(style='o', label=f'{i} normal')
+    #((reconstruccion_masica_evento[i][0])/df_conc['PM2.5']).plot(style='o', label=f'{i} evento')
+plt.yticks(np.arange(0, 2.8, step=0.2))
+plt.grid(axis='y')
+plt.legend()
 plt.show()
+# -
 
-# Correlaciones con meteorologia
-print(obsbaires.keys())
 
+closure = mass_closure(df_conc, equation='Hand_2011')
+plt.figure(figsize=(20,10))
+closure[0].plot(style='o-')
+df_conc['PM2.5'].plot(color='k', style='o-')
+(df_conc['PM2.5'] + df_conc['uPM2,5']).plot(color='k', style='--')
+(df_conc['PM2.5'] - df_conc['uPM2,5']).plot(color='k', style='--') 
+(closure[0] + closure[3]).plot(style=':', color='r')
+(closure[0] - closure[3]).plot(style=':', color='r')
+plt.show()
+plt.plot(closure[3] / closure[0] * 100)
+
+closure = mass_closure(df_conc, equation='Hand_2011_mod')
+plt.figure(figsize=(20,10))
+closure[0].plot(style='o-')
+# df_conc['PM2.5'].plot(color='k', style='o-')
+# (df_conc['PM2.5'] + df_conc['uPM2,5']).plot(color='k', style='--')
+# (df_conc['PM2.5'] - df_conc['uPM2,5']).plot(color='k', style='--') 
+(closure[0] + closure[3]).plot(style=':', color='r')
+(closure[0] - closure[3]).plot(style=':', color='r')
+plt.show()
+plt.plot(closure[3] / closure[0] * 100)
+
+(closure[1]['organic_mass'] / closure[0]).mean()
