@@ -39,7 +39,16 @@ df_conc['date'] = pd.to_datetime(df_conc['date'], format="%Y-%m-%d %H:%M:%S")
 df_conc = df_conc.rename(columns={'PM2,5': 'PM2.5'})
 #df_unc = df_unc.rename(columns={'PM2,5': 'PM2.5'})
 
-display(df_conc)
+(df_conc['uC Orgánico']/df_conc['C Orgánico'] * 100).plot(label='eOC')
+(df_conc['uC Elemental']/df_conc['C Elemental'] * 100).plot(label='eEC')
+(df_conc['uNa']/df_conc['Na'] * 100).plot(label='eNa')
+
+plt.legend()
+plt.show()
+
+exclude = ['date', 'C Total', 'uC Elemental', 'uC Orgnico', 'Na total']
+df_conc.loc[:, df_conc.columns.difference(exclude)].plot()
+
 #display(df_unc)
 
 #df_normal = df.where(df['E. Regional binario'] == 'no')
@@ -138,13 +147,13 @@ for i in range(4, len(keys)-1):
         plt.savefig(f'corr_nuevas/{keys[i]}_vs_{keys[j]}.png')
         plt.show()
 
-# + tags=[]
+# + tags=[] jupyter={"source_hidden": true}
 for i in df.keys()[4:]:
     df[i].plot(label=i)
     plt.legend()
     plt.show()
 
-# + tags=[] jupyter={"outputs_hidden": true}
+# + tags=[]
 df_conc['Sr'] = 0
 df_conc['S'] = df_conc['SO4'] * 1/3 #1/3 = Mr S / Mr SO4
 df_conc['Hg'] = df_conc['SO4'] * 0
@@ -152,10 +161,13 @@ df_conc['Hg'] = df_conc['SO4'] * 0
 # df_conc_normal['S'] = df_conc['SO4'] * 1/3 
 # df_conc_evento['Sr'] = 0
 # df_conc_evento['S'] = df_conc['SO4'] * 1/3 
-methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
-           'Malm_2000', 'Maenhaut_2002',
-           'DeBell_2006',
-           'Hand_2011', 'Hand_2011_mod']
+
+#methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+#           'Malm_2000', 'Maenhaut_2002',
+#           'DeBell_2006',
+#           'Hand_2011', 'Hand_2011_mod']
+
+methods = ['Hand_2011']
 
 reconstruccion_masica = {}
 reconstruccion_masica_normal = {}
@@ -220,7 +232,7 @@ plt.show()
 #plt.ylabel('Fracción explicada')
 #plt.show()
 
-# + jupyter={"outputs_hidden": true} tags=[]
+# + jupyter={"outputs_hidden": true, "source_hidden": true} tags=[]
 plt.figure(figsize=[19,10])
 df_unc['Sr'] = 0
 df_unc['S'] = df_unc['SO4'] * 1/3 #1/3 = Mr S / Mr SO4
@@ -240,29 +252,101 @@ plt.yticks(np.arange(0, 2.8, step=0.2))
 plt.grid(axis='y')
 plt.legend()
 plt.show()
-# -
 
 
+# + tags=[]
 closure = mass_closure(df_conc, equation='Hand_2011')
-plt.figure(figsize=(20,10))
-closure[0].plot(style='o-')
-df_conc['PM2.5'].plot(color='k', style='o-')
-(df_conc['PM2.5'] + df_conc['uPM2,5']).plot(color='k', style='--')
-(df_conc['PM2.5'] - df_conc['uPM2,5']).plot(color='k', style='--') 
-(closure[0] + closure[3]).plot(style=':', color='r')
-(closure[0] - closure[3]).plot(style=':', color='r')
-plt.show()
-plt.plot(closure[3] / closure[0] * 100)
+#plt.figure(figsize=(20,10))
+#closure[0].plot(style='o-')
+#df_conc['PM2.5'].plot(color='k', style='o-')
+#(df_conc['PM2.5'] + df_conc['uPM2,5']).plot(color='k', style='--')
+#(df_conc['PM2.5'] - df_conc['uPM2,5']).plot(color='k', style='--') 
+#(closure[0] + closure[2]).plot(style=':', color='r')
+#(closure[0] - closure[2]).plot(style=':', color='r')
 
+plt.show()
+plt.figure(figsize=(20,10))
+plt.errorbar(df_conc['date'], df_conc['PM2.5'], df_conc['uPM2,5'],
+             capsize=4, ecolor='r', color='k', fmt='o-', label='PM2.5')
+plt.errorbar(df_conc['date'], closure[0], closure[2],
+             capsize=4, ecolor='darkred', color='fuchsia', fmt='o:', label='Mass closure')
+plt.ylim(ymin=0)
+plt.legend()
+plt.show()
+
+
+plt.show()
+plt.plot(closure[2] / closure[0] * 100)
+
+# + jupyter={"outputs_hidden": true, "source_hidden": true} tags=[]
 closure = mass_closure(df_conc, equation='Hand_2011_mod')
 plt.figure(figsize=(20,10))
 closure[0].plot(style='o-')
 # df_conc['PM2.5'].plot(color='k', style='o-')
 # (df_conc['PM2.5'] + df_conc['uPM2,5']).plot(color='k', style='--')
 # (df_conc['PM2.5'] - df_conc['uPM2,5']).plot(color='k', style='--') 
-(closure[0] + closure[3]).plot(style=':', color='r')
-(closure[0] - closure[3]).plot(style=':', color='r')
+(closure[0] + closure[2]).plot(style=':', color='r')
+(closure[0] - closure[2]).plot(style=':', color='r')
 plt.show()
-plt.plot(closure[3] / closure[0] * 100)
+plt.plot(closure[2] / closure[0] * 100)
+# -
 
 (closure[1]['organic_mass'] / closure[0]).mean()
+
+
+# +
+def porcentaje(f, PM):
+    return f/PM * 100
+
+def err_porcentaje(f, PM, err_f, err_PM):
+    return np.linalg.norm( [ 100/PM *err_f, f/(PM**2) * 100 * err_PM ], axis=0)
+
+f = closure[0]
+PM = df_conc['PM2.5']
+err_f = closure[2]
+err_PM = df_conc['uPM2,5']
+
+
+plt.figure(figsize=(20, 10))
+plt.errorbar(df_conc['date'], porcentaje(f, PM), err_porcentaje(f, PM, err_f, err_PM), capsize=3, ecolor='r', fmt='o-')
+plt.plot(df_conc['date'], df_conc['PM2.5'])
+plt.plot(df_conc['date'], closure[0], ':')
+plt.axhline(y=80, color='k', linestyle=':')
+plt.axhline(y=120, color='k', linestyle=':')
+plt.ylim(ymin=0)
+
+# +
+escapan = 0
+escapan_defecto = 0
+escapan_exceso = 0
+cumplen = 0
+son_nan = 0
+criterio = 20
+cierre = mass_closure(data_df=df_conc, equation='Hand_2011')
+cierre_por = porcentaje(cierre[0], df_conc['PM2.5'])
+error_por = err_porcentaje(cierre[0], df_conc['PM2.5'], cierre[2], df_conc['uPM2,5'])
+
+for i in range(len(cierre_por)):
+    value = cierre_por[i]
+    uvalue = error_por[i]
+    if (100 - criterio) < value < (100 + criterio):
+        cumplen += 1
+    elif np.isnan(value):
+        son_nan +=1
+    elif value < 100 - criterio:
+        value += uvalue
+        if value < 100 - criterio:
+            escapan_defecto +=1
+        else:
+            cumplen += 1
+    elif value > (100 + criterio):
+        value -= uvalue
+        if value > 100 + criterio:
+            escapan_exceso += 1
+        else:
+            cumplen += 1
+
+print('Hand_2011' + '\ncumplen =', cumplen, '\nescapan =', escapan,
+          '\n\tpor defecto =', escapan_defecto, '\n\tpor exceso =', escapan_exceso,
+          '\nson nan =', son_nan, '\n')
+

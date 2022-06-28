@@ -84,7 +84,7 @@ def comparacion_tecnicas(df, elemento):
         return(ax)
 
 
-# +
+# + tags=[]
 # df.keys() = ['Cl', 'NO3', 'SO4', 'Na', 'NH4', 'C Orgánico', 'C Elemental', 'C Total',
        # 'S', 'Cl.1', 'K', 'Ca', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Ni', 'Cu', 'Zn',
        # 'As', 'Se', 'Sr', 'Pb', 'Hg', 'Pb.1', 'Zn.1', 'Mn.1', 'Mo', 'Ni.1',
@@ -97,31 +97,68 @@ def mass_closure(data_df, equation='Chow_1996'):
     data_df2 = data_df.fillna(0)
     data_df2['Si'] = 2.4729 * data_df2['Al']
     data_df2['uSi'] = 2.4729 * data_df2['uAl'] * 2 # Ese * 2 es solo para agrandar la incert Si
+    data_df2['S'] = data_df2['SO4']/3 
+    data_df2['uS'] = data_df2['uSO4']/3 
+    data_df2['Sr'] = 0
+    data_df2['uSr'] = 0
+    data_df2['Hg'] = 0
+    data_df2['uHg'] = 0
     
     if equation == 'Macias_1981':
-        inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4SO3']
+        inorganic_ions = data_df2['(nh4)2so4'] + data_df2['nh4so3']
+        uinorganic_ions = np.linalg.norm( [data_df2['u(nh4)2so4'], data_df2['unh4so3'] ], axis=0)
+        
         organic_mass = 1.5 * data_df2['C Orgánico']
+        uorganic_mass = 1.5 * data_df2['uC Orgánico']
+        
         elemental_C = data_df2['C Elemental']
+        uelemental_C = data_df2['uC Elemental']
+        
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.2 * data_df2['K'] +
                                1.43 * data_df2['Fe'])
+        ugeological_minerals = np.linalg.norm( [1.89 * data_df2['uAl'], 2.14 * data_df2['uSi'],
+                                                1.4 * data_df2['uCa'], 1.2 * data_df2['uK'],
+                                                1.43 * data_df2['uFe'] ], axis=0)
+        
         trace_elements = (1.25 * data_df2['Cu'] + 1.24 * data_df2['Zn'] +
                           1.08 * data_df2['Pb'])
+        utrace_elements = np.linalg.norm( [1.25 * data_df2['uCu'], 1.24 * data_df2['uZn'],
+                                              1.08 * data_df2['uPb'] ], axis=0)
         
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                        'trace_elements': trace_elements}
         
-        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
-                       'trace_elements_unc': trace_elements_unc}
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals,
+                       'utrace_elements': utrace_elements}
+        
+        uclosure = np.linalg.norm( [ data_df2['u(nh4)2so4'], data_df2['unh4so3'],
+                                        1.5 * data_df2['uC Orgánico'],
+                                        data_df2['uC Elemental'],
+                                        1.89 * data_df2['uAl'], 2.14 * data_df2['uSi'],
+                                        1.4 * data_df2['uCa'], 1.2 * data_df2['uK'],
+                                        1.43 * data_df2['uFe'],
+                                        1.25 * data_df2['uCu'], 1.24 * data_df2['uZn'],
+                                        1.08 * data_df2['uPb'] ], axis=0)
+                               
       
     if equation == 'Solomon_1989':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
+        uinorganic_ions = np.linalg.norm([ data_df2['uSO4'], data_df2['uNO3'], data_df2['uNH4'] ], axis=0)
+        
         organic_mass = 1.4 * data_df2['C Orgánico']
+        uorganic_mass = 1.4 * data_df2['uC Orgánico']
+        
         elemental_C = data_df2['C Elemental']
+        uelemental_C = data_df2['uC Elemental']
+        
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
+        ugeological_minerals = np.linalg.norm( [1.89 * data_df2['uAl'] + 2.14 * data_df2['uSi'] +
+                               1.4 * data_df2['uCa'] + 1.43 * data_df2['uFe'] ], axis=0)
+        
         # Pide que sean por XRF salvo Na+ y Mg++, que deberían ser por AAS. No es el caso en ninguno
         trace_elements = (data_df2['Cl'] + data_df2['Na total'] + data_df2['K'] +
                           data_df2['Ti'] + data_df2['V'] + data_df2['Cr'] +
@@ -129,50 +166,96 @@ def mass_closure(data_df, equation='Chow_1996'):
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +
                           data_df2['Sr'] + data_df2['Pb'] + data_df2['Hg'] +
                           data_df2['Sb'])
+        utrace_elements = np.linalg.norm( [data_df2['uCl'] + data_df2['uNa total'] + data_df2['uK'] +
+                          data_df2['uTi'] + data_df2['uV'] + data_df2['uCr'] +
+                          data_df2['uMn'] + data_df2['uNi'] + data_df2['uCu'] +
+                          data_df2['uZn'] + data_df2['uAs'] + data_df2['uSe'] +
+                          data_df2['uSr'] + data_df2['uPb'] + data_df2['uHg'] +
+                          data_df2['uSb'] ], axis=0)
         
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'trace_elements': trace_elements}
         
-        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
-                      'trace_elements_unc': trace_elements_unc}
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass_unc': uorganic_mass, 
+                      'uelemental_C': uelemental_C, 'ugeological_minerals_unc': ugeological_minerals,
+                      'utrace_elements': utrace_elements}
+        
+        uclosure = np.linalg.norm( [data_df2['uSO4'], data_df2['uNO3'], data_df2['uNH4'],
+                                    1.4 * data_df2['uC Orgánico'],
+                                    data_df2['uC Elemental'],
+                                    1.89 * data_df2['uAl'], 2.14 * data_df2['uSi'],
+                                    1.4 * data_df2['uCa'], 1.43 * data_df2['uFe'],
+                                    data_df2['uCl'] + data_df2['uNa total'] + data_df2['uK'] +
+                                    data_df2['uTi'] + data_df2['uV'] + data_df2['uCr'] +
+                                    data_df2['uMn'] + data_df2['uNi'] + data_df2['uCu'] +
+                                    data_df2['uZn'] + data_df2['uAs'] + data_df2['uSe'] +
+                                    data_df2['uSr'] + data_df2['uPb'] + data_df2['uHg'] +
+                                    data_df2['uSb'] ], axis=0)
+                                    
         
     if equation == 'Chow_1994':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
+        uinorganic_ions = np.linalg.norm( [ data_df2['uSO4'], data_df2['uNO3'], data_df2['uNH4'] ], axis=0)
+        
         organic_mass = 1.4 * data_df2['C Orgánico']
+        uorganic_mass = 1.4 * data_df2['uC Orgánico']
+        
         elemental_C = data_df2['C Elemental']
+        uelemental_C = data_df2['uC Elemental']
+        
         geological_minerals = (1.89 * data_df2['Al'] + 2.14 * data_df2['Si'] +
                                1.4 * data_df2['Ca'] + 1.43 * data_df2['Fe'])
+        ugeological_minerals = np.linalg.norm( [1.89 * data_df2['uAl'], 2.14 * data_df2['uSi'],
+                                1.4 * data_df2['uCa'], 1.43 * data_df2['uFe'] ], axis=0)
+        
         trace_elements = (data_df2['Cl'] + data_df2['Na total'] + data_df2['K'] +
                           data_df2['Ti'] + data_df2['V'] + data_df2['Cr'] +
                           data_df2['Mn'] + data_df2['Ni'] + data_df2['Cu'] +
                           data_df2['Zn'] + data_df2['As'] + data_df2['Se'] +
                           data_df2['Sr'] + data_df2['Pb'] + data_df2['Hg'] +
                           data_df2['Sb'])
+        utrace_elements = np.linalg.norm( [ data_df2['uCl'], data_df2['uNa total'], data_df2['uK'],
+                                            data_df2['uTi'], data_df2['uV'], data_df2['uCr'],
+                                            data_df2['uMn'], data_df2['uNi'], data_df2['uCu'],
+                                            data_df2['uZn'], data_df2['uAs'], data_df2['uSe'],
+                                            data_df2['uSr'], data_df2['uPb'], data_df2['uHg'],
+                                            data_df2['uSb'] ], axis=0)     
+        
         
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'trace_elements': trace_elements}
         
-        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-                      'elemental_C': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
-                      'trace_elements': trace_elements_unc}
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals,
+                       'utrace_elements': utrace_elements}
+        
+        
         
     if equation == 'Malm_1994':
         inorganic_ions = 4.125 * data_df2['S']
+        uinorganic_ions = 4.125 * data_df2['uS']
+        
         organic_mass = 1.4 * data_df2['C Orgánico']
+        uorganic_mass = 1.4 * data_df2['uC Orgánico']
+         
         elemental_C = data_df2['C Elemental']
+        uelemental_C = data_df2['uC Elemental']
+        
         geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
+        ugeological_minerals = np.linalg.norm( [2.2 * data_df2['uAl'], 2.49 * data_df2['uSi'],
+                               1.63 * data_df2['uCa'], 1.94 * data_df2['uTi'],
+                               2.42 * data_df2['uFe'] ], axis=0)
         
-        categories = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc}
         
-        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc_unc': geological_minerals_unc,
-                      'trace_elements_unc': trace_elements_unc}
+        categories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
         
     if equation == 'Chow_1996':
         inorganic_ions = data_df2['SO4'] + data_df2['NO3'] + data_df2['NH4']
@@ -271,87 +354,67 @@ def mass_closure(data_df, equation='Chow_1996'):
         
     if equation == 'Hand_2011':
         inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
-        inorganic_ions_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 )
+        uinorganic_ions = np.linalg.norm( [ 1.375 * data_df2['uSO4'], 1.29 * data_df2['uNO3'] ] ,axis=0)
         organic_mass = 1.8 * data_df2['C Orgánico']
-        organic_mass_unc = 1.8 * data_df2['uC Orgánico'] # Un solo elemento
+        uorganic_mass = 1.8 * data_df2['uC Orgánico'] # Un solo elemento
         elemental_C = data_df2['C Elemental'] # Un solo elemento
-        elemental_C_unc = data_df2['uC Elemental']
+        uelemental_C = data_df2['uC Elemental']
         geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
-        geological_minerals_unc = np.sqrt((2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
-                               (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
-                               (2.42 * data_df2['uFe'])**2)
+        ugeological_minerals = np.linalg.norm( [2.2 * data_df2['uAl'], 2.49 * data_df2['uSi'],
+                               1.63 * data_df2['uCa'], 1.94 * data_df2['uTi'],
+                               2.42 * data_df2['uFe'] ], axis=0)
         salt = 1.8 * data_df2['Cl']
-        salt_unc = 1.8 * data_df2['uCl'] # Un solo elemento
+        usalt = 1.8 * data_df2['uCl'] # Un solo elemento
         
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'salt': salt}
         
-        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-                      'elemental_C': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc}
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
         
-        closure_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 + 
-                                       (1.8 * data_df2['uC Orgánico'])**2 +
-                                       data_df2['uC Elemental']**2 +
-                                       (2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
-                                       (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
-                                       (2.42 * data_df2['uFe'])**2 +
-                                       (1.8 * data_df2['uCl'])**2 )
+        uclosure = np.linalg.norm( [ 1.375 * data_df2['uSO4'], 1.29 * data_df2['uNO3'], 
+                                       1.8 * data_df2['uC Orgánico'],
+                                       data_df2['uC Elemental'],
+                                       2.2 * data_df2['uAl'], 2.49 * data_df2['uSi'],
+                                       1.63 * data_df2['uCa'], 1.94 * data_df2['uTi'],
+                                       2.42 * data_df2['uFe'],
+                                       1.8 * data_df2['uCl'] ], axis=0)
+        
         
     if equation == 'Hand_2011_mod':
         inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
-        inorganic_ions_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 )
+        uinorganic_ions = np.linalg.norm( [ 1.375 * data_df2['uSO4'], 1.29 * data_df2['uNO3'] ], axis=0)
         organic_mass = 1.8 * data_df2['C Orgánico']
-        organic_mass_unc = np.sqrt( (1.8 * data_df2['uC Orgánico']) ** 2 + (0.2 * data_df2['C Orgánico']) ** 2 )
+        uorganic_mass = np.linalg.norm( [ 1.8 * data_df2['uC Orgánico'], 0.2 * data_df2['C Orgánico'] ], axis=0)
         elemental_C = data_df2['C Elemental'] # Un solo elemento
-        elemental_C_unc = data_df2['uC Elemental']
+        uelemental_C = data_df2['uC Elemental']
         geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
                                1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
                                2.42 * data_df2['Fe'])
-        geological_minerals_unc = np.sqrt((2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
-                               (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
-                               (2.42 * data_df2['uFe'])**2)
+        ugeological_minerals = np.linalg.norm( [ 2.2 * data_df2['uAl'], 2.49 * data_df2['uSi'],
+                               1.63 * data_df2['uCa'], 1.94 * data_df2['uTi'],
+                               2.42 * data_df2['uFe'] ], axis=0)
         salt = 1.8 * data_df2['Cl']
-        salt_unc = 1.8 * data_df2['uCl'] # Un solo elemento
+        usalt = 1.8 * data_df2['uCl'] # Un solo elemento
         
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
                       'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
                       'salt': salt}
         
-        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-                      'elemental_C': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc}
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
         
-        closure_unc = np.sqrt( (1.375 * data_df2['uSO4'])**2 + (1.29 * data_df2['uNO3'])**2 + 
-                                       (1.8 * data_df2['uC Orgánico'])**2 +
-                                       organic_mass_unc**2 +     # CHEQUEAR
-                                       (2.2 * data_df2['uAl'])**2 + (2.49 * data_df2['uSi'])**2 +
-                                       (1.63 * data_df2['uCa'])**2 + (1.94 * data_df2['uTi'])**2 +
-                                       (2.42 * data_df2['uFe'])**2 +
-                                       (1.8 * data_df2['uCl'])**2 )
-        
-#    if equation == 'Hand_2011_mod':
-#        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
-#                      'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
-#                      'trace_elements': trace_elements}
-#        inorganic_ions = 1.375 * data_df2['SO4'] + 1.29 * data_df2['NO3']
-#        # organic_mass = 1.8 * data_df2['C Orgánico']
-#        organic_mass = 2.0 * data_df2['C Orgánico']
-#        elemental_C = data_df2['C Elemental']
-#        geological_minerals = (2.2 * data_df2['Al'] + 2.49 * data_df2['Si'] +
-#                               1.63 * data_df2['Ca'] + 1.94 * data_df2['Ti'] +
-#                               2.42 * data_df2['Fe'])
-#        salt = 1.8 * data_df2['Cl']
-#
-#        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
-#              'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
-#              'salt': salt}
-#        
-#        categories = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
-#                      'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
-#                      'trace_elements_unc': trace_elements_unc}
-#        
+        uclosure = np.linalg.norm( [ 1.375 * data_df2['uSO4'], 1.29 * data_df2['uNO3'], 
+                                       1.8 * data_df2['uC Orgánico'], 0.2 * data_df2['C Orgánico'] , #Incerteza en el parametro Corg.
+                                       1.8 * data_df2['uC Elemental'],
+                                       2.2 * data_df2['uAl'], 2.49 * data_df2['uSi'],
+                                       1.63 * data_df2['uCa'], 1.94 * data_df2['uTi'],
+                                       2.42 * data_df2['uFe'],
+                                       1.8 * data_df2['uCl'] ], axis=0)
+       
     if equation == 'Simon_2011':
         inorganic_ions = data_df2['(NH4)2SO4'] + data_df2['NH4NO3']
         organic_mass = 1.8 * data_df2['C Orgánico']
@@ -365,14 +428,14 @@ def mass_closure(data_df, equation='Chow_1996'):
               'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
               'salt': salt, 'others': others}
         
-        categories_unc = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
+        ucategories = {'inorganic_ions_unc': inorganic_ions_unc, 'organic_mass_unc': organic_mass_unc, 
                       'elemental_C_unc': elemental_C_unc, 'geological_minerals_unc': geological_minerals_unc,
                       'trace_elements_unc': trace_elements_unc}
         
     closure = sum(categories.values())
     categories['unexplained'] = data_df2['PM2.5'] - closure
-    categories_unc['unexplained'] = data_df2['PM2.5'] * np.nan
-    return closure, categories, categories_unc, closure_unc
+    ucategories['unexplained'] = data_df2['PM2.5'] * np.nan
+    return closure, categories, uclosure, ucategories
 
 
 
