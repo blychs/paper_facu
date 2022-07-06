@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.10.2
+#       jupytext_version: 1.13.8
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -29,7 +29,7 @@ from pandas.api.types import is_numeric_dtype # chequeos de tipo numérico
 # #%matplotlib widget
 
 
-df_raw = pd.read_excel('20210621_matriz_total.xlsx', index_col=0, skiprows=[1,2])[36:] # Matriz CSV curada
+df_raw = pd.read_excel('PMF_BA_completo.xlsx', index_col=0, skiprows=[1,2])[36:] # Matriz CSV curada
 
 ############# Remove outliers ############
 # Elimino outliers de la matriz definido como aquello que está a más de 3 sigmas 
@@ -38,7 +38,7 @@ df_log = np.log(df_raw)
 #df = df_raw.mask(df_raw.sub(df_raw.mean()).div(df_raw.std()).abs().gt(3)) 
 df = df_raw.mask(df_log.sub(df_log.mean()).div(df_log.std()).abs().gt(9)) 
 
-df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2])
+# df_tecnicas = pd.read_csv('ArcalMetalesAnalisis.csv', index_col=0, skiprows=[1,2])
 
 # + tags=[]
 display(df)
