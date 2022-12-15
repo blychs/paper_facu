@@ -1,11 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.4
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
 
 # Load packages and data and convert negative values into **NaN**
 
-# In[3]:
-
-
+# +
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -22,13 +32,12 @@ unc = unc.rename(columns={'PM2,5': 'PM2.5'})
 unc[unc < 0] = np.nan
 unc = unc.reindex(sorted(unc.columns), axis=1)
 
+# -
 
 # Time series plot
 
-# In[5]:
-
-
-get_ipython().run_line_magic('matplotlib', 'widget')
+# +
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 plt.style.use('seaborn-v0_8-paper')
@@ -47,15 +56,8 @@ ax.set_title('Time series')
 ax.legend()
 plt.show()
 
-
-# In[5]:
-
-
-(matrix.keys())
-
-
-# In[8]:
-
+# +
+#Prepare correlation plots
 
 for key1 in matrix.keys():
     i, j = 0, 0
