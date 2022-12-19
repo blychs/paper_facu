@@ -74,30 +74,33 @@ methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000'
 
 d_methodQuality = {}
 
-
-fig, axs = plt.subplots(3, 3, figsize=(20, 15))
+plt.style.use('seaborn-v0_8-paper')
+fig, axs = plt.subplots(3, 3, figsize=(16, 12))
 
 i, j = 0, 0
 for method in methods:
     d_methodQuality[method] = 0
     mass = mass_reconstruction(matrix, unc, equation=method)
-    reconst = mass[0]/matrix['PM2.5']
-    ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2)
-    axs[i][j].errorbar(matrix.index, reconst,  yerr=ureconst, label=method, capsize=2, capthick=1)
-    #axs[i][j].plot(matrix.index, reconst.where(np.logical_or(events['Event']=='S', events['Event']=='SP', events['Event']=='SN')), 'ro')
-    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='S'), 'ro', label='Smoke')
-    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SP'), 'go', label='Smoke previous day')
-    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SN'), 'ko', label='Smoke next day')
+    reconst = mass[0]/matrix['PM2.5'] * 100
+    ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+    axs[i][j].errorbar(matrix.index, reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue', zorder=0)
+    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke', zorder=1)
+    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SP'), 'D', label='Smoke previous day', zorder=2)
+    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SN'), 's', label='Smoke next day', zorder=3)
     axs[i][j].set_title(method)
-    axs[i][j].legend()
-    axs[i][j].axhline(0.8, color='k')
-    axs[i][j].axhline(1.2, color='k')
-    axs[i][j].tick_params(labelrotation=45)
+    axs[i][j].legend(loc=9)
+    axs[i][j].axhline(80, color='k')
+    axs[i][j].axhline(120, color='k')
+    axs[i][j].tick_params(labelrotation=0)
     j += 1
     if j%3==0:
         j = 0
         i += 1
     d_methodQuality[method] = np.logical_and(((reconst + ureconst) > 0.8), ((reconst - ureconst) < 1.2)).sum()
+
+for x in range(0, 3):
+    axs[x][0].set_ylabel('Mass reconstructed [%]')
+    axs[-1][x].set_xlabel('Date')
     
 plt.show()
     
