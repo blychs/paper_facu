@@ -673,3 +673,15 @@ def mass_reconstruction_mod(concentration_matrix, uncertainty_matrix, events, eq
     categories['unexplained'] = concentration_matrix['PM2.5'] - closure
     ucategories['uunexplained'] = np.linalg.norm( [uclosure, uncertainty_matrix['PM2.5'] ], axis=0)
     return closure, categories, uclosure, ucategories
+
+def percentage_with_err(val, totalval, uval, utotalval):
+    """
+    Calculate the percentage that val represents of totalval,
+    and the uncertainty associated. Return a dictionary {perc, uperc}
+    """
+    perc = val/totalval * 100
+    
+    # Note that the 100 can be taken out
+    uperc = 100 * np.linalg.norm([1/totalval * uval, val/(totalval**2) * utotalval], axis=0)
+    
+    return {'perc': perc, 'uperc': uperc}
