@@ -59,7 +59,6 @@ ax.set_xlabel("Date")
 ax.set_ylabel("Mass concentration (µg/m$^3$)")
 ax.legend()
 plt.show()
-# -
 
 
 # + tags=[]
@@ -163,37 +162,52 @@ smoke_dates = list(matrix.index.where(events['Event']=='S').dropna())
 print(smoke_dates)
 
 
-width=2
+width=2.5
 
-fig, ax = plt.subplots(nrows=3, ncols=2, figsize=(15, 9), sharex=True)
+fig, ax = plt.subplots(nrows=4, ncols=2, figsize=(15, 12), sharex=True)
 
 plt.subplots_adjust(hspace=.0)
 plt.subplots_adjust(wspace=.0)
 
+fig.suptitle('Mass reconstruction')
 ax[0][0].bar(matrix.index, organic_mass_per['perc'], width, yerr=organic_mass_per['uperc'], label='Organic mass')
 ax[0][0].bar(matrix.index, inorganic_ions_per['perc'], width, yerr=inorganic_ions_per['uperc'], bottom=organic_mass_per['perc'],label='Inorganic ions')
 ax[0][0].bar(matrix.index, geological_minerals_per['perc'], width, yerr=geological_minerals_per['uperc'],
          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']),label='Geological minerals')
 ax[0][0].bar(matrix.index, EC_per['perc'], width, yerr=EC_per['uperc'],
-          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='Geological minerals')
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='EC')
 ax[0][0].bar(matrix.index, ssa_per['perc'], width, yerr=ssa_per['uperc'],
-          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='Geological minerals')
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='SSA')
 ax[0][0].set_ylabel('Category of rec. mass (%)')
 ax[0][0].legend(loc=4)
 
-ax[1][0].errorbar(x=matrix.index, y=reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue')
-ax[1][0].axhspan(80, 120, facecolor='y', alpha=0.5)
-ax[1][0].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke')
-ax[1][0].plot(matrix.index, reconst.where(events['Event']=='SP'), 'o', label='Smoke prev. day')
-ax[1][0].plot(matrix.index, reconst.where(events['Event']=='SN'), 'o', label='Smoke next day')
-ax[1][0].axhline(100, color='k')
-ax[1][0].legend()
-ax[1][0].set_ylabel('Percentage of PM2.5 reconstructed')
+ax[1][0].bar(matrix.index, mass[1]['organic_mass'], width, yerr=mass[3]['uorganic_mass'], label='Organic mass')
+ax[1][0].bar(matrix.index, mass[1]['inorganic_ions'], width, yerr=mass[3]['uinorganic_ions'],
+             bottom=mass[1]['organic_mass'],label='Inorganic ions')
+ax[1][0].bar(matrix.index, mass[1]['geological_minerals'], width, yerr=mass[3]['ugeological_minerals'],
+         bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions']),label='Geological minerals')
+ax[1][0].bar(matrix.index, mass[1]['elemental_C'], width, yerr=mass[3]['uelemental_C'],
+          bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions'] + mass[1]['geological_minerals']),label='EC')
+ax[1][0].bar(matrix.index, mass[1]['salt'], width, yerr=mass[3]['usalt'],
+          bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C']),label='SSA')
+ax[1][0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', ecolor='tan', color='tan')
+ax[1][0].set_ylabel('Category of rec. mass ($\mu$g/m$^3$)')
+ax[1][0].legend(loc=1)
 
-ax[2][0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', label='Measured PM2.5')
-ax[2][0].errorbar(matrix.index, mass[0], mass[2], capsize=2, capthick=1, marker='.', label='Reconstructed PM2.5') 
+
+ax[2][0].errorbar(x=matrix.index, y=reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue')
+ax[2][0].axhspan(80, 120, facecolor='y', alpha=0.5)
+ax[2][0].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke')
+ax[2][0].plot(matrix.index, reconst.where(events['Event']=='SP'), 'o', label='Smoke prev. day')
+ax[2][0].plot(matrix.index, reconst.where(events['Event']=='SN'), 'o', label='Smoke next day')
+ax[2][0].axhline(100, color='k')
 ax[2][0].legend()
-ax[2][0].set_ylabel('Mass $\mu$g/m$^3$')
+ax[2][0].set_ylabel('Percentage of PM2.5 reconstructed')
+
+ax[3][0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', label='Measured PM2.5')
+ax[3][0].errorbar(matrix.index, mass[0], mass[2], capsize=2, capthick=1, marker='.', label='Reconstructed PM2.5') 
+ax[3][0].legend()
+ax[3][0].set_ylabel('Mass $\mu$g/m$^3$')
 
 
 mass = mass_reconstruction_mod(matrix, unc, events=events, equation="Hand_2011")
@@ -206,31 +220,46 @@ ax[0][1].bar(matrix.index, inorganic_ions_per['perc'], width, yerr=inorganic_ion
 ax[0][1].bar(matrix.index, geological_minerals_per['perc'], width, yerr=geological_minerals_per['uperc'],
           bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']),label='Geological minerals')
 ax[0][1].bar(matrix.index, EC_per['perc'], width, yerr=EC_per['uperc'],
-          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='Geological minerals')
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='EC')
 ax[0][1].bar(matrix.index, ssa_per['perc'], width, yerr=ssa_per['uperc'],
-          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='Geological minerals')
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='SSA')
 ax[0][1].yaxis.tick_right() 
 ax[0][1].yaxis.set_label_position("right")
 ax[0][1].set_ylabel('Category of rec. mass (%)')
 ax[0][1].legend(loc=4)
 
-ax[1][1].errorbar(x=matrix.index, y=reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue')
-ax[1][1].axhspan(80, 120, facecolor='y', alpha=0.5)
-ax[1][1].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke')
-ax[1][1].plot(matrix.index, reconst.where(events['Event']=='SP'), 'o', label='Smoke prev. day')
-ax[1][1].plot(matrix.index, reconst.where(events['Event']=='SN'), 'o', label='Smoke next day')
-ax[1][1].axhline(100, color='k')
-ax[1][1].legend(loc=1)
+ax[1][1].bar(matrix.index, mass[1]['organic_mass'], width, yerr=mass[3]['uorganic_mass'], label='Organic mass')
+ax[1][1].bar(matrix.index, mass[1]['inorganic_ions'], width, yerr=mass[3]['uinorganic_ions'],
+             bottom=mass[1]['organic_mass'],label='Inorganic ions')
+ax[1][1].bar(matrix.index, mass[1]['geological_minerals'], width, yerr=mass[3]['ugeological_minerals'],
+         bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions']),label='Geological minerals')
+ax[1][1].bar(matrix.index, mass[1]['elemental_C'], width, yerr=mass[3]['uelemental_C'],
+          bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions'] + mass[1]['geological_minerals']),label='EC')
+ax[1][1].bar(matrix.index, mass[1]['salt'], width, yerr=mass[3]['usalt'],
+          bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C']),label='SSA')
+ax[1][1].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', ecolor='tan', color='tan')
 ax[1][1].yaxis.tick_right() 
 ax[1][1].yaxis.set_label_position("right")
-ax[1][1].set_ylabel('Percentage of PM2.5 reconstructed')
+ax[1][1].set_ylabel('Category of rec. mass ($\mu$g/m$^3$)')
+ax[1][1].legend(loc=1)
 
-ax[2][1].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', label='Measured PM2.5')
-ax[2][1].errorbar(matrix.index, mass[0], mass[2], capsize=2, capthick=1, marker='.', label='Reconstructed PM2.5') 
-ax[2][1].legend()
+ax[2][1].errorbar(x=matrix.index, y=reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue')
+ax[2][1].axhspan(80, 120, facecolor='y', alpha=0.5)
+ax[2][1].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke')
+ax[2][1].plot(matrix.index, reconst.where(events['Event']=='SP'), 'o', label='Smoke prev. day')
+ax[2][1].plot(matrix.index, reconst.where(events['Event']=='SN'), 'o', label='Smoke next day')
+ax[2][1].axhline(100, color='k')
+ax[2][1].legend(loc=1)
 ax[2][1].yaxis.tick_right() 
 ax[2][1].yaxis.set_label_position("right")
-ax[2][1].set_ylabel('Mass $\mu$g/m$^3$')
+ax[2][1].set_ylabel('Percentage of PM2.5 reconstructed')
+
+ax[3][1].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', label='Measured PM2.5')
+ax[3][1].errorbar(matrix.index, mass[0], mass[2], capsize=2, capthick=1, marker='.', label='Reconstructed PM2.5') 
+ax[3][1].legend()
+ax[3][1].yaxis.tick_right() 
+ax[3][1].yaxis.set_label_position("right")
+ax[3][1].set_ylabel('Mass $\mu$g/m$^3$')
 
 
 
