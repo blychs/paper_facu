@@ -22,20 +22,36 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
 
-matrix = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='CONC', index_col='date')
+matrix = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='CONC')
 matrix = matrix.rename(columns={'PM2,5': 'PM2.5'})
+matrix['date'] = pd.to_datetime(matrix['date']).dt.date
+matrix.set_index(matrix['date'], inplace=True)
+matrix.drop('date', inplace=True, axis=1)
 matrix[matrix < 0] = np.nan
 matrix = matrix.reindex(sorted(matrix.columns), axis=1)
 
-unc = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='UNC', index_col='date')
+unc = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='UNC')
 unc = unc.rename(columns={'PM2,5': 'PM2.5'})
+unc['date'] = pd.to_datetime(unc['date']).dt.date
+unc.set_index(unc['date'], inplace=True)
+unc.drop('date', inplace=True, axis=1)
 unc[unc < 0] = np.nan
 unc = unc.reindex(sorted(unc.columns), axis=1)
-print(matrix.keys())
+
+meteo_mean = pd.read_csv('dataObs_noon2noon.csv')
+meteo_mean['date'] = pd.to_datetime(meteo_mean['date']).dt.date
+meteo_mean.set_index(meteo_mean['date'], inplace=True)
+meteo_mean.drop('date', inplace=True, axis=1)
+meteo_mean = meteo_mean[meteo_mean.index.isin(matrix.index)]
 
 events = pd.read_excel('BA_events.xlsx', index_col='date')
 
 # -
+fig, ax = plt.subplots()
+ax.scatter(meteo_mean['ventCoef'], matrix[matrix.index.isin(meteo_mean.index)]['PM2.5'], marker='.')
+ax.set_xlabel('Ventilation Coeff m$^2$ s$^{-1}$')
+ax.set_ylabel('PM2.5 $\mu$g m$^{3}$')
+plt.show()
 # Time series plot
 
 # + tags=[]
@@ -265,7 +281,7 @@ ax[3][1].set_ylabel('Mass $\mu$g/m$^3$')
 
 
 plt.show()
-# + tags=[] jupyter={"source_hidden": true, "outputs_hidden": true}
+# + tags=[] jupyter={"source_hidden": true}
 # %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
