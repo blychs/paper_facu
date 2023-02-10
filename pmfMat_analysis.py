@@ -54,6 +54,14 @@ ax.set_ylabel('PM2.5 $\mu$g m$^{3}$')
 plt.show()
 # Time series plot
 
+fig, ax = plt.subplots()
+ax.scatter(events['AOD440'], events['Alpha'])
+ax.axhline(0.85, color='k', linestyle='dashed')
+ax.axvline(0.185, color='k', linestyle='dashed')
+ax.set_xlabel('AOD 440nm', size=10)
+ax.set_ylabel(r'$\alpha$', size=10)
+plt.show()
+
 # + tags=[]
 # %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
@@ -62,7 +70,7 @@ plt.style.use('seaborn-v0_8-paper')
 
 fig, ax = plt.subplots(figsize=(12,6))
 
-matrix['PM2.5'].plot(style='.-', label='PM2.5', ax=ax)
+#matrix['PM2.5'].plot(style='.-', label='PM2.5', ax=ax)
 ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], marker='.', linestyle='-', capsize=3, capthick=1, label='PM2.5')
 ax.errorbar(matrix.index, mass[1]['organic_mass'], yerr=mass[3]['uorganic_mass'], marker='.', capsize=3, capthick=1, linestyle='-', label="Organic mass")
 ax.errorbar(matrix.index, mass[1]['inorganic_ions'], yerr=mass[3]['uinorganic_ions'], marker='.', capsize=3, capthick=1, linestyle='-', label="Inorganic ions")
@@ -115,8 +123,8 @@ width=2
 
 fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(10, 10), sharex=True)
 
-plt.subplots_adjust(hspace=.0)
 
+fig.suptitle('Results of the reconstruction using Hand 2011')
 ax[0].bar(matrix.index, organic_mass_per['perc'], width, yerr=organic_mass_per['uperc'], label='Organic mass')
 ax[0].bar(matrix.index, inorganic_ions_per['perc'], width, yerr=inorganic_ions_per['uperc'], bottom=organic_mass_per['perc'],label='Inorganic ions')
 ax[0].bar(matrix.index, geological_minerals_per['perc'], width, yerr=geological_minerals_per['uperc'],
@@ -141,7 +149,9 @@ ax[2].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capt
 ax[2].errorbar(matrix.index, mass[0], mass[2], capsize=2, capthick=1, marker='.', label='Reconstructed PM2.5') 
 ax[2].legend()
 ax[2].set_ylabel('Mass $\mu$g/m$^3$')
-
+fig.tight_layout()
+fig.subplots_adjust(hspace=.0)
+fig.subplots_adjust(top=0.95)
 
 plt.show()
 # + tags=[]
@@ -281,7 +291,7 @@ ax[3][1].set_ylabel('Mass $\mu$g/m$^3$')
 
 
 plt.show()
-# + tags=[] jupyter={"source_hidden": true}
+# + tags=[]
 # %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 

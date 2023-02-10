@@ -364,8 +364,8 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
                                1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                2.42 * uncertainty_matrix['Fe'] ], axis=0)
         
-        salt = concentration_matrix['Cl'] + 1.4486 * (concentration_matrix['Na sol'] + concentration_matrix['Na sol'])
-        usalt = np.linalg.norm([ uncertainty_matrix['Cl'], 1.4486 * uncertainty_matrix['Na sol'], 1.4486 * uncertainty_matrix['Na sol']], axis=0)
+        salt = concentration_matrix['Cl'] + 1.4486 * (concentration_matrix['Na sol'])
+        usalt = np.linalg.norm([ uncertainty_matrix['Cl'], 1.4486 * uncertainty_matrix['Na sol']], axis=0)
         
         trace_elements = (concentration_matrix['K'] +  concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
