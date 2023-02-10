@@ -40,8 +40,8 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
     uncertainty_matrix['Hg'] = 0
     
     if equation == 'Macias_1981':
-        inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4SO3']
-        uinorganic_ions = np.linalg.norm( [uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4SO3'] ], axis=0)
+        inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4NO3']
+        uinorganic_ions = np.linalg.norm( [uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'] ], axis=0)
         
         organic_mass = 1.5 * concentration_matrix['C Orgánico']
         uorganic_mass = 1.5 * uncertainty_matrix['C Orgánico']
