@@ -21,6 +21,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import pandas as pd
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
+from funciones_pmfBA import estimation_om_oc
 
 matrix = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='CONC')
 matrix = matrix.rename(columns={'PM2,5': 'PM2.5'})
@@ -301,7 +302,7 @@ uvalues = mass[3]['uinorganic_ions'] + mass[3]['ugeological_minerals'] + mass[3]
 
 plt.style.use('seaborn-v0_8-paper')
 
-fig, ax = plt.subplots(figsize=(20,10))
+fig, ax = plt.subplots(figsize=(15,7.5))
 
 #matrix['PM2.5'].plot(style='.-', label='PM2.5', ax=ax)
 ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], marker='.', linestyle='-', capsize=3, capthick=1, label='PM2.5')
@@ -337,7 +338,7 @@ for method in methods:
     ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
     axs[i][j].errorbar(matrix.index, reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue', zorder=0)
     axs[i][j].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke', zorder=1)
-#    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SP'), 'D', label='Smoke previous day', zorder=2)
+    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SP'), 'D', label='Smoke previous day', zorder=2)
 #    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SN'), 's', label='Smoke next day', zorder=3)
     axs[i][j].set_title(method)
     axs[i][j].legend(loc=9)
@@ -425,11 +426,11 @@ for method in methods:
     axs[j].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke', zorder=1)
     axs[j].plot(matrix.index, reconst.where(events['Event']=='SP'), 'D', label='Smoke previous day', zorder=2)
     axs[j].plot(matrix.index, reconst.where(events['Event']=='SN'), 's', label='Smoke next day', zorder=3)
-    axs[j].axhline(100, color='r')
+    axs[j].axhline(100, color='k', linewidth=0.75)
     axs[j].set_title(method)
     axs[j].legend(loc=9)
-    axs[j].axhline(80, color='k')
-    axs[j].axhline(120, color='k')
+    axs[j].axhline(80, color='k', linestyle='--', linewidth=0.75)
+    axs[j].axhline(120, color='k', linestyle='--', linewidth=0.75)
     axs[j].tick_params(labelrotation=0)
     j += 1
     d_methodQuality[method] = np.logical_and(((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
@@ -462,4 +463,41 @@ for key1 in matrix.keys():
     plt.close()
 
         
+
+# -
+
+result = estimation_om_oc(matrix)
+print(result.summary())
+
+# +
+#print(result.fittedvalues)
+pred_ols = result.get_prediction()
+iv_l = pred_ols.summary_frame()["obs_ci_lower"]
+iv_u = pred_ols.summary_frame()["obs_ci_upper"]
+
+matrix_dropped_na = matrix.dropna(axis=0).reset_index(drop=True)
+x = matrix_dropped_na.index
+y = matrix_dropped_na['PM2.5']
+fig, ax = plt.subplots(figsize=(13, 6))
+
+ax.plot(x, y, "b.-", label="data")
+ax.plot(x, result.fittedvalues, "r.-", label="OLS")
+#ax.plot(x, y, "o", label="data")
+#ax.plot(x, y_true, "b-", label="True")
+#ax.plot(y, result.fittedvalues, "o", label="OLS")
+#lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+#        np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
+#        ]
+#ax.plot(lims, lims, 'k-', alpha=0.75, zorder=0)
+
+ax.plot(x, iv_u, "r--", linewidth = 0.75, label='IC')
+ax.plot(x, iv_l, "r--", linewidth = 0.75)
+ax.legend(loc="best")
+ax.set_xlabel('Date')
+ax.set_ylabel('PM2.5 (µg/m$^3$)')
+plt.show()
+
+
+# -
+
 

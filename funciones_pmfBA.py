@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import xarray as xr
+import statsmodels.api as sm
 
 
 
@@ -367,12 +368,12 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
         salt = concentration_matrix['Cl'] + 1.4486 * (concentration_matrix['Na sol'])
         usalt = np.linalg.norm([ uncertainty_matrix['Cl'], 1.4486 * uncertainty_matrix['Na sol']], axis=0)
         
-        trace_elements = (concentration_matrix['K'] +  concentration_matrix['V'] + concentration_matrix['Cr'] +
+        trace_elements = (concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])  # CHEQUEAR
-        utrace_elements = np.linalg.norm( [ uncertainty_matrix['K'],  uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                            uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                            uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
                                            uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
@@ -685,3 +686,47 @@ def percentage_with_err(val, totalval, uval, utotalval):
     uperc = 100 * np.linalg.norm([1/totalval * uval, val/(totalval**2) * utotalval], axis=0)
     
     return {'perc': perc, 'uperc': uperc}
+
+def estimation_om_oc(conc_matrix):
+    """
+    Calculate the OM/OC ratio based on Simon et al 2011, using
+    a multiple regresion with ordinary least squares to adjust
+    PM25 = mOC OC + msulf (NH4)2SO4 + mnit NH4NO3 + bsoil SOIL
+           + EC + 1.8 Cl- + 1.2 (K - 0.6 Fe) + e
+           
+    SOIL = 3.48 Si + 1.63 Ca + 2.42 Fe + 1.94 Ti
+    """
+    concentration_matrix = conc_matrix.dropna(axis=0).reset_index(drop=True)
+    if "C Elemental" in concentration_matrix:
+        concentration_matrix["EC"] = concentration_matrix["C Elemental"]
+    if "C Orgánico" in concentration_matrix:
+        concentration_matrix["OC"] = concentration_matrix['C Orgánico']
+    if "Si" not in concentration_matrix:
+        concentration_matrix['Si'] = 2.4729 * concentration_matrix['Al']
+#        uncertainty_matrix['Si'] = 2.4729 * uncertainty_matrix['Al'] * 2 # Ese * 2 es solo para agrandar la incert Si
+    if "(NH4)2SO4" not in concentration_matrix:
+        # Assume all SO4 is (NH4)2SO4
+        concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06) * concentration_matrix["SO4"]
+    if "NH4NO3" not in concentration_matrix:
+        # Assume all NO3 is NH4NO3
+        concentration_matrix["NH4NO3"] =  (80.043 / 62.004) * concentration_matrix["NO3"]
+    
+    soil = (3.46 * concentration_matrix["Si"] + 1.63 * concentration_matrix["Ca"] +
+            2.42 * concentration_matrix["Fe"] + 1.94 * concentration_matrix["Ti"])
+            
+    intercept_base = (concentration_matrix["EC"] + 1.8 * concentration_matrix ["Cl"] +
+                      1.2 * (concentration_matrix["K"] - 0.6 * concentration_matrix["Fe"]))
+    
+#    print(concentration_matrix)
+            
+    y = (concentration_matrix['PM2.5'] - intercept_base).values
+    X = np.column_stack((concentration_matrix["OC"].values,
+                        concentration_matrix["(NH4)2SO4"].values,
+                        concentration_matrix["NH4NO3"].values,
+                        soil.values))
+    X = sm.add_constant(X)
+#    print(X)
+#    print(y)
+    model = sm.OLS(y, X)
+    results = model.fit()
+    return(results)
