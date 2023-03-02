@@ -20,6 +20,8 @@ import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
 import pandas as pd
+from scipy.stats import linregress
+import statsmodels.api as sm
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
 from funciones_pmfBA import estimation_om_oc
 
@@ -45,15 +47,147 @@ meteo_mean.set_index(meteo_mean['date'], inplace=True)
 meteo_mean.drop('date', inplace=True, axis=1)
 meteo_mean = meteo_mean[meteo_mean.index.isin(matrix.index)]
 
+lv = pd.read_excel('graficos_lv_vs_hv_mod.xlsx', skiprows=1, sheet_name='datos')
+
+lv = lv.rename(columns={'CONCENTRACIÓN LOW-VOL ref (µg/m3)': 'PM2.5',
+                        'FECHA MONITOREO': 'date'})
+lv['date'] = pd.to_datetime(lv['date']).dt.date
+lv.set_index(lv['date'], inplace=True)
+
+
 events = pd.read_excel('BA_events.xlsx', index_col='date')
 
+# +
+
+x_orig = lv['PM2.5'].dropna()
+y = matrix['PM2.5'].dropna()
+
+x_orig = x_orig.loc[x_orig.index.isin(y.index)]
+y = y.loc[y.index.isin(x_orig.index)]
+#)
+x = x_orig
+x = sm.add_constant(x)
+model = sm.RLM(y, x, M=sm.robust.norms.HuberT())
+#model = sm.OLS(y, x)
+#model2 = 
+results = model.fit()
+#print(results.summary())
+#print(results.params)
+fig, ax = plt.subplots()
+
+
+ax.plot(x_orig, y, '.')#.loc[matrix.index.isin(lv.index)])
+ax.plot([0, 1], [0, 1], transform=ax.transAxes) # The transform makes it just be the axis
+ax.plot(x_orig, results.fittedvalues)
+ax.set_xlabel('LV')
+ax.set_ylabel('HV')
+ax.set_xlim(0,40)
+ax.set_ylim(0,40)
+plt.show()
+
+print(results.summary())
+
+# +
+matrix['month'] = pd.DatetimeIndex(matrix.index)
+matrix['month'] = matrix['month'].dt.month
+
+matrix.boxplot(by='month', column='PM2.5')
+plt.show()
+
+matrix.boxplot(by='month', column='C Elemental')
+plt.show()
+
+# +
+display(lv.loc[lv.index.isin(matrix.index)]['PM2.5'])
+print(matrix.loc[matrix.index.isin(lv.index)].shape)
+
+x_orig = lv['PM2.5'].dropna()
+y = matrix['PM2.5'].dropna()
+
+x_orig = x_orig.loc[x_orig.index.isin(y.index)]
+y = y.loc[y.index.isin(x_orig.index)]
+#x = add_constant(x_orig)
+x = x_orig
+
+res = linregress(x, y)
+#print(results.summary())
+#print(results.params)
+fig, ax = plt.subplots()
+print(res.intercept, res.slope, res.rvalue**2, res.pvalue)
+
+ax.plot(x_orig, y, '.')#.loc[matrix.index.isin(lv.index)])
+ax.plot([0, 1], [0, 1], transform=ax.transAxes) # The transform makes it just be the axis
+ax.plot(x_orig, res.intercept + res.slope*x, 'r', label='fitted line')
+ax.set_xlabel('LV')
+ax.set_ylabel('HV')
+plt.show()
+
+# +
+# %matplotlib widget
+with plt.style.context('seaborn-v0_8-paper'):
+    fig, ax = plt.subplots()
+    ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
+                marker='.', linestyle='-', capsize=3, capthick=1, label=r'PM$_{2.5}$, HV')
+#    ax.plot(pm25lv.index, pm25lv, 'o-')
+    ax.plot(lv.index, lv['PM2.5'],
+            '.-', label=r'PM$_{2.5}$, LV')
+    
+#    ax.axhline(5, color='k', linestyle=':')
+    ax.axhline(50, color='c', linestyle=':')#, label='Iterim target 2')
+    ax.axhline(37.5, color='g', linestyle=':')#, label='Iterim target 3')
+    ax.axhline(25, color='m', linestyle=':')#, label='Iterim target 4')
+    ax.axhline(15, color='r', linestyle=':')#, label='AQG level')
+    ax.set_xlabel('Date')
+    ax.set_ylabel(r'PM$_{2.5}$ (µg m$^{-3}$)')
+    ax.legend()
+    fig.savefig('PM25_hvlv.png')
+plt.show()
+
+# Calculate averages
+average = matrix['PM2.5'].mean()
+print(matrix['PM2.5'].notna().sum())
+
+exceedanceAQG = (matrix['PM2.5'] > 15).sum()
+exceedanceI1 = (matrix['PM2.5'] > 75).sum()
+exceedanceI2 = (matrix['PM2.5'] > 50).sum()
+exceedanceI3 = (matrix['PM2.5'] > 37.5).sum()
+exceedanceI4 = (matrix['PM2.5'] > 25).sum()
+
+print(average)
+print(f'exceedanceAQG {exceedanceAQG}\nexceedanceI1 {exceedanceI1}\nexceedanceI2 {exceedanceI2}')
+print(f'exceedanceI3 {exceedanceI3}\nexceedanceI4 {exceedanceI4}')
+
+###### Convert to LV
+# Create final values
+lvvals = 0.59 * matrix['PM2.5'] + 0.15
+pm25lv = lv['PM2.5'].dropna().combine_first(lvvals)
+
+#pm25lv.plot()
+
+averageLV = pm25lv.mean()
+pm25_total_number = pm25lv.notna().sum()
+print(pm25_total_number)
+
+exceedanceLVAQG = (pm25lv > 15).sum()/1.12
+exceedanceLVI1 = (pm25lv > 75).sum()/1.12
+exceedanceLVI2 = (pm25lv > 50).sum()/1.12
+exceedanceLVI3 = (pm25lv > 37.5).sum()/1.12
+exceedanceLVI4 = (pm25lv > 25).sum()/1.12
+print(averageLV)
+print(f'exceedanceLVAQG {exceedanceLVAQG}\nexceedanceLVI1 {exceedanceLVI1}\nexceedanceLVI2 {exceedanceLVI2}')
+print(f'exceedanceLVI3 {exceedanceLVI3}\nexceedanceLVI4 {exceedanceLVI4}')
 # -
+
 fig, ax = plt.subplots()
 ax.scatter(meteo_mean['ventCoef'], matrix[matrix.index.isin(meteo_mean.index)]['PM2.5'], marker='.')
 ax.set_xlabel('Ventilation Coeff m$^2$ s$^{-1}$')
 ax.set_ylabel('PM2.5 $\mu$g m$^{3}$')
 plt.show()
 # Time series plot
+fig, ax = plt.subplots()
+ax.plot(matrix.index[matrix.index.isin(meteo_mean.index)], meteo_mean['ventCoef'], '.-')
+ax.set_xlabel('Date')
+ax.set_ylabel('Ventilation Coefficient (m$^2$/s)')
 
 fig, ax = plt.subplots()
 ax.scatter(events['AOD440'], events['Alpha'])
@@ -464,9 +598,14 @@ for key1 in matrix.keys():
 
         
 
-# -
 
+# +
 result = estimation_om_oc(matrix)
+#print(result.summary())
+
+print('\n\n Results for warm season')
+warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
+result = estimation_om_oc(matrix.loc[warm_season_index])
 print(result.summary())
 
 # +

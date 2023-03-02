@@ -706,10 +706,10 @@ def estimation_om_oc(conc_matrix):
 #        uncertainty_matrix['Si'] = 2.4729 * uncertainty_matrix['Al'] * 2 # Ese * 2 es solo para agrandar la incert Si
     if "(NH4)2SO4" not in concentration_matrix:
         # Assume all SO4 is (NH4)2SO4
-        concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06) * concentration_matrix["SO4"]
+        concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * concentration_matrix["SO4"]
     if "NH4NO3" not in concentration_matrix:
         # Assume all NO3 is NH4NO3
-        concentration_matrix["NH4NO3"] =  (80.043 / 62.004) * concentration_matrix["NO3"]
+        concentration_matrix["NH4NO3"] =  (80.043 / 62.004 ) * concentration_matrix["NO3"]
     
     soil = (3.46 * concentration_matrix["Si"] + 1.63 * concentration_matrix["Ca"] +
             2.42 * concentration_matrix["Fe"] + 1.94 * concentration_matrix["Ti"])
