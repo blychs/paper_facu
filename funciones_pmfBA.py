@@ -41,6 +41,18 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
     uncertainty_matrix['Hg'] = 0
     
     if equation == 'Macias_1981':
+
+                
+        if "(NH4)2SO4" not in concentration_matrix:
+            # Assume all SO4 is (NH4)2SO4
+            concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * concentration_matrix["SO4"]
+            uncertainty_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * uncertainty_matrix["SO4"]
+        if "NH4NO3" not in concentration_matrix:
+            # Assume all NO3 is NH4NO3
+            concentration_matrix["NH4NO3"] =  (80.043 / 62.004 ) * concentration_matrix["NO3"]
+            uncertainty_matrix["NH4NO3"] = (80.043 / 62.004 ) * uncertainty_matrix["NO3"]
+        
+        
         inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4NO3']
         uinorganic_ions = np.linalg.norm( [uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'] ], axis=0)
         
@@ -70,7 +82,7 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
                       'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals,
                        'utrace_elements': utrace_elements}
         
-        uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4SO3'],
+        uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
                                         1.5 * uncertainty_matrix['C Orgánico'],
                                         uncertainty_matrix['C Elemental'],
                                         1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
@@ -468,39 +480,43 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
         
        
     if equation == 'Simon_2011':
+        # Consider all SO4 and NO3 with ammonium as counterion
+        
+        if "(NH4)2SO4" not in concentration_matrix:
+            # Assume all SO4 is (NH4)2SO4
+            concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * concentration_matrix["SO4"]
+            uncertainty_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * uncertainty_matrix["SO4"]
+        if "NH4NO3" not in concentration_matrix:
+            # Assume all NO3 is NH4NO3
+            concentration_matrix["NH4NO3"] =  (80.043 / 62.004 ) * concentration_matrix["NO3"]
+            uncertainty_matrix["NH4NO3"] = (80.043 / 62.004 ) * uncertainty_matrix["NO3"]
+        
         inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4NO3']
         uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'] ], axis=0)
         
-        organic_mass = (1.8 * concentration_matrix['C Orgánico'] +
-                        0.2 * concentration_matrix['C Orgánico'].where(events['Event']=='SN', other=0) +
-                        0.2 * concentration_matrix['C Orgánico'].where(events['Event']=='SP', other=0) +
-                        0.4 * concentration_matrix['C Orgánico'].where(events['Event']=='S', other=0))
-        uorganic_mass = (1.8 * uncertainty_matrix['C Orgánico'] +
-                         0.2 * uncertainty_matrix['C Orgánico'].where(events['Event']=='SN', other=0) +
-                         0.2 * uncertainty_matrix['C Orgánico'].where(events['Event']=='SP', other=0) +
-                         0.4 * uncertainty_matrix['C Orgánico'].where(events['Event']=='S', other=0)) 
+        organic_mass = (1.8 * concentration_matrix['C Orgánico'] )
+        uorganic_mass = (1.8 * uncertainty_matrix['C Orgánico'] )
         
         elemental_C = concentration_matrix['C Elemental']
         uelemental_C = uncertainty_matrix['C Elemental']
         
         geological_minerals = (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
                                2.42 * concentration_matrix['Fe'] + 1.94 * concentration_matrix['Ti'])
-        geological_minerals = np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
+        ugeological_minerals = np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
                                2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'] ], axis=0)
         
         salt = 1.8 * concentration_matrix['Cl']
-        salt = 1.8 * uncertainty_matrix['Cl']
+        usalt = 1.8 * uncertainty_matrix['Cl']
         
         others = 1.2 * (concentration_matrix['K'] - 0.6 * concentration_matrix['Fe'])
-        others = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        uothers = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
         
         categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
               'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
               'salt': salt, 'others': others}
         
         ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
-                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals,
-                      'utrace_elements': utrace_elements}
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
                                     1.8 * uncertainty_matrix['C Orgánico'],
@@ -687,46 +703,91 @@ def percentage_with_err(val, totalval, uval, utotalval):
     
     return {'perc': perc, 'uperc': uperc}
 
-def estimation_om_oc(conc_matrix):
+def estimation_om_oc(conc_matrix, method='Simon_2011'):
+    from IPython.display import display, Markdown, Latex
     """
     Calculate the OM/OC ratio based on Simon et al 2011, using
     a multiple regresion with ordinary least squares to adjust
+    functions from the method.
+    Default is Simon 2011:
     PM25 = mOC OC + msulf (NH4)2SO4 + mnit NH4NO3 + bsoil SOIL
            + EC + 1.8 Cl- + 1.2 (K - 0.6 Fe) + e
            
     SOIL = 3.48 Si + 1.63 Ca + 2.42 Fe + 1.94 Ti
     """
-    concentration_matrix = conc_matrix.dropna(axis=0).reset_index(drop=True)
+    concentration_matrix = conc_matrix.copy()
     if "C Elemental" in concentration_matrix:
         concentration_matrix["EC"] = concentration_matrix["C Elemental"]
     if "C Orgánico" in concentration_matrix:
         concentration_matrix["OC"] = concentration_matrix['C Orgánico']
     if "Si" not in concentration_matrix:
         concentration_matrix['Si'] = 2.4729 * concentration_matrix['Al']
-#        uncertainty_matrix['Si'] = 2.4729 * uncertainty_matrix['Al'] * 2 # Ese * 2 es solo para agrandar la incert Si
     if "(NH4)2SO4" not in concentration_matrix:
-        # Assume all SO4 is (NH4)2SO4
+            # Assume all SO4 is (NH4)2SO4
         concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * concentration_matrix["SO4"]
     if "NH4NO3" not in concentration_matrix:
-        # Assume all NO3 is NH4NO3
+            # Assume all NO3 is NH4NO3
         concentration_matrix["NH4NO3"] =  (80.043 / 62.004 ) * concentration_matrix["NO3"]
+        
+    if method=="DeBell_2006":
+        ############################
     
-    soil = (3.46 * concentration_matrix["Si"] + 1.63 * concentration_matrix["Ca"] +
-            2.42 * concentration_matrix["Fe"] + 1.94 * concentration_matrix["Ti"])
-            
-    intercept_base = (concentration_matrix["EC"] + 1.8 * concentration_matrix ["Cl"] +
-                      1.2 * (concentration_matrix["K"] - 0.6 * concentration_matrix["Fe"]))
+    if method=="Hand_2011":
+        concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "Si", "Al",
+                                                                   "Ca", "Fe", "Ti", "EC", "Cl",
+                                                                   "Fe", "PM2.5", "OC"], axis=0)
+        soil = (2.2 * concentration_matrix["Al"] + 2.49 * concentration_matrix["Si"] +
+                1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
+                2.42 * concentration_matrix["Fe"])
+        intercept_base = (concentration_matrix["EC"] + 1.8 * concentration_matrix["Cl"])
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                            concentration_matrix["(NH4)2SO4"].values,
+                            concentration_matrix["NH4NO3"].values,
+                            soil.values))
+        X = sm.add_constant(X)
+    #    print(X)
+    #    print(y)
+        model = sm.OLS(y, X)
+        results = model.fit()
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} g m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                {results.params[4].round(2)} SOIL +\
+                 1.8 Cl$^-$'))       
+        
     
-#    print(concentration_matrix)
-            
-    y = (concentration_matrix['PM2.5'] - intercept_base).values
-    X = np.column_stack((concentration_matrix["OC"].values,
-                        concentration_matrix["(NH4)2SO4"].values,
-                        concentration_matrix["NH4NO3"].values,
-                        soil.values))
-    X = sm.add_constant(X)
-#    print(X)
-#    print(y)
-    model = sm.OLS(y, X)
-    results = model.fit()
+    
+    if method=="Simon_2011":
+        concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "Si",
+                                                                   "Ca", "Fe", "Ti", "EC", "Cl",
+                                                                   "K", "Fe", "PM2.5", "OC"], axis=0)
+        
+
+        soil = (3.48 * concentration_matrix["Si"] + 1.63 * concentration_matrix["Ca"] +
+                2.42 * concentration_matrix["Fe"] + 1.94 * concentration_matrix["Ti"])
+        
+        intercept_base = (concentration_matrix["EC"] + 1.8 * concentration_matrix ["Cl"] +
+                          1.2 * (concentration_matrix["K"] - 0.6 * concentration_matrix["Fe"]))
+        
+    #    print(concentration_matrix)
+                
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                            concentration_matrix["(NH4)2SO4"].values,
+                            concentration_matrix["NH4NO3"].values,
+                            soil.values))
+        X = sm.add_constant(X)
+    #    print(X)
+    #    print(y)
+        model = sm.OLS(y, X)
+        results = model.fit()
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} g m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                {results.params[4].round(2)} SOIL +\
+                 1.8 Cl$^-$ + 1.2 KNON'))
     return(results)

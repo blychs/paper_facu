@@ -28,7 +28,7 @@ from funciones_pmfBA import estimation_om_oc
 
 matrix = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='CONC')
 matrix = matrix.rename(columns={'PM2,5': 'PM2.5'})
-matrix['date'] = pd.to_datetime(matrix['date']).dt.date
+matrix['date'] = pd.to_datetime(matrix['date'])#.dt.date
 matrix.set_index(matrix['date'], inplace=True)
 matrix.drop('date', inplace=True, axis=1)
 matrix[matrix < 0] = np.nan
@@ -36,14 +36,14 @@ matrix = matrix.reindex(sorted(matrix.columns), axis=1)
 
 unc = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='UNC')
 unc = unc.rename(columns={'PM2,5': 'PM2.5'})
-unc['date'] = pd.to_datetime(unc['date']).dt.date
+unc['date'] = pd.to_datetime(unc['date'])#.dt.date
 unc.set_index(unc['date'], inplace=True)
 unc.drop('date', inplace=True, axis=1)
 unc[unc < 0] = np.nan
 unc = unc.reindex(sorted(unc.columns), axis=1)
 
 meteo_mean = pd.read_csv('dataObs_noon2noon.csv')
-meteo_mean['date'] = pd.to_datetime(meteo_mean['date']).dt.date
+meteo_mean['date'] = pd.to_datetime(meteo_mean['date'])#.dt.date
 meteo_mean.set_index(meteo_mean['date'], inplace=True)
 meteo_mean.drop('date', inplace=True, axis=1)
 meteo_mean = meteo_mean[meteo_mean.index.isin(matrix.index)]
@@ -52,6 +52,7 @@ meteo_mean = meteo_mean[meteo_mean.index.isin(matrix.index)]
 events = pd.read_excel('BA_events.xlsx', index_col='date')
 
 # +
+# #%matplotlib widget
 fig, ax = plt.subplots()
 
 ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.')
@@ -62,14 +63,27 @@ ax.axhline(15, color='r', linestyle='dashed', label='AQ Guideline')
 ax.legend()
 ax.set_xlabel('Date')
 ax.set_ylabel('PM$_{2.5}$ mass concentration (µg m$^{-3}$)')
+# ax.grid()
 fig.savefig('HV_PM25.png')
 plt.show()
+
+## Calculate num exceedances (percentage)
+valid_filters = matrix['PM2.5'].notna().sum()
+print(valid_filters)
+exceedance = lambda target: ((matrix['PM2.5'] > target).sum()/valid_filters * 100).round(2)
+
+print('Interim target 1:', exceedance(75))
+print('Interim target 2:', exceedance(50))
+print('Interim target 3:', exceedance(37.5))
+print('Interim target 4:', exceedance(25))
+print('Interim target AQG:', exceedance(15))
+print('Yearly mean:', matrix['PM2.5'].mean().round(2))
 
 
 # +
 matrix['month'] = pd.DatetimeIndex(matrix.index)
 matrix['month'] = matrix['month'].dt.to_period('M')
-display(matrix)
+
 
 fig, ax = plt.subplots()
 
@@ -85,31 +99,7 @@ ax.set_ylabel('PM$_{2.5}$ concentration (µg m$^{-3}$)')
 ax.set_xlabel('Month')
 ax.set_xticklabels(bins, rotation=45, ha='right')
 ax.grid()
-plt.show()
-
-# +
-display(lv.loc[lv.index.isin(matrix.index)]['PM2.5'])
-print(matrix.loc[matrix.index.isin(lv.index)].shape)
-
-x_orig = lv['PM2.5'].dropna()
-y = matrix['PM2.5'].dropna()
-
-x_orig = x_orig.loc[x_orig.index.isin(y.index)]
-y = y.loc[y.index.isin(x_orig.index)]
-#x = add_constant(x_orig)
-x = x_orig
-
-res = linregress(x, y)
-#print(results.summary())
-#print(results.params)
-fig, ax = plt.subplots()
-print(res.intercept, res.slope, res.rvalue**2, res.pvalue)
-
-ax.plot(x_orig, y, '.')#.loc[matrix.index.isin(lv.index)])
-ax.plot([0, 1], [0, 1], transform=ax.transAxes) # The transform makes it just be the axis
-ax.plot(x_orig, res.intercept + res.slope*x, 'r', label='fitted line')
-ax.set_xlabel('LV')
-ax.set_ylabel('HV')
+fig.savefig('PM_boxplot.png')
 plt.show()
 # -
 
@@ -133,7 +123,7 @@ ax.set_ylabel(r'$\alpha$', size=10)
 plt.show()
 
 # + tags=[]
-# %matplotlib widget
+# #%matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 plt.style.use('seaborn-v0_8-paper')
@@ -189,75 +179,6 @@ smoke_dates = list(matrix.index.where(events['Event']=='S').dropna())
 print(smoke_dates)
 
 
-width=2
-
-fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(10, 10), sharex=True)
-
-
-fig.suptitle('Results of the reconstruction using Hand 2011')
-ax[0].bar(matrix.index, organic_mass_per['perc'], width, yerr=organic_mass_per['uperc'], label='Organic mass')
-ax[0].bar(matrix.index, inorganic_ions_per['perc'], width, yerr=inorganic_ions_per['uperc'], bottom=organic_mass_per['perc'],label='Inorganic ions')
-ax[0].bar(matrix.index, geological_minerals_per['perc'], width, yerr=geological_minerals_per['uperc'],
-       bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']),label='Geological minerals')
-ax[0].bar(matrix.index, EC_per['perc'], width, yerr=EC_per['uperc'],
-       bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='Geological minerals')
-ax[0].bar(matrix.index, ssa_per['perc'], width, yerr=ssa_per['uperc'],
-       bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='Geological minerals')
-ax[0].set_ylabel('Percentage of reconstructed mass (%)')
-ax[0].legend(loc=4)
-
-ax[1].errorbar(x=matrix.index, y=reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue')
-ax[1].axhspan(80, 120, facecolor='y', alpha=0.5)
-ax[1].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke')
-ax[1].plot(matrix.index, reconst.where(events['Event']=='SP'), 'o', label='Smoke previous day')
-ax[1].plot(matrix.index, reconst.where(events['Event']=='SN'), 'o', label='Smoke next day')
-ax[1].axhline(100, color='k')
-ax[1].legend()
-ax[1].set_ylabel('Percentage of PM2.5 reconstructed')
-
-ax[2].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', label='Measured PM2.5')
-ax[2].errorbar(matrix.index, mass[0], mass[2], capsize=2, capthick=1, marker='.', label='Reconstructed PM2.5') 
-ax[2].legend()
-ax[2].set_ylabel('Mass $\mu$g/m$^3$')
-fig.tight_layout()
-fig.subplots_adjust(hspace=.0)
-fig.subplots_adjust(top=0.95)
-
-plt.show()
-# + tags=[]
-# %matplotlib widget
-mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
-
-organic_mass_per = percentage_with_err(mass[1]['organic_mass'], mass[0], mass[3]['uorganic_mass'], mass[2])
-inorganic_ions_per = percentage_with_err(mass[1]['inorganic_ions'], mass[0], mass[3]['uinorganic_ions'], mass[2])
-geological_minerals_per = percentage_with_err(mass[1]['geological_minerals'], mass[0], mass[3]['ugeological_minerals'], mass[2])
-EC_per = percentage_with_err(mass[1]['elemental_C'], mass[0], mass[3]['uelemental_C'], mass[2])
-ssa_per = percentage_with_err(mass[1]['salt'], mass[0], mass[3]['usalt'], mass[2])
-
-plt.style.use('seaborn-v0_8-paper')
-
-#fig, ax = plt.subplots(figsize=(12,6))
-#
-#
-##ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], marker='.', linestyle='-', capsize=3, capthick=1, label='PM2.5')
-#ax.errorbar(matrix.index, organic_mass_per['perc'], yerr=organic_mass_per['uperc'], marker='.', capsize=3, capthick=1, linestyle='-', label="Organic mass")
-#ax.errorbar(matrix.index, inorganic_ions_per['perc'], yerr=inorganic_ions_per['uperc'], marker='.', capsize=3, capthick=1, linestyle='-', label="Inorganic ions")
-#ax.errorbar(matrix.index, geological_minerals_per['perc'], yerr=geological_minerals_per['uperc'], marker='.', capsize=3, capthick=1, linestyle='-', label="Geological minerals")
-#ax.errorbar(matrix.index, EC_per['perc'], yerr=EC_per['uperc'], marker='.', capsize=3, capthick=1, linestyle='-', label="Elemental carbon")
-#ax.errorbar(matrix.index, mass[1]['salt'], yerr=mass[3]['usalt'], marker='.', capsize=3, capthick=1, linestyle='-', label="Sea salt")
-#
-#ax.set_title('Time series as percentage of reconstructed mass')
-#ax.set_xlabel("Date")
-#ax.set_ylabel("Mass concentration (µg/m$^3$)")
-#ax.legend()
-#plt.show()
-
-reconst = mass[0]/matrix['PM2.5'] * 100
-ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
-smoke_dates = list(matrix.index.where(events['Event']=='S').dropna())
-print(smoke_dates)
-
-
 width=2.5
 
 fig, ax = plt.subplots(nrows=4, ncols=2, figsize=(15, 12), sharex=True)
@@ -266,6 +187,7 @@ plt.subplots_adjust(hspace=.0)
 plt.subplots_adjust(wspace=.0)
 
 fig.suptitle('Mass reconstruction')
+ax[0][0].set_title('Hand 2011')
 ax[0][0].bar(matrix.index, organic_mass_per['perc'], width, yerr=organic_mass_per['uperc'], label='Organic mass')
 ax[0][0].bar(matrix.index, inorganic_ions_per['perc'], width, yerr=inorganic_ions_per['uperc'], bottom=organic_mass_per['perc'],label='Inorganic ions')
 ax[0][0].bar(matrix.index, geological_minerals_per['perc'], width, yerr=geological_minerals_per['uperc'],
@@ -306,19 +228,24 @@ ax[3][0].legend()
 ax[3][0].set_ylabel('Mass $\mu$g/m$^3$')
 
 
-mass = mass_reconstruction_mod(matrix, unc, events=events, equation="Hand_2011")
+mass = mass_reconstruction_mod(matrix, unc, events=events, equation="DeBell_2006")
 reconst = mass[0]/matrix['PM2.5'] * 100
 ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+organic_mass_per = percentage_with_err(mass[1]['organic_mass'], mass[0], mass[3]['uorganic_mass'], mass[2])
+inorganic_ions_per = percentage_with_err(mass[1]['inorganic_ions'], mass[0], mass[3]['uinorganic_ions'], mass[2])
+geological_minerals_per = percentage_with_err(mass[1]['geological_minerals'], mass[0], mass[3]['ugeological_minerals'], mass[2])
+EC_per = percentage_with_err(mass[1]['elemental_C'], mass[0], mass[3]['uelemental_C'], mass[2])
+#ssa_per = percentage_with_err(mass[1]['salt'], mass[0], mass[3]['usalt'], mass[2])
 
-
+ax[0][1].set_title('DeBell 2006')
 ax[0][1].bar(matrix.index, organic_mass_per['perc'], width, yerr=organic_mass_per['uperc'], label='Organic mass')
 ax[0][1].bar(matrix.index, inorganic_ions_per['perc'], width, yerr=inorganic_ions_per['uperc'], bottom=organic_mass_per['perc'],label='Inorganic ions')
 ax[0][1].bar(matrix.index, geological_minerals_per['perc'], width, yerr=geological_minerals_per['uperc'],
           bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']),label='Geological minerals')
 ax[0][1].bar(matrix.index, EC_per['perc'], width, yerr=EC_per['uperc'],
           bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='EC')
-ax[0][1].bar(matrix.index, ssa_per['perc'], width, yerr=ssa_per['uperc'],
-          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='SSA')
+#ax[0][1].bar(matrix.index, ssa_per['perc'], width, yerr=ssa_per['uperc'],
+#          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='SSA')
 ax[0][1].yaxis.tick_right() 
 ax[0][1].yaxis.set_label_position("right")
 ax[0][1].set_ylabel('Category of rec. mass (%)')
@@ -331,8 +258,8 @@ ax[1][1].bar(matrix.index, mass[1]['geological_minerals'], width, yerr=mass[3]['
          bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions']),label='Geological minerals')
 ax[1][1].bar(matrix.index, mass[1]['elemental_C'], width, yerr=mass[3]['uelemental_C'],
           bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions'] + mass[1]['geological_minerals']),label='EC')
-ax[1][1].bar(matrix.index, mass[1]['salt'], width, yerr=mass[3]['usalt'],
-          bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C']),label='SSA')
+#ax[1][1].bar(matrix.index, mass[1]['salt'], width, yerr=mass[3]['usalt'],
+#          bottom=(mass[1]['organic_mass'] + mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C']),label='SSA')
 ax[1][1].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', ecolor='tan', color='tan')
 ax[1][1].yaxis.tick_right() 
 ax[1][1].yaxis.set_label_position("right")
@@ -357,7 +284,7 @@ ax[3][1].yaxis.tick_right()
 ax[3][1].yaxis.set_label_position("right")
 ax[3][1].set_ylabel('Mass $\mu$g/m$^3$')
 
-
+fig.savefig('stacked_massreconst.png')
 
 
 plt.show()
@@ -387,17 +314,17 @@ plt.show()
 
 
 # + tags=[]
-# %matplotlib widget
+# #%matplotlib widget
 
-methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
-           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
+methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
 
 #methods = ['Hand_2011']
 
 d_methodQuality = {}
 
 plt.style.use('seaborn-v0_8-paper')
-fig, axs = plt.subplots(3, 3, figsize=(16, 12))
+fig, axs = plt.subplots(4, 3, figsize=(16, 12))
 
 i, j = 0, 0
 for method in methods:
@@ -430,17 +357,17 @@ print(d_methodQuality)
 
 
 # + tags=[]
-# %matplotlib widget
+# #%matplotlib widget
 
-methods = ['Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
-           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
+methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
 
 #methods = ['Hand_2011']
 
 d_methodQuality = {}
 
 plt.style.use('seaborn-v0_8-paper')
-fig, axs = plt.subplots(3, 3, figsize=(16, 12))
+fig, axs = plt.subplots(4, 3, figsize=(16, 12))
 
 i, j = 0, 0
 for method in methods:
@@ -474,7 +401,7 @@ print(d_methodQuality)
 
 
 # +
-# %matplotlib widget
+# #%matplotlib widget
 
 methods = [ 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
 
@@ -535,16 +462,18 @@ for key1 in matrix.keys():
 
 
 # +
-result = estimation_om_oc(matrix)
+result = estimation_om_oc(matrix, method="Simon_2011")
 #print(result.summary())
 
+print(matrix.index.dtype)
 print('\n\n Results for warm season')
-warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
-result = estimation_om_oc(matrix.loc[warm_season_index])
-print(result.summary())
+#warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
+#result = estimation_om_oc(matrix.loc[warm_season_index])
+print(result.summary().as_latex())
 
 # +
 #print(result.fittedvalues)
+
 pred_ols = result.get_prediction()
 iv_l = pred_ols.summary_frame()["obs_ci_lower"]
 iv_u = pred_ols.summary_frame()["obs_ci_upper"]
@@ -556,7 +485,8 @@ fig, ax = plt.subplots(figsize=(13, 6))
 
 ax.plot(x, y, "b.-", label="data")
 ax.plot(x, result.fittedvalues, "r.-", label="OLS")
-#ax.plot(x, y, "o", label="data")
+ax.plot(x, y, "o", label="data")
+ax.plot(mass)
 #ax.plot(x, y_true, "b-", label="True")
 #ax.plot(y, result.fittedvalues, "o", label="OLS")
 #lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
@@ -570,6 +500,17 @@ ax.legend(loc="best")
 ax.set_xlabel('Date')
 ax.set_ylabel('PM2.5 (µg/m$^3$)')
 plt.show()
+
+fig, ax = plt.subplots(figsize=(13,6))
+ax.plot(x, result.fittedvalues/y * 100, "b.-")
+ax.set_xlabel("Date")
+ax.set_ylabel("Mass explained (%)")
+ax.axhline(80)
+ax.axhline(120)
+plt.show()
+
+
+#explained_percentage = is_explained.sum()
 
 
 # -
