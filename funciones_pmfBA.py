@@ -574,7 +574,7 @@ def mass_reconstruction_mod(concentration_matrix, uncertainty_matrix, events, eq
         salt = concentration_matrix['Cl'] + 1.4486 * (concentration_matrix['Na sol'] + concentration_matrix['Na sol'])
         usalt = np.linalg.norm([ uncertainty_matrix['Cl'], 1.4486 * uncertainty_matrix['Na sol'], 1.4486 * uncertainty_matrix['Na sol']], axis=0)
         
-        trace_elements = (concentration_matrix['K'] +  concentration_matrix['V'] + concentration_matrix['Cr'] +
+        trace_elements = (concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
@@ -728,10 +728,242 @@ def estimation_om_oc(conc_matrix, method='Simon_2011'):
     if "NH4NO3" not in concentration_matrix:
             # Assume all NO3 is NH4NO3
         concentration_matrix["NH4NO3"] =  (80.043 / 62.004 ) * concentration_matrix["NO3"]
-        
-    if method=="DeBell_2006":
-        ############################
     
+    
+    if method=="Macias_1981":
+        concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "OC", "Al", "Si",
+                                                                   "Ca", "K", "Fe", "Cu", "Zn", "Pb", "PM2.5",
+                                                                   "EC"], axis=0)
+        
+    
+        soil = (1.89 * concentration_matrix["Al"] + 2.14 * concentration_matrix["Si"] +
+                1.4 * concentration_matrix["Ca"] + 1.2 * concentration_matrix["K"] +
+                1.43 * concentration_matrix["Fe"])
+        
+        trace = (1.25 * concentration_matrix["Cu"] + 1.24 * concentration_matrix["Zn"] +
+                 1.08 * concentration_matrix["Pb"])
+        
+        
+        intercept_base = concentration_matrix["EC"] + trace
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                             concentration_matrix["(NH4)2SO4"].values,
+                             concentration_matrix["NH4NO3"].values,
+                             soil.values))
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X)
+        results = model.fit()       
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                {results.params[4].round(2)} SOIL + trace +\
+                 EC'))   
+           
+    
+    if method=="Chow_1994" or method=="Solomon_1989":
+        
+        
+        concentration_matrix = concentration_matrix.dropna(subset=["SO4", "NO3", "NH4", "Si", "Al",
+                                                                   "Ca", "Ti", "Fe", "Cl", "Na sol",
+                                                                   "V", "Cr", "Mn", "Ni", 
+                                                                   "Cu", "Zn", "As", "Se", 
+                                                                   "Pb", "Sb", "PM2.5"], axis=0)
+        soil = (1.89 * concentration_matrix["Al"] + 2.14 * concentration_matrix["Si"] +
+                1.4 * concentration_matrix["Ca"] +
+                1.43 * concentration_matrix["Fe"])
+        trace = (concentration_matrix['V'] + concentration_matrix['Cr'] +
+                 concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                 concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                 concentration_matrix['Pb'] + concentration_matrix["Na sol"] + concentration_matrix["Cl"] + 
+                 concentration_matrix['Sb'])
+        
+        intercept_base = concentration_matrix["EC"] + trace
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                             concentration_matrix["SO4"].values,
+                             concentration_matrix["NO3"].values,
+                             concentration_matrix["NH4"].values,
+                             soil.values))
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X)
+        results = model.fit()       
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} SO$_4$ +\
+                {results.params[3].round(2)} NO$_3$ +\
+                {results.params[4].round(2)} NH$_4$ +\
+                {results.params[5].round(2)} SOIL + trace +\
+                 EC'))   
+           
+    
+    if method=="Malm_1994":
+        concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "Si", "Al",
+                                                                   "Ca", "Fe", "Ti", "EC",
+                                                                   "Fe", "PM2.5", "OC"], axis=0)
+        soil = (2.2 * concentration_matrix["Al"] + 2.49 * concentration_matrix["Si"] +
+                1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
+                2.42 * concentration_matrix["Fe"])
+        intercept_base = (concentration_matrix["EC"])
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                            concentration_matrix["(NH4)2SO4"].values,
+                            soil.values))
+        X = sm.add_constant(X)
+    #    print(X)
+    #    print(y)
+        model = sm.OLS(y, X)
+        results = model.fit()
+        print(method)
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                {results.params[3].round(2)} SOIL'))   
+    
+    
+    if method=="Chow_1996":
+        
+        concentration_matrix = concentration_matrix.dropna(subset=["SO4", "NO3", "NH4", "Si", "Al",
+                                                                   "Ca", "Ti", "Fe", "Cl", "Na sol",
+                                                                   "V", "Cr", "Mn", "Ni", 
+                                                                   "Cu", "Zn", "As", "Se", 
+                                                                   "Pb", "Sb", "PM2.5"], axis=0)
+        soil = (1.89 * concentration_matrix["Al"] + 2.14 * concentration_matrix["Si"] +
+                1.4 * concentration_matrix["Ca"] +
+                1.43 * concentration_matrix["Fe"])
+        salt = concentration_matrix["Cl"] + concentration_matrix["Na sol"]
+        trace = (concentration_matrix['V'] + concentration_matrix['Cr'] +
+                 concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                 concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                 concentration_matrix['Pb'] + 
+                 concentration_matrix['Sb'])
+        
+        intercept_base = concentration_matrix["EC"] + salt + trace
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                             concentration_matrix["SO4"].values,
+                             concentration_matrix["NO3"].values,
+                             concentration_matrix["NH4"].values,
+                             soil.values))
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X)
+        results = model.fit()       
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} SO$_4$ +\
+                {results.params[3].round(2)} NO$_3$ +\
+                {results.params[4].round(2)} NH$_4$ +\
+                {results.params[5].round(2)} SOIL + trace +\
+                 EC + Cl + Na'))   
+           
+    
+    if method=="Andrews_2000":
+        
+        concentration_matrix = concentration_matrix.dropna(subset=["SO4", "NO3", "NH4", "Si", "Al",
+                                                                   "Ca", "Ti", "Fe", "Cl", "Na sol",
+                                                                   "V", "Cr", "Mn", "Ni",
+                                                                   "Cu", "Zn", "As", "Se", 
+                                                                   "Pb", "Sb", "K", "PM2.5"], axis=0)
+        soil = (1.89 * concentration_matrix["Al"] + 2.14 * concentration_matrix["Si"] +
+                1.4 * concentration_matrix["Ca"] + 1.67 * concentration_matrix["Ti"] +
+                1.43 * concentration_matrix["Fe"])
+       
+        trace = (concentration_matrix['V'] + concentration_matrix['Cr'] + concentration_matrix["Na sol"] +
+                 concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                 concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                 concentration_matrix['Pb'] + concentration_matrix["Cl"] +
+                 concentration_matrix['Sb'])
+        
+        intercept_base = concentration_matrix["EC"]  + trace
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                             concentration_matrix["SO4"].values,
+                             concentration_matrix["NO3"].values,
+                             concentration_matrix["NH4"].values,
+                             soil.values))
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X)
+        results = model.fit()       
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} SO$_4$ +\
+                {results.params[3].round(2)} NO$_3$ +\
+                {results.params[4].round(2)} NH$_4$ +\
+                {results.params[5].round(2)} SOIL + trace +\
+                 EC'))   
+        
+        
+    
+    if method=="Maenhaut_2002": # Por algún motivo tuve que sacar Sr y Hg
+        concentration_matrix = concentration_matrix.dropna(subset=["SO4", "NO3", "NH4", "Si", "Al",
+                                                                   "Ca", "Ti", "Fe", "Cl", "Na sol",
+                                                                   "V", "Cr", "Mn", "Ni", 
+                                                                   "Cu", "Zn", "As", "Se", 
+                                                                   "Pb", "Sb", "K", "PM2.5"], axis=0)
+        soil = (2.2 * concentration_matrix["Al"] + 2.49 * concentration_matrix["Si"] +
+                1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
+                2.42 * concentration_matrix["Fe"])
+        salt = concentration_matrix["Cl"] + 1.4486 * concentration_matrix["Na sol"]
+        trace = (concentration_matrix['V'] + concentration_matrix['Cr'] +
+                 concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                 concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                 concentration_matrix['Pb'] + 
+                 concentration_matrix['Sb'])
+        knon = concentration_matrix["K"] - 0.6 * concentration_matrix["Fe"]
+        
+        intercept_base = concentration_matrix["EC"] + salt + knon + trace
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                             concentration_matrix["SO4"].values,
+                             concentration_matrix["NO3"].values,
+                             concentration_matrix["NH4"].values,
+                             soil.values))
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X)
+        results = model.fit()       
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} SO$_4$ +\
+                {results.params[3].round(2)} NO$_3$ +\
+                {results.params[4].round(2)} NH$_4$ +\
+                {results.params[5].round(2)} SOIL + trace + KNON +\
+                 EC + Cl + 1.4486 Na'))   
+        
+        
+    if (method=="DeBell_2006" or method =="Malm_2000"):
+        ############################
+        #Using the fact that the equation actually considers all S as (NH4)2SO4 
+        concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "Si", "Al",
+                                                                   "Ca", "Fe", "Ti", "EC",
+                                                                   "Fe", "PM2.5", "OC"], axis=0)
+        soil = (2.2 * concentration_matrix["Al"] + 2.49 * concentration_matrix["Si"] +
+                1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
+                2.42 * concentration_matrix["Fe"])
+        intercept_base = (concentration_matrix["EC"])
+        
+        y = (concentration_matrix['PM2.5'] - intercept_base).values
+        X = np.column_stack((concentration_matrix["OC"].values,
+                            concentration_matrix["(NH4)2SO4"].values,
+                            concentration_matrix["NH4NO3"].values,
+                            soil.values))
+        X = sm.add_constant(X)
+    #    print(X)
+    #    print(y)
+        model = sm.OLS(y, X)
+        results = model.fit()
+        print(method)
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                {results.params[1].round(2)} OC +\
+                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                {results.params[4].round(2)} SOIL'))       
+           
     if method=="Hand_2011":
         concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "Si", "Al",
                                                                    "Ca", "Fe", "Ti", "EC", "Cl",
@@ -751,12 +983,13 @@ def estimation_om_oc(conc_matrix, method='Simon_2011'):
     #    print(y)
         model = sm.OLS(y, X)
         results = model.fit()
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} g m$^{{{-3}}}$ +\
+        print(method)
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
                 {results.params[1].round(2)} OC +\
                 {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
                 {results.params[3].round(2)} NH$_4$NO$_3$ +\
                 {results.params[4].round(2)} SOIL +\
-                 1.8 Cl$^-$'))       
+                 1.8 Cl$^-$ + EC'))       
         
     
     
@@ -784,10 +1017,11 @@ def estimation_om_oc(conc_matrix, method='Simon_2011'):
     #    print(y)
         model = sm.OLS(y, X)
         results = model.fit()
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} g m$^{{{-3}}}$ +\
+        print("method")
+        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
                 {results.params[1].round(2)} OC +\
                 {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
                 {results.params[3].round(2)} NH$_4$NO$_3$ +\
                 {results.params[4].round(2)} SOIL +\
-                 1.8 Cl$^-$ + 1.2 KNON'))
+                 1.8 Cl$^-$ + 1.2 KNON + EC'))
     return(results)

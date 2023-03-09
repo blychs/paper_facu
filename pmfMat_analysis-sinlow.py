@@ -123,7 +123,7 @@ ax.set_ylabel(r'$\alpha$', size=10)
 plt.show()
 
 # + tags=[]
-# #%matplotlib widget
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 plt.style.use('seaborn-v0_8-paper')
@@ -462,14 +462,23 @@ for key1 in matrix.keys():
 
 
 # +
-result = estimation_om_oc(matrix, method="Simon_2011")
+method = 'Macias_1981'
+resultNormal = estimation_om_oc(matrix.where(events["Event"]=='no'), method=method)
+resultEvent = estimation_om_oc(matrix.where(events["Event"].isin(["S", "SP", "SN"])), method=method)
 #print(result.summary())
 
-print(matrix.index.dtype)
-print('\n\n Results for warm season')
+matrix.where(events['Event'].isin(["S", "SP", "SN"]))["PM2.5"].plot(style='o')
+
 #warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
 #result = estimation_om_oc(matrix.loc[warm_season_index])
-print(result.summary().as_latex())
+print("No events")
+print(resultNormal.summary())
+
+print("Events")
+print(resultEvent.summary())
+
+
+
 
 # +
 #print(result.fittedvalues)
@@ -481,33 +490,39 @@ iv_u = pred_ols.summary_frame()["obs_ci_upper"]
 matrix_dropped_na = matrix.dropna(axis=0).reset_index(drop=True)
 x = matrix_dropped_na.index
 y = matrix_dropped_na['PM2.5']
-fig, ax = plt.subplots(figsize=(13, 6))
 
-ax.plot(x, y, "b.-", label="data")
-ax.plot(x, result.fittedvalues, "r.-", label="OLS")
-ax.plot(x, y, "o", label="data")
-ax.plot(mass)
-#ax.plot(x, y_true, "b-", label="True")
-#ax.plot(y, result.fittedvalues, "o", label="OLS")
-#lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
-#        np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
-#        ]
-#ax.plot(lims, lims, 'k-', alpha=0.75, zorder=0)
+unc_dropped_na = unc.dropna(axis=0).reset_index(drop=True)
 
-ax.plot(x, iv_u, "r--", linewidth = 0.75, label='IC')
-ax.plot(x, iv_l, "r--", linewidth = 0.75)
-ax.legend(loc="best")
-ax.set_xlabel('Date')
-ax.set_ylabel('PM2.5 (µg/m$^3$)')
-plt.show()
+with plt.style.context('ggplot'):
 
-fig, ax = plt.subplots(figsize=(13,6))
-ax.plot(x, result.fittedvalues/y * 100, "b.-")
-ax.set_xlabel("Date")
-ax.set_ylabel("Mass explained (%)")
-ax.axhline(80)
-ax.axhline(120)
-plt.show()
+    fig, ax = plt.subplots(figsize=(13, 6))
+
+    ax.errorbar(x, y, yerr=unc_dropped_na["PM2.5"],
+                color='b', marker='.', capsize=2, capthick=2,
+                label="data")
+    ax.plot(x, result.fittedvalues, "ro-", label="OLS")
+#    ax.plot(x, y, "o", label="data")
+    #ax.plot(x, y_true, "b-", label="True")
+    #ax.plot(y, result.fittedvalues, "o", label="OLS")
+    #lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+    #        np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
+    #        ]
+    #ax.plot(lims, lims, 'k-', alpha=0.75, zorder=0)
+
+    ax.plot(x, iv_u, "r--", linewidth = 0.75, label='IC')
+    ax.plot(x, iv_l, "r--", linewidth = 0.75)
+    ax.legend(loc="best")
+    ax.set_xlabel('Date')
+    ax.set_ylabel('PM2.5 (µg/m$^3$)')
+    plt.show()
+
+    fig, ax = plt.subplots(figsize=(13,6))
+    ax.plot(x, result.fittedvalues/y * 100, "b.-")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Mass explained (%)")
+    ax.axhline(80)
+    ax.axhline(120)
+    plt.show()
 
 
 #explained_percentage = is_explained.sum()
