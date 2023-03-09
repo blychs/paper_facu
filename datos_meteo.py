@@ -117,7 +117,12 @@ df_uaest = (df_uaest.loc[(df_uaest['date'].dt.date.isin(df_filters['date'].dt.da
 
 # +
 df_uaest['VentCoef'] = ventilation_coef(df_uaest)
-with pd.option_context('display.max_columns', None, 'display.max_rows', None):
-    display(df_uaest[['ws', 'PBLHc', 'PBLHm', 'L', 'VentCoef']])
+#print(df_uaest.dtypes)
+#with pd.option_context('display.max_columns', None, 'display.max_rows', None):
+#display(df_uaest[['temp', 'pres', 'rh', 'ws', 'VentCoef']])
 
-df_uaest.to_csv('datos_meteo_obs_filtro.csv')
+df_uaest[['temp', 'pres', 'rh', 'ws', 'VentCoef']].to_csv('datos_meteo_obs_filtro.csv')
+df_uaest_disp = df_uaest
+df_uaest_disp.index = df_uaest.index - dt.timedelta(hours=12)
+
+df_mean = df_uaest.groupby(df_uaest.index.day).mean()
