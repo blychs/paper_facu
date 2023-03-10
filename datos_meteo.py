@@ -107,10 +107,11 @@ plt.show()
 
 # + tags=[]
 df_uaest = readSFC('OBSERVATORIO.SFC')
+display(df_uaest)
 df_uaest = (df_uaest.loc[(df_uaest['date'].dt.date.isin(df_filters['date'].dt.date) & (df_uaest['date'].dt.hour.astype(int) >= 12 )) |
               (df_uaest['date'].dt.date.isin(df_filters['date'].dt.date + dt.timedelta(days=1)) & (df_uaest['date'].dt.hour.astype(int) < 12))])
 
-#display(df_uaest)
+display(df_uaest[['PBLHc', 'PBLHm', 'L', 'ws']])
 #with pd.option_context('display.max_rows', None):#, 'display.max_columns', None,):
 #    display(df_uaest[['ws']])
 #display(df[['ws']])
@@ -125,4 +126,6 @@ df_uaest[['temp', 'pres', 'rh', 'ws', 'VentCoef']].to_csv('datos_meteo_obs_filtr
 df_uaest_disp = df_uaest
 df_uaest_disp.index = df_uaest.index - dt.timedelta(hours=12)
 
-df_mean = df_uaest.groupby(df_uaest.index.day).mean()
+df_mean = df_uaest.groupby(df_uaest.index.date).mean(numeric_only=True)
+df_mean[['temp', 'pres', 'rh', 'ws', 'VentCoef']].to_csv('datos_meteo_obs_mean.csv')
+

@@ -19,9 +19,10 @@
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import pandas as pd
 import seaborn as sns
-from scipy.stats import linregress
+from scipy.stats import linregress, spearmanr
 import statsmodels.api as sm
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
 from funciones_pmfBA import estimation_om_oc
@@ -48,14 +49,43 @@ meteo_mean.set_index(meteo_mean['date'], inplace=True)
 meteo_mean.drop('date', inplace=True, axis=1)
 meteo_mean = meteo_mean[meteo_mean.index.isin(matrix.index)]
 
+meteo = pd.read_csv('datos_meteo_obs_mean.csv')
+meteo = meteo.rename(columns={'Unnamed: 0': 'date'})
+meteo['date'] = pd.to_datetime(meteo['date'])
+meteo.set_index(meteo['date'], inplace=True)
+meteo.drop('date', inplace=True, axis=1)
+display(meteo.dtypes)
 
+matrix = matrix.join(meteo)
+matrix['temp'] = (matrix['temp']-273.15).round(2)
+display(matrix)
 events = pd.read_excel('BA_events.xlsx', index_col='date')
+
+# +
+matrix['month'] = pd.DatetimeIndex(matrix.index)
+matrix['month'] = matrix['month'].dt.to_period('M')
+
+matrix_average = matrix.mean(numeric_only=True).round(3)
+matrix_std = matrix.std(numeric_only=True).round(3)
+matrix_average = pd.concat([matrix_average, matrix_std], axis=1)
+
+## Calculate seasonal values. It has to be done by quarter, indicating
+## that the year ends in november
+matrix_average = matrix.groupby(matrix['month']).mean()
+print(matrix_average.transpose().to_latex())
+
+print(matrix.groupby(matrix['month']).agg('count'))
+
+#print(matrix_average.to_latex())
 
 # +
 # #%matplotlib widget
 fig, ax = plt.subplots()
 
-ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.')
+ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', zorder=0)
+ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['S'])), 'o', label='Smoke')
+ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SP'])), 'o', label='Smoke previous day')
+ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SN'])), 'o', label='Smoke next day')
 ax.axhline(50, color='c', linestyle='dashed', label='Interim target 2')
 ax.axhline(37.5, color='g', linestyle='dashed', label='Interim target 3')
 ax.axhline(25, color='m', linestyle='dashed', label='Interim target 4')
@@ -85,6 +115,8 @@ matrix['month'] = pd.DatetimeIndex(matrix.index)
 matrix['month'] = matrix['month'].dt.to_period('M')
 
 
+print(matrix.groupby(matrix['month']).mean().round(2)[['PM2.5', 'ws', 'VentCoef', 'temp']].style.to_latex())
+
 fig, ax = plt.subplots()
 
 ### Boxplots, width of box depends on number of data points.
@@ -101,25 +133,41 @@ ax.set_xticklabels(bins, rotation=45, ha='right')
 ax.grid()
 fig.savefig('PM_boxplot.png')
 plt.show()
+
+# +
+#print(plt.rcParams.keys())
+
+fig, ax = plt.subplots()
+
+ax.scatter(matrix['VentCoef'], matrix['PM2.5'], label='No event')
+ax.scatter(matrix['VentCoef'], matrix['PM2.5'].where(events['Event'].isin(['S', 'SP', 'SN'])), label='Event')
+ax.set_xlabel('Ventilation Coefficient (m$^2$/s)')
+ax.set_ylabel('PM2.5 (µg/m$^3$)')
+ax.legend()
+fig.savefig('PM2.5_vs_vent.png')
+plt.show()
+
+#spear
+
+
+with plt.rc_context({'axes.labelsize': 15}):
+    spearman_corr = matrix.corr(numeric_only=True, method='spearman')
+    plt.figure(figsize=(35,20))
+    sns.heatmap(spearman_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
+    plt.title('Spearman correlation', fontsize=20)
+    plt.savefig('heatmap_spearman_corr.png')
+    plt.show()
 # -
 
 fig, ax = plt.subplots()
-ax.scatter(meteo_mean['ventCoef'], matrix[matrix.index.isin(meteo_mean.index)]['PM2.5'], marker='.')
-ax.set_xlabel('Ventilation Coeff m$^2$ s$^{-1}$')
-ax.set_ylabel('PM2.5 $\mu$g m$^{3}$')
-plt.show()
-# Time series plot
-fig, ax = plt.subplots()
-ax.plot(matrix.index[matrix.index.isin(meteo_mean.index)], meteo_mean['ventCoef'], '.-')
-ax.set_xlabel('Date')
-ax.set_ylabel('Ventilation Coefficient (m$^2$/s)')
-
-fig, ax = plt.subplots()
 ax.scatter(events['AOD440'], events['Alpha'])
+ax.scatter(events['AOD440'], events['Alpha'].where(events['Event'].isin(['S', 'SP', 'SN'])), label='Event')
 ax.axhline(0.85, color='k', linestyle='dashed')
 ax.axvline(0.185, color='k', linestyle='dashed')
 ax.set_xlabel('AOD 440nm', size=10)
 ax.set_ylabel(r'$\alpha$', size=10)
+ax.legend(loc=4)
+fig.savefig('AOD_alpha.png')
 plt.show()
 
 # + tags=[]
@@ -335,7 +383,7 @@ for method in methods:
     axs[i][j].errorbar(matrix.index, reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue', zorder=0)
     axs[i][j].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke', zorder=1)
     axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SP'), 'D', label='Smoke previous day', zorder=2)
-#    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SN'), 's', label='Smoke next day', zorder=3)
+    axs[i][j].plot(matrix.index, reconst.where(events['Event']=='SN'), 's', label='Smoke next day', zorder=3)
     axs[i][j].set_title(method)
     axs[i][j].legend(loc=9)
     axs[i][j].axhline(80, color='k')
@@ -462,7 +510,7 @@ for key1 in matrix.keys():
 
 
 # +
-method = 'Macias_1981'
+method = 'Simon_2011'
 resultNormal = estimation_om_oc(matrix.where(events["Event"]=='no'), method=method)
 resultEvent = estimation_om_oc(matrix.where(events["Event"].isin(["S", "SP", "SN"])), method=method)
 #print(result.summary())
@@ -472,7 +520,7 @@ matrix.where(events['Event'].isin(["S", "SP", "SN"]))["PM2.5"].plot(style='o')
 #warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
 #result = estimation_om_oc(matrix.loc[warm_season_index])
 print("No events")
-print(resultNormal.summary())
+print(resultNormal.summary().as_latex())
 
 print("Events")
 print(resultEvent.summary())
