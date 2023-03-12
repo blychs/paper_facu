@@ -448,43 +448,46 @@ print(d_methodQuality)
     
 
 
-# +
+# + tags=[]
 # #%matplotlib widget
 
-methods = [ 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011']
+methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
 
 #methods = ['Hand_2011']
 
 d_methodQuality = {}
 
 plt.style.use('seaborn-v0_8-paper')
-fig, axs = plt.subplots(1, 3, figsize=(16, 4))
+fig, axs = plt.subplots(4, 3, figsize=(16, 12))
 
-j=0
+i, j = 0, 0
 for method in methods:
     d_methodQuality[method] = 0
     mass = mass_reconstruction_mod(matrix, unc, events, equation=method)
     reconst = mass[0]/matrix['PM2.5'] * 100
     ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
-    axs[j].errorbar(matrix.index, reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue', zorder=0)
-    axs[j].plot(matrix.index, reconst.where(events['Event']=='S'), 'o', label='Smoke', zorder=1)
-    axs[j].plot(matrix.index, reconst.where(events['Event']=='SP'), 'D', label='Smoke previous day', zorder=2)
-    axs[j].plot(matrix.index, reconst.where(events['Event']=='SN'), 's', label='Smoke next day', zorder=3)
-    axs[j].axhline(100, color='k', linewidth=0.75)
-    axs[j].set_title(method)
-    axs[j].legend(loc=9)
-    axs[j].axhline(80, color='k', linestyle='--', linewidth=0.75)
-    axs[j].axhline(120, color='k', linestyle='--', linewidth=0.75)
-    axs[j].tick_params(labelrotation=0)
+    axs[i][j].errorbar(matrix.index, reconst,  yerr=ureconst, capsize=2, capthick=1, marker='.', ecolor='cornflowerblue', zorder=0)
+#    axs[i][j].plot(matrix.index, reconst.where(events['AOD440']>0.185), 'or', label='AOD', zorder=1)
+#    axs[i][j].plot(matrix.index, reconst.where(events['Alpha']>0.85), 'Xg', label='Alpha', zorder=3)
+    axs[i][j].plot(matrix.index, reconst.where(events['Event']=="S"), 's', label='Smoke', zorder=1)
+    axs[i][j].plot(matrix.index, reconst.where(events['Alpha']>0.85).where(events['AOD440']>0.185), '^g', label='Alpha+AOD', zorder=2)
+    axs[i][j].set_title(method)
+    axs[i][j].legend(loc=9)
+    axs[i][j].axhline(80, color='k')
+    axs[i][j].axhline(120, color='k')
+    axs[i][j].tick_params(labelrotation=0)
     j += 1
+    if j%3==0:
+        j = 0
+        i += 1
     d_methodQuality[method] = np.logical_and(((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
 
 for x in range(0, 3):
-    axs[x].set_ylabel('Mass reconstructed [%]')
-    axs[-1].set_xlabel('Date')
+    axs[x][0].set_ylabel('Mass reconstructed [%]')
+    axs[-1][x].set_xlabel('Date')
     
 plt.show()
-
 print(d_methodQuality)
     
 
