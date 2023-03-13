@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 import seaborn as sns
-from scipy.stats import linregress, spearmanr
+from scipy.stats import linregress, spearmanr, zscore
 import statsmodels.api as sm
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
 from funciones_pmfBA import estimation_om_oc
@@ -54,29 +54,46 @@ meteo = meteo.rename(columns={'Unnamed: 0': 'date'})
 meteo['date'] = pd.to_datetime(meteo['date'])
 meteo.set_index(meteo['date'], inplace=True)
 meteo.drop('date', inplace=True, axis=1)
-display(meteo.dtypes)
 
 matrix = matrix.join(meteo)
 matrix['temp'] = (matrix['temp']-273.15).round(2)
-display(matrix)
 events = pd.read_excel('BA_events.xlsx', index_col='date')
 
 # +
+pd.set_option('display.float_format', '{:.2g}'.format)
+
 matrix['month'] = pd.DatetimeIndex(matrix.index)
 matrix['month'] = matrix['month'].dt.to_period('M')
 
-matrix_average = matrix.mean(numeric_only=True).round(3)
-matrix_std = matrix.std(numeric_only=True).round(3)
-matrix_average = pd.concat([matrix_average, matrix_std], axis=1)
+month_to_season = {1:'DJF', 2:'DJF', 3:'MAM', 4:'MAM', 5:'MAM', 6:'JJA',
+                   7:'JJA', 8:'JJA', 9:'SON', 10:'SON', 11:'SON', 12:'DJF'}
 
-## Calculate seasonal values. It has to be done by quarter, indicating
-## that the year ends in november
-matrix_average = matrix.groupby(matrix['month']).mean()
-print(matrix_average.transpose().to_latex())
+matrix['season'] = matrix.index.month.map(month_to_season)
+#print(matrix['season'])
 
-print(matrix.groupby(matrix['month']).agg('count'))
+matrix_seasonal = matrix.groupby(matrix['season']).mean(numeric_only=True).transpose()
 
-#print(matrix_average.to_latex())
+print(matrix.groupby(matrix['season']).agg('count').transpose())
+matrix_seasonal_std = matrix.groupby(matrix['season']).std(numeric_only=True).transpose()
+
+for key in matrix_seasonal_std.keys():
+    matrix_seasonal_std = matrix_seasonal_std.rename(columns={key:f'{key}_std'})
+
+matrix_seasonal = matrix_seasonal.join(matrix_seasonal_std)
+
+matrix_seasonal['All_average'] = matrix.mean(numeric_only=True, axis=0).transpose()
+matrix_seasonal['All_std'] = matrix.std(numeric_only=True, axis=0).transpose()
+
+print(matrix_seasonal.reindex(sorted(matrix_seasonal.columns), axis=1).to_latex())
+
+# matrix_average = matrix.mean(numeric_only=True).round(3)
+# matrix_std = matrix.std(numeric_only=True).round(3)
+# matrix_average = pd.concat([matrix_average, matrix_std], axis=1)
+# 
+# 
+#print(matrix.groupby(matrix['month']).agg('count'))
+# 
+# #print(matrix_average.to_latex())
 
 # +
 # #%matplotlib widget
@@ -153,9 +170,23 @@ plt.show()
 with plt.rc_context({'axes.labelsize': 15}):
     spearman_corr = matrix.corr(numeric_only=True, method='spearman')
     plt.figure(figsize=(35,20))
+    plt.tick_params(axis='x', which='both', labelsize=10, labelrotation=90, labelbottom = True, bottom=True, top = True, labeltop=True)
+    plt.tick_params(axis='y', which='both', labelsize=10, labelleft = True, left=True, labelright = True, right=True)
     sns.heatmap(spearman_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
     plt.title('Spearman correlation', fontsize=20)
     plt.savefig('heatmap_spearman_corr.png')
+    plt.show()
+
+# +
+
+with plt.rc_context({'axes.labelsize': 15}):
+    spearman_corr = matrix.corr(numeric_only=True, method='pearson')
+    plt.figure(figsize=(35,20))
+    plt.title('Pearson correlation', fontsize=20)
+    plt.tick_params(axis='x', which='both', labelsize=10, labelrotation=90, labelbottom = True, bottom=True, top = True, labeltop=True)
+    plt.tick_params(axis='y', which='both', labelsize=10, labelleft = True, left=True, labelright = True, right=True)
+    sns.heatmap(spearman_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
+    plt.savefig('heatmap_pearson_corr.png')
     plt.show()
 # -
 
@@ -506,7 +537,33 @@ for key1 in matrix.keys():
         if j%8 == 0:
             j=0
             i += 1
-    fig.savefig(f'correlation_plots_{key1}.png')
+    fig.savefig(f'correlations/correlation_plots_{key1}.png')
+    plt.close()
+
+        
+
+
+# +
+#Prepare correlation plots whithout outliers
+
+
+
+for key1 in ['Cd']:
+    i, j = 0, 0
+    fig, axs = plt.subplots(6, 8, figsize=(45,30))
+    for key2 in list(matrix.keys())[:-7]:
+        matrix_nooutliers = matrix[[key1, key2]]
+        #matrix_nooutliers['zscore'] = matrix_nooutliers[(np.abs(zscore(matrix_nooutliers)) < 3).all(axis=1)]
+        axs[i][j].plot(matrix_nooutliers[key1].where(matrix_nooutliers['Cd']<0.008), matrix_nooutliers[key2], 'o')
+        axs[i][j].set_xlabel(key1)
+        axs[i][j].set_ylabel(key2)
+        j += 1
+        if j%8 == 0:
+            j=0
+            i += 1
+        del matrix_nooutliers
+    fig.savefig(f'correlations_no_outliers/correlation_plots_{key1}.png')
+    plt.show()
     plt.close()
 
         
@@ -579,6 +636,65 @@ with plt.style.context('ggplot'):
 #explained_percentage = is_explained.sum()
 
 
-# -
+# +
+fig, ax = plt.subplots()
+ax.plot(matrix['SO4'], matrix['Na no sol'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix['SO4'], matrix['Na no sol'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+ax.set_xlabel('SO$_4$')
+ax.set_ylabel('Na total')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(matrix['SO4'], matrix['Na sol'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix['SO4'], matrix['Na sol'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+ax.set_xlabel('SO$_4$')
+ax.set_ylabel('Na$^+$')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(matrix['NH4'], matrix['NO3'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix['NH4'], matrix['NO3'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+ax.set_xlabel('NH$_4$')
+ax.set_ylabel('NO$_3$')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(matrix['PM2.5'], matrix['C Elemental'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix['PM2.5'], matrix['C Elemental'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+ax.set_xlabel('PM$_{2.5}$')
+ax.set_ylabel('C Elemental')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(matrix['PM2.5'], matrix['C Orgánico'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix['PM2.5'], matrix['C Orgánico'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+ax.set_xlabel('PM$_{2.5}$')
+ax.set_ylabel('C Orgánico')
+plt.show()
 
 
+# +
+## SSA SO4
+x = matrix['SO4'].values
+y = matrix['Na sol'].values
+mask = ~np.isnan(x) & ~np.isnan(y)
+
+
+slope, intercept, r, p, se  = linregress(x[mask], y[mask])
+
+fig, ax = plt.subplots()
+ax.plot(x, y , 'o')
+ax.plot(x, intercept + slope * x)
+ax.set_xlabel('SO4')
+ax.set_ylabel('Na sol')
+fig.savefig('SO4_NAsol.png')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(matrix['SO4'], matrix['Na no sol'], 'o')
+ax.plot(x, intercept + slope * x, label='linear for Na sol')
+ax.set_xlabel('SO4')
+ax.set_ylabel('Na total')
+ax.legend()
+fig.savefig('SO4_NAtotal_withregress.png')
+plt.show()

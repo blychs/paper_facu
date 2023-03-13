@@ -21,7 +21,7 @@ def corr_matrix(df, minimum=-1, maximum=1, method='pearson'):
     return correlation.where(correlation >= minimum).where(correlation <= maximum)
 
 
-def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand_2011'):
+def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
     
     """
     Reconstructs the mass using methodologies as described in Chow 2015. It requires a concentration
@@ -29,6 +29,8 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
     """
 
     closure = 0
+    concentration_matrix = conc_matrix.copy()
+    uncertainty_matrix = unc_matrix.copy()
 #    data_df2 = data_df.fillna(0)
     if 'Si' not in concentration_matrix:
         concentration_matrix['Si'] = 2.4729 * concentration_matrix['Al']
@@ -534,7 +536,7 @@ def mass_reconstruction(concentration_matrix, uncertainty_matrix, equation='Hand
 
 
 
-def mass_reconstruction_mod(concentration_matrix, uncertainty_matrix, events, equation='Hand_2011'):
+def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011'):
     
     
     """
@@ -543,6 +545,8 @@ def mass_reconstruction_mod(concentration_matrix, uncertainty_matrix, events, eq
     """
 
     closure = 0
+    concentration_matrix = conc_matrix.copy()
+    uncertainty_matrix = unc_matrix.copy()
 #    data_df2 = data_df.fillna(0)
     if 'Si' not in concentration_matrix:
         concentration_matrix['Si'] = 2.4729 * concentration_matrix['Al']
