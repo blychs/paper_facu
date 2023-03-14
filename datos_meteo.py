@@ -108,6 +108,7 @@ plt.show()
 # + tags=[]
 df_uaest = readSFC('OBSERVATORIO.SFC')
 display(df_uaest)
+
 df_uaest = (df_uaest.loc[(df_uaest['date'].dt.date.isin(df_filters['date'].dt.date) & (df_uaest['date'].dt.hour.astype(int) >= 12 )) |
               (df_uaest['date'].dt.date.isin(df_filters['date'].dt.date + dt.timedelta(days=1)) & (df_uaest['date'].dt.hour.astype(int) < 12))])
 

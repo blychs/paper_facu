@@ -15,7 +15,7 @@
 
 # Load packages and data and convert negative values into **NaN**
 
-# +
+# + jupyter={"outputs_hidden": true} tags=[]
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -26,6 +26,8 @@ from scipy.stats import linregress, spearmanr, zscore
 import statsmodels.api as sm
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
 from funciones_pmfBA import estimation_om_oc
+
+
 
 matrix = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='CONC')
 matrix = matrix.rename(columns={'PM2,5': 'PM2.5'})
@@ -59,7 +61,13 @@ matrix = matrix.join(meteo)
 matrix['temp'] = (matrix['temp']-273.15).round(2)
 events = pd.read_excel('BA_events.xlsx', index_col='date')
 
-# +
+gases = pd.read_csv('gases_mean.csv')
+gases['date'] = pd.to_datetime(gases['date'])
+gases.set_index(gases['date'], inplace=True)
+gases = matrix.join(gases)
+display(gases)
+
+# + jupyter={"outputs_hidden": true} tags=[]
 pd.set_option('display.float_format', '{:.2g}'.format)
 
 matrix['month'] = pd.DatetimeIndex(matrix.index)
@@ -684,17 +692,60 @@ slope, intercept, r, p, se  = linregress(x[mask], y[mask])
 
 fig, ax = plt.subplots()
 ax.plot(x, y , 'o')
-ax.plot(x, intercept + slope * x)
+ax.plot(x, intercept + slope * x, label=f'{slope.round(2)} [SO$_{{{4}}}$] + {intercept.round(2)}')
 ax.set_xlabel('SO4')
 ax.set_ylabel('Na sol')
+ax.legend()
 fig.savefig('SO4_NAsol.png')
 plt.show()
 
 fig, ax = plt.subplots()
-ax.plot(matrix['SO4'], matrix['Na no sol'], 'o')
-ax.plot(x, intercept + slope * x, label='linear for Na sol')
+ax.plot(matrix['SO4'], matrix['Na no sol'], 'o', label='Na (total)')
+ax.plot(x, intercept + slope * x,
+       label=f'{slope.round(2)} [SO$_{{{4}}}$] + {intercept.round(2)}', zorder=3)
+ax.plot(matrix['SO4'], matrix['Na sol'], 'rx', label='Na$^+$')
 ax.set_xlabel('SO4')
 ax.set_ylabel('Na total')
 ax.legend()
 fig.savefig('SO4_NAtotal_withregress.png')
 plt.show()
+
+# +
+#Separating K source
+#It is often assumed that crustal K is 0.6 Fe
+
+fig, ax = plt.subplots()
+ax.plot(matrix['K'], matrix['Na sol'], 'o')
+#ax.plot(matrix['K'], matrix['K'] / 0.6)
+ax.set_xlabel('K')
+ax.set_ylabel('Na$^+$')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(matrix['K'], matrix['Na no sol'], 'o')
+#ax.plot(matrix['K'], matrix['K'] / 0.6)
+ax.set_xlabel('K')
+ax.set_ylabel('Na total')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(matrix['K'], matrix['Fe'], 'o')
+ax.plot(matrix['K'], matrix['Fe'] * 0.6, 'x')
+ax.set_xlabel('K')
+ax.set_ylabel('0.6 * Fe')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot()
+
+# +
+fig, ax = plt.subplots()
+ax.plot(gases['SO4'], gases['SO2'], 'o')
+ax.plot(gases['SO4'].where((gases['Na no sol']>2) & (gases['SO4'] <2)), gases['SO2'], 'o')
+
+ax.set_xlabel('SO$_4$')
+ax.set_ylabel('SO$_2$')
+plt.show()
+# -
+
+display(matrix.loc[matrix['SO4'] > 2])
