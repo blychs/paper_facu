@@ -1407,3 +1407,41 @@ def estimation_om_oc(conc_matrix, method='Simon_2011'):
                 {results.params[4].round(2)} SOIL +\
                  1.8 Cl$^-$ + 1.2 KNON + EC'))
     return(results)
+
+def calculate_seasonal(conc_matrix):
+    """Calculates seasonal means, an all around mean and standard
+    deviations. Adds as well the number of samples per period as 
+    last row"""
+
+
+    matrix['month'] = pd.DatetimeIndex(matrix.index)
+    matrix['month'] = matrix['month'].dt.to_period('M')
+
+    month_to_season = {1:'DJF', 2:'DJF', 3:'MAM', 4:'MAM', 5:'MAM', 6:'JJA',
+                       7:'JJA', 8:'JJA', 9:'SON', 10:'SON', 11:'SON', 12:'DJF'}
+
+    matrix['season'] = matrix.index.month.map(month_to_season)
+    #print(matrix['season'])
+
+    matrix_seasonal = matrix.groupby(matrix['season']).mean(numeric_only=True).transpose()
+
+
+
+    matrix_seasonal_std = matrix.groupby(matrix['season']).std(numeric_only=True).transpose()
+
+    # Count number of samples per season
+    count = matrix.groupby(matrix['season']).agg('count')['Ag'].transpose()
+    count["All_average"] = len(matrix["PM2.5"])
+
+    for key in matrix_seasonal_std.keys():
+        matrix_seasonal_std = matrix_seasonal_std.rename(columns={key:f'{key}_std'})
+
+    matrix_seasonal = matrix_seasonal.join(matrix_seasonal_std)
+
+    matrix_seasonal['All_average'] = matrix.mean(numeric_only=True, axis=0).transpose()
+    matrix_seasonal['All_std'] = matrix.std(numeric_only=True, axis=0).transpose()
+
+    matrix_seasonal = matrix_seasonal.reindex(sorted(matrix_seasonal.columns), axis=1)
+    matrix_seasonal = matrix_seasonal.append(count)
+
+    return(matrix_seasonal)
