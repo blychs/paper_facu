@@ -1,3 +1,20 @@
+# -*- coding: utf-8 -*-
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     custom_cell_magics: kql
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.11.2
+#   kernelspec:
+#     display_name: Python3 (analysis)
+#     language: python
+#     name: analysis
+# ---
+
 # %% [markdown]
 # Load packages and data and convert negative values into **NaN**
 
@@ -25,21 +42,22 @@ pd.set_option('display.float_format', '{:.2g}'.format)
 
 matrix_seasonal = calculate_seasonal(matrix)
 
-print(matrix_seasonal.to_latex())
+#print(matrix_seasonal.to_latex())
 
 
 # %%
-%matplotlib widget
+# %matplotlib widget
 fig, ax = plt.subplots()
 
 ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', zorder=0)
-ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['S'])), 'o', label='Smoke')
+ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['S'])),  'o', label='Smoke')
 ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SP'])), 'o', label='Smoke previous day')
 ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SN'])), 'o', label='Smoke next day')
-ax.axhline(50, color='c', linestyle='dashed', label='Interim target 2')
-ax.axhline(37.5, color='g', linestyle='dashed', label='Interim target 3')
-ax.axhline(25, color='m', linestyle='dashed', label='Interim target 4')
-ax.axhline(15, color='r', linestyle='dashed', label='AQ Guideline')
+ax.axhline(50,   color='c', linestyle='-.', label='Interim target 2')
+ax.axhline(37.5, color='g', linestyle='--', label='Interim target 3')
+ax.axhline(35,   color='y', linestyle=':',  label='Local regulations')
+ax.axhline(25,   color='m', linestyle='-.', label='Interim target 4')
+ax.axhline(15,   color='r', linestyle='--', label='AQ Guideline')
 ax.legend()
 ax.set_xlabel('Date')
 ax.set_ylabel('PM$_{2.5}$ mass concentration (µg m$^{-3}$)')
@@ -57,6 +75,7 @@ print('Interim target 2:', exceedance(50))
 print('Interim target 3:', exceedance(37.5))
 print('Interim target 4:', exceedance(25))
 print('Interim target AQG:', exceedance(15))
+print('Local regulation (35 µg/m$^3$) =', exceedance(35))
 print('Yearly mean:', matrix['PM2.5'].mean().round(2))
 
 # %%
@@ -64,7 +83,7 @@ matrix['month'] = pd.DatetimeIndex(matrix.index)
 matrix['month'] = matrix['month'].dt.to_period('M')
 
 
-print(matrix.groupby(matrix['month']).mean().round(2)[['PM2.5', 'ws', 'VentCoef', 'temp']].style.to_latex())
+#print(matrix.groupby(matrix['month']).mean().round(2)[['PM2.5', 'ws', 'VentCoef', 'temp']].style.to_latex())
 
 fig, ax = plt.subplots()
 
@@ -80,6 +99,7 @@ ax.set_ylabel('PM$_{2.5}$ concentration (µg m$^{-3}$)')
 ax.set_xlabel('Month')
 ax.set_xticklabels(bins, rotation=45, ha='right')
 ax.grid()
+fig.tight_layout()
 fig.savefig('PM_boxplot.png')
 plt.show()
 
@@ -134,7 +154,7 @@ fig.savefig('AOD_alpha.png')
 plt.show()
 
 # %%
-%matplotlib widget
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 plt.style.use('seaborn-v0_8-paper')
@@ -156,7 +176,7 @@ ax.legend()
 plt.show()
 
 # %%
-%matplotlib widget
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 organic_mass_per = percentage_with_err(mass[1]['organic_mass'], mass[0], mass[3]['uorganic_mass'], mass[2])
@@ -300,7 +320,7 @@ fig.savefig('stacked_massreconst.png')
 plt.show()
 
 # %%
-%matplotlib widget
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 values = mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C'] + mass[1]['salt']
@@ -324,7 +344,7 @@ ax.legend()
 plt.show()
 
 # %%
-#%matplotlib widget
+# #%matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
@@ -363,10 +383,10 @@ for x in range(0, 3):
     
 plt.show()
 print(d_methodQuality)
-    
+
 
 # %%
-#%matplotlib widget
+# #%matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
@@ -406,10 +426,10 @@ for x in range(0, 3):
     
 plt.show()
 print(d_methodQuality)
-    
+
 
 # %%
-#%matplotlib widget
+# #%matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
@@ -449,7 +469,7 @@ for x in range(0, 3):
     
 plt.show()
 print(d_methodQuality)
-    
+
 
 # %%
 #Prepare correlation plots
