@@ -1433,6 +1433,7 @@ def calculate_seasonal(conc_matrix):
     # Count number of samples per season
     count = matrix.groupby(matrix['season']).agg('count')['Ag'].transpose()
     count["All_average"] = len(matrix["PM2.5"])
+    count = count.rename('N')
 
     for key in matrix_seasonal_std.keys():
         matrix_seasonal_std = matrix_seasonal_std.rename(columns={key:f'{key}_std'})
@@ -1443,6 +1444,7 @@ def calculate_seasonal(conc_matrix):
     matrix_seasonal['All_std'] = matrix.std(numeric_only=True, axis=0).transpose()
 
     matrix_seasonal = matrix_seasonal.reindex(sorted(matrix_seasonal.columns), axis=1)
-    matrix_seasonal = matrix_seasonal.append(count)
+    #matrix_seasonal = matrix_seasonal.append(count)
+    matrix_seasonal = pd.concat([matrix_seasonal, count.to_frame().T], axis=0)
 
     return(matrix_seasonal)

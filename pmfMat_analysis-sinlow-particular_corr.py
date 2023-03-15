@@ -1,7 +1,21 @@
-# %% [markdown]
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.4
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
 # Load packages and data and convert negative values into **NaN**
 
-# %%
+# + tags=[]
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -11,25 +25,86 @@ import seaborn as sns
 from scipy.stats import linregress, spearmanr, zscore
 import statsmodels.api as sm
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
-from funciones_pmfBA import estimation_om_oc, calculate_seasonal
-from load_data import load_data
+from funciones_pmfBA import estimation_om_oc
 
 
-matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
-                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
-                                               'BA_events.xlsx')
 
+matrix = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='CONC')
+matrix = matrix.rename(columns={'PM2,5': 'PM2.5'})
+matrix['date'] = pd.to_datetime(matrix['date'])#.dt.date
+matrix.set_index(matrix['date'], inplace=True)
+matrix.drop('date', inplace=True, axis=1)
+matrix[matrix < 0] = np.nan
+matrix = matrix.reindex(sorted(matrix.columns), axis=1)
 
-# %%
+unc = pd.read_excel('PMF_BA_full.xlsx', decimal=',', sheet_name='UNC')
+unc = unc.rename(columns={'PM2,5': 'PM2.5'})
+unc['date'] = pd.to_datetime(unc['date'])#.dt.date
+unc.set_index(unc['date'], inplace=True)
+unc.drop('date', inplace=True, axis=1)
+unc[unc < 0] = np.nan
+unc = unc.reindex(sorted(unc.columns), axis=1)
+
+meteo_mean = pd.read_csv('dataObs_noon2noon.csv')
+meteo_mean['date'] = pd.to_datetime(meteo_mean['date'])#.dt.date
+meteo_mean.set_index(meteo_mean['date'], inplace=True)
+meteo_mean.drop('date', inplace=True, axis=1)
+meteo_mean = meteo_mean[meteo_mean.index.isin(matrix.index)]
+
+meteo = pd.read_csv('datos_meteo_obs_mean.csv')
+meteo = meteo.rename(columns={'Unnamed: 0': 'date'})
+meteo['date'] = pd.to_datetime(meteo['date'])
+meteo.set_index(meteo['date'], inplace=True)
+meteo.drop('date', inplace=True, axis=1)
+
+matrix = matrix.join(meteo)
+matrix['temp'] = (matrix['temp']-273.15).round(2)
+events = pd.read_excel('BA_events.xlsx', index_col='date')
+
+gases = pd.read_csv('gases_mean.csv')
+gases['date'] = pd.to_datetime(gases['date'])
+gases.set_index(gases['date'], inplace=True)
+gases = matrix.join(gases)
+display(gases)
+
+# + jupyter={"outputs_hidden": true} tags=[]
 pd.set_option('display.float_format', '{:.2g}'.format)
 
-matrix_seasonal = calculate_seasonal(matrix)
+matrix['month'] = pd.DatetimeIndex(matrix.index)
+matrix['month'] = matrix['month'].dt.to_period('M')
 
-print(matrix_seasonal.to_latex())
+month_to_season = {1:'DJF', 2:'DJF', 3:'MAM', 4:'MAM', 5:'MAM', 6:'JJA',
+                   7:'JJA', 8:'JJA', 9:'SON', 10:'SON', 11:'SON', 12:'DJF'}
 
+matrix['season'] = matrix.index.month.map(month_to_season)
+#print(matrix['season'])
 
-# %%
-%matplotlib widget
+matrix_seasonal = matrix.groupby(matrix['season']).mean(numeric_only=True).transpose()
+
+print(matrix.groupby(matrix['season']).agg('count').transpose())
+matrix_seasonal_std = matrix.groupby(matrix['season']).std(numeric_only=True).transpose()
+
+for key in matrix_seasonal_std.keys():
+    matrix_seasonal_std = matrix_seasonal_std.rename(columns={key:f'{key}_std'})
+
+matrix_seasonal = matrix_seasonal.join(matrix_seasonal_std)
+
+matrix_seasonal['All_average'] = matrix.mean(numeric_only=True, axis=0).transpose()
+matrix_seasonal['All_std'] = matrix.std(numeric_only=True, axis=0).transpose()
+
+print(matrix_seasonal.reindex(sorted(matrix_seasonal.columns), axis=1).to_latex())
+
+# matrix_average = matrix.mean(numeric_only=True).round(3)
+# matrix_std = matrix.std(numeric_only=True).round(3)
+# matrix_average = pd.concat([matrix_average, matrix_std], axis=1)
+# 
+# 
+#print(matrix.groupby(matrix['month']).agg('count'))
+# 
+# #print(matrix_average.to_latex())
+
+# +
+# #%matplotlib widget
 fig, ax = plt.subplots()
 
 ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', zorder=0)
@@ -59,7 +134,8 @@ print('Interim target 4:', exceedance(25))
 print('Interim target AQG:', exceedance(15))
 print('Yearly mean:', matrix['PM2.5'].mean().round(2))
 
-# %%
+
+# +
 matrix['month'] = pd.DatetimeIndex(matrix.index)
 matrix['month'] = matrix['month'].dt.to_period('M')
 
@@ -83,7 +159,7 @@ ax.grid()
 fig.savefig('PM_boxplot.png')
 plt.show()
 
-# %%
+# +
 #print(plt.rcParams.keys())
 
 fig, ax = plt.subplots()
@@ -109,7 +185,7 @@ with plt.rc_context({'axes.labelsize': 15}):
     plt.savefig('heatmap_spearman_corr.png')
     plt.show()
 
-# %%
+# +
 
 with plt.rc_context({'axes.labelsize': 15}):
     spearman_corr = matrix.corr(numeric_only=True, method='pearson')
@@ -120,8 +196,8 @@ with plt.rc_context({'axes.labelsize': 15}):
     sns.heatmap(spearman_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
     plt.savefig('heatmap_pearson_corr.png')
     plt.show()
+# -
 
-# %%
 fig, ax = plt.subplots()
 ax.scatter(events['AOD440'], events['Alpha'])
 ax.scatter(events['AOD440'], events['Alpha'].where(events['Event'].isin(['S', 'SP', 'SN'])), label='Event')
@@ -133,8 +209,8 @@ ax.legend(loc=4)
 fig.savefig('AOD_alpha.png')
 plt.show()
 
-# %%
-%matplotlib widget
+# + tags=[]
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 plt.style.use('seaborn-v0_8-paper')
@@ -155,8 +231,9 @@ ax.set_ylabel("Mass concentration (µg/m$^3$)")
 ax.legend()
 plt.show()
 
-# %%
-%matplotlib widget
+
+# + tags=[]
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 organic_mass_per = percentage_with_err(mass[1]['organic_mass'], mass[0], mass[3]['uorganic_mass'], mass[2])
@@ -298,9 +375,8 @@ fig.savefig('stacked_massreconst.png')
 
 
 plt.show()
-
-# %%
-%matplotlib widget
+# + tags=[]
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 values = mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C'] + mass[1]['salt']
@@ -323,8 +399,9 @@ ax.set_ylabel("Mass concentration (µg/m$^3$)")
 ax.legend()
 plt.show()
 
-# %%
-#%matplotlib widget
+
+# + tags=[]
+# #%matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
@@ -365,8 +442,9 @@ plt.show()
 print(d_methodQuality)
     
 
-# %%
-#%matplotlib widget
+
+# + tags=[]
+# #%matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
@@ -408,8 +486,9 @@ plt.show()
 print(d_methodQuality)
     
 
-# %%
-#%matplotlib widget
+
+# + tags=[]
+# #%matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
@@ -451,7 +530,8 @@ plt.show()
 print(d_methodQuality)
     
 
-# %%
+
+# +
 #Prepare correlation plots
 
 for key1 in matrix.keys():
@@ -470,7 +550,8 @@ for key1 in matrix.keys():
 
         
 
-# %%
+
+# +
 #Prepare correlation plots whithout outliers
 
 
@@ -495,7 +576,8 @@ for key1 in ['Cd']:
 
         
 
-# %%
+
+# +
 method = 'Simon_2011'
 resultNormal = estimation_om_oc(matrix.where(events["Event"]=='no'), method=method)
 resultEvent = estimation_om_oc(matrix.where(events["Event"].isin(["S", "SP", "SN"])), method=method)
@@ -513,7 +595,8 @@ print(resultEvent.summary())
 
 
 
-# %%
+
+# +
 #print(result.fittedvalues)
 
 pred_ols = result.get_prediction()
@@ -560,7 +643,8 @@ with plt.style.context('ggplot'):
 
 #explained_percentage = is_explained.sum()
 
-# %%
+
+# +
 fig, ax = plt.subplots()
 ax.plot(matrix['SO4'], matrix['Na no sol'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
 ax.plot(matrix['SO4'], matrix['Na no sol'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
@@ -596,7 +680,8 @@ ax.set_xlabel('PM$_{2.5}$')
 ax.set_ylabel('C Orgánico')
 plt.show()
 
-# %%
+
+# +
 ## SSA SO4
 x = matrix['SO4'].values
 y = matrix['Na sol'].values
@@ -624,13 +709,13 @@ ax.set_ylabel('Na total')
 ax.legend()
 fig.savefig('SO4_NAtotal_withregress.png')
 plt.show()
+# -
 
-# %%
 # SO4 and Cl
 fig, ax = plt.subplots()
 ax.plot(matrix['SO4'], )
 
-# %%
+# +
 #Separating K source
 #It is often assumed that crustal K is 0.6 Fe
 
@@ -664,7 +749,7 @@ plt.show()
 fig, ax = plt.subplots()
 ax.plot()
 
-# %%
+# +
 fig, ax = plt.subplots()
 ax.plot(gases['SO4'], gases['SO2'], 'o')
 ax.plot(gases['SO4'].where((gases['Na no sol']>2) & (gases['SO4'] <2)), gases['SO2'], 'o')
@@ -672,8 +757,6 @@ ax.plot(gases['SO4'].where((gases['Na no sol']>2) & (gases['SO4'] <2)), gases['S
 ax.set_xlabel('SO$_4$')
 ax.set_ylabel('SO$_2$')
 plt.show()
+# -
 
-# %%
 display(matrix.loc[matrix['SO4'] > 2])
-
-
