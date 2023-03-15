@@ -5,8 +5,9 @@ def load_data(data_matrix, unc_matrix, gases, meteo, events):
     Loads data for analysis of BA_2019
     """
 
-    import datetime as dt
+  
     import pandas as pd
+    import numpy as np
     
     matrix = pd.read_excel(data_matrix, decimal=',', sheet_name='CONC')
     matrix = matrix.rename(columns={'PM2,5': 'PM2.5'})

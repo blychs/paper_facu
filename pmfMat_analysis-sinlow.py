@@ -15,7 +15,7 @@
 
 # Load packages and data and convert negative values into **NaN**
 
-# + jupyter={"outputs_hidden": true} tags=[]
+# + tags=[]
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -709,6 +709,11 @@ ax.set_ylabel('Na total')
 ax.legend()
 fig.savefig('SO4_NAtotal_withregress.png')
 plt.show()
+# -
+
+# SO4 and Cl
+fig, ax = plt.subplots()
+ax.plot(matrix['SO4'], )
 
 # +
 #Separating K source
@@ -722,6 +727,12 @@ ax.set_ylabel('Na$^+$')
 plt.show()
 
 fig, ax = plt.subplots()
+ax.plot(matrix['K'], matrix['Na sol'].where(matrix['Na sol'] < 0.8), 'o')
+ax.set_xlabel('K')
+ax.set_ylabel('Na$^+$')
+plt.show()
+
+fig, ax = plt.subplots()
 ax.plot(matrix['K'], matrix['Na no sol'], 'o')
 #ax.plot(matrix['K'], matrix['K'] / 0.6)
 ax.set_xlabel('K')
@@ -729,7 +740,7 @@ ax.set_ylabel('Na total')
 plt.show()
 
 fig, ax = plt.subplots()
-ax.plot(matrix['K'], matrix['Fe'], 'o')
+ax.plot(matrix['K'], matrix['K'], 'o')
 ax.plot(matrix['K'], matrix['Fe'] * 0.6, 'x')
 ax.set_xlabel('K')
 ax.set_ylabel('0.6 * Fe')
