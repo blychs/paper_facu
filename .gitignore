@@ -16,3 +16,5 @@ manifest.txt
 /stats
 /.ipynb_checkpoints
 /imagenes
+/Rcode
+/__pycache__
