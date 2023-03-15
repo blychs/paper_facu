@@ -18,3 +18,4 @@ manifest.txt
 /imagenes
 /Rcode
 /__pycache__
+*.pyc
