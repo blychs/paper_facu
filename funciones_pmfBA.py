@@ -1413,6 +1413,7 @@ def calculate_seasonal(conc_matrix):
     deviations. Adds as well the number of samples per period as 
     last row"""
 
+    matrix = conc_matrix.copy()
 
     matrix['month'] = pd.DatetimeIndex(matrix.index)
     matrix['month'] = matrix['month'].dt.to_period('M')
