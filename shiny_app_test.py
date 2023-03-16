@@ -29,8 +29,8 @@ app_ui = ui.page_fluid(
     ui.layout_sidebar(
         ui.panel_sidebar(
                 ui.tags.p("Cambiar límites de x e y"),
-                ui.input_slider("xlim", "Xlim", min=0, max=75, value=[10, 20]),
-                ui.input_slider("ylim", "Ylim", min=0, max=75, value=[10, 20])
+                ui.input_slider("xlim", "Xlim", min=0, max=75, value=[10, 20], drag_range=False),
+                ui.input_slider("ylim", "Ylim", min=0, max=75, value=[10, 20], drag_range=False)
         ),
     ui.panel_main(
         ui.output_plot("scatter", width='600px', height='600px'),
