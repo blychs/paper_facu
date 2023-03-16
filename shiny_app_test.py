@@ -25,10 +25,10 @@ choices = list(matrix.keys())
 app_ui = ui.page_fluid(
     ui.input_selectize("x", "Select x (single)", choices),
     ui.input_selectize("y", "Select y (single)", choices),
-    ui.input_selectize("linreg", "Regresión lineal", ["Sí", "No"]),
+    ui.input_checkbox("linreg", "Regresión lineal", False),
     ui.layout_sidebar(
         ui.panel_sidebar(
-                ui.tags.p("Change valid xmax and ymax"),
+                ui.tags.p("Cambiar límites de x e y"),
                 ui.input_slider("xlim", "Xlim", min=0, max=75, value=[10, 20]),
                 ui.input_slider("ylim", "Ylim", min=0, max=75, value=[10, 20])
         ),
@@ -51,7 +51,7 @@ def server(input, output, session):
         mask = ~np.isnan(x) & ~np.isnan(y)
         fig, ax = plt.subplots(figsize=(20,20))
         ax.plot(x, y, 'o')
-        if input.linreg()=="Sí":
+        if input.linreg()==True:
             slope, intercept, r, p, se = linregress(x[mask], y[mask])
             ax.plot(x, intercept + slope * x,
                     label=f'{slope:.2g} [{input.x()}] + {intercept:.2g} \nR$^2$ = {r**2:.2g}\np-val = {p:.2g}')
