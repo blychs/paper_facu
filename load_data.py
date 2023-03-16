@@ -10,7 +10,8 @@ def load_data(data_matrix, unc_matrix, gases, meteo, events):
     import numpy as np
     
     matrix = pd.read_excel(data_matrix, decimal=',', sheet_name='CONC')
-    matrix = matrix.rename(columns={'PM2,5': 'PM2.5'})
+    matrix = matrix.rename(columns={'PM2,5': 'PM2.5', 'C Orgánico': 'OC',
+                                     'C Elemental': 'EC', 'C Total': 'TC'})
     matrix['date'] = pd.to_datetime(matrix['date'])#.dt.date
     matrix.set_index(matrix['date'], inplace=True)
     matrix.drop('date', inplace=True, axis=1)
@@ -18,7 +19,8 @@ def load_data(data_matrix, unc_matrix, gases, meteo, events):
     matrix = matrix.reindex(sorted(matrix.columns), axis=1)
     
     unc = pd.read_excel(unc_matrix, decimal=',', sheet_name='UNC')
-    unc = unc.rename(columns={'PM2,5': 'PM2.5'})
+    unc = unc.rename(columns={'PM2,5': 'PM2.5', 'C Orgánico': 'OC',
+                                     'C Elemental': 'EC', 'C Total': 'TC'})
     unc['date'] = pd.to_datetime(unc['date'])#.dt.date
     unc.set_index(unc['date'], inplace=True)
     unc.drop('date', inplace=True, axis=1)
