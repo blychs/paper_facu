@@ -35,6 +35,7 @@ from load_data import load_data
 matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                                'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                                'BA_events.xlsx')
+display(matrix)
 
 
 # %%
@@ -603,17 +604,17 @@ ax.set_ylabel('NO$_3$')
 plt.show()
 
 fig, ax = plt.subplots()
-ax.plot(matrix['PM2.5'], matrix['C Elemental'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
-ax.plot(matrix['PM2.5'], matrix['C Elemental'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+ax.plot(matrix['PM2.5'], matrix['EC'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix['PM2.5'], matrix['EC'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
 ax.set_xlabel('PM$_{2.5}$')
-ax.set_ylabel('C Elemental')
+ax.set_ylabel('EC')
 plt.show()
 
 fig, ax = plt.subplots()
-ax.plot(matrix['PM2.5'], matrix['C Orgánico'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
-ax.plot(matrix['PM2.5'], matrix['C Orgánico'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+ax.plot(matrix['PM2.5'], matrix['OC'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix['PM2.5'], matrix['OC'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
 ax.set_xlabel('PM$_{2.5}$')
-ax.set_ylabel('C Orgánico')
+ax.set_ylabel('OC')
 plt.show()
 
 # %%
