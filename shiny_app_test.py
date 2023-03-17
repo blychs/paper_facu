@@ -69,10 +69,10 @@ def server(input, output, session):
         valx = matrix[input.x()].max() * 1.01 
         valy = matrix[input.y()].max() * 1.01 
         ui.update_slider(
-            "xlim", value=[0, valx], min=0, max=valx, step=valx/30
+            "xlim", value=[0, valx], min=0, max=valx, step=valx/50
         )
         ui.update_slider(
-            "ylim", value=[0,valy], min=0, max=valy, step=valy/30  
+            "ylim", value=[0,valy], min=0, max=valy, step=valy/50  
         )
 
         
