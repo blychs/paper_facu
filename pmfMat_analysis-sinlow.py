@@ -10,9 +10,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.11.2
 #   kernelspec:
-#     display_name: Python3 (analysis)
+#     display_name: analysis
 #     language: python
-#     name: analysis
+#     name: python3
 # ---
 
 # %% [markdown]
@@ -63,7 +63,7 @@ ax.legend()
 ax.set_xlabel('Date')
 ax.set_ylabel('PM$_{2.5}$ mass concentration (µg m$^{-3}$)')
 # ax.grid()
-fig.savefig('HV_PM25.png')
+fig.savefig('images/HV_PM25.png')
 plt.show()
 
 ## Calculate num exceedances (percentage)
