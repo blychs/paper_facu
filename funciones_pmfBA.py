@@ -1056,7 +1056,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
               'salt': salt, 'others': others}
         
         ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 'usalt': usalt,
-                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals, 'others': uothers}
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals, 'uothers': uothers}
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
                                     1.8 * uncertainty_matrix['OC'],
