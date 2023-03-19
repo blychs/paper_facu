@@ -499,7 +499,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
         organic_mass = (1.8 * concentration_matrix['OC'] )
         uorganic_mass = (1.8 * uncertainty_matrix['OC'] )
         
-        elemental_C = concentration_matrix['EC']
+        elementaSl_C = concentration_matrix['EC']
         uelemental_C = uncertainty_matrix['EC']
         
         geological_minerals = (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
@@ -518,7 +518,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
               'salt': salt, 'others': others}
         
         ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 'usalt': usalt, 
-                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals, 'others': uothers}
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals, 'uothers': uothers}
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
                                     1.8 * uncertainty_matrix['OC'],
