@@ -517,8 +517,8 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
               'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
               'salt': salt, 'others': others}
         
-        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
-                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 'usalt': usalt, 
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals, 'others': uothers}
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
                                     1.8 * uncertainty_matrix['OC'],
@@ -1055,8 +1055,8 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
               'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
               'salt': salt, 'others': others}
         
-        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
-                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 'usalt': usalt,
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals, 'others': uothers}
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
                                     1.8 * uncertainty_matrix['OC'],
