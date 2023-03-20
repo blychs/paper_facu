@@ -499,7 +499,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
         organic_mass = (1.8 * concentration_matrix['OC'] )
         uorganic_mass = (1.8 * uncertainty_matrix['OC'] )
         
-        elementaSl_C = concentration_matrix['EC']
+        elemental_C = concentration_matrix['EC']
         uelemental_C = uncertainty_matrix['EC']
         
         geological_minerals = (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
