@@ -354,7 +354,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
         ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
                       'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
         
-        uclosure = np.linalg.norm( [ 1.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'],
+        uclosure = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'],
                                     1.4 * uncertainty_matrix['OC'],
                                     uncertainty_matrix['EC'],
                                     2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
@@ -884,7 +884,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
                       'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals}
         
-        uclosure = np.linalg.norm( [ 1.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'],
+        uclosure = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'],
                                     1.4 * uncertainty_matrix['OC'],
                                     uncertainty_matrix['EC'],
                                     2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
