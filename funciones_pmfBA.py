@@ -332,8 +332,8 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
         
         
     if equation == 'Malm_2000':
-        inorganic_ions = 1.125 * concentration_matrix['S'] + 1.29 * concentration_matrix['NO3']
-        uinorganic_ions = np.linalg.norm( [ 1.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
+        inorganic_ions = 4.125 * concentration_matrix['S'] + 1.29 * concentration_matrix['NO3']
+        uinorganic_ions = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
         
         organic_mass = 1.4 * concentration_matrix['OC']
         uorganic_mass = 1.4 * uncertainty_matrix['OC']
@@ -860,8 +860,8 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         
         
     if equation == 'Malm_2000':
-        inorganic_ions = 1.125 * concentration_matrix['S'] + 1.29 * concentration_matrix['NO3']
-        uinorganic_ions = np.linalg.norm( [ 1.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
+        inorganic_ions = 4.125 * concentration_matrix['S'] + 1.29 * concentration_matrix["NO3"]
+        uinorganic_ions = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
         
         organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
