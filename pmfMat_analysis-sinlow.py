@@ -10,9 +10,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.11.2
 #   kernelspec:
-#     display_name: analysis
+#     display_name: Python3 (analysis)
 #     language: python
-#     name: python3
+#     name: analysis
 # ---
 
 # %% [markdown]
@@ -63,7 +63,7 @@ ax.legend()
 ax.set_xlabel('Date')
 ax.set_ylabel('PM$_{2.5}$ mass concentration (µg m$^{-3}$)')
 # ax.grid()
-fig.savefig('images/HV_PM25.png')
+fig.savefig('HV_PM25.png')
 plt.show()
 
 ## Calculate num exceedances (percentage)
@@ -322,6 +322,61 @@ plt.show()
 
 # %%
 # %matplotlib widget
+mass_Simon = mass_reconstruction_mod(matrix, unc, events=events, equation="Simon_2011")
+mass_Hand = mass_reconstruction_mod(matrix, unc, events=events, equation="Hand_2011")
+mass_Maenhaut = mass_reconstruction_mod(matrix, unc, events=events, equation="Maenhaut_2002")
+
+mass = {}
+
+for key in mass_Hand[1].keys():
+    mass[key] = (mass_Simon[1][key] + mass_Hand[1][key] + mass_Maenhaut[1][key])/3
+
+    
+
+
+organic_mass_per = percentage_with_err(mass['organic_mass'], matrix['PM2.5'], mass[3]['uorganic_mass'], mass[2])
+inorganic_ions_per = percentage_with_err(mass['inorganic_ions'], matrix['PM2.5'], mass[3]['uinorganic_ions'], mass[2])
+geological_minerals_per = percentage_with_err(mass['geological_minerals'], matrix['PM2.5'], mass[3]['ugeological_minerals'], mass[2])
+EC_per = percentage_with_err(mass['elemental_C'], matrix['PM2.5'], mass[3]['uelemental_C'], mass[2])
+ssa_per = percentage_with_err(mass['salt'], matrix['PM2.5'], mass[3]['usalt'], mass[2])
+
+plt.style.use('seaborn-v0_8-paper')
+
+reconst = mass[0]/matrix['PM2.5'] * 100
+ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+smoke_dates = list(matrix.index.where(events['Event']=='S').dropna())
+print(smoke_dates)
+
+
+width=2.5
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+plt.subplots_adjust(hspace=.0)
+plt.subplots_adjust(wspace=.0)
+
+fig.suptitle('Mass reconstruction')
+#ax.set_title('Mass reconstructed')
+ax.bar(matrix.index, organic_mass_per['perc'], width,  label='Organic mass')
+ax.bar(matrix.index, inorganic_ions_per['perc'], width,  bottom=organic_mass_per['perc'],label='Inorganic ions')
+ax.bar(matrix.index, geological_minerals_per['perc'], width, 
+   bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']),label='Geological minerals')
+ax.bar(matrix.index, EC_per['perc'], width, 
+    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='EC')
+ax.bar(matrix.index, ssa_per['perc'], width, yerr=ureconst,
+    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='SSA')
+ax.axhline(100, linestyle=':', color='k')
+ax.axhspan(80, 120, alpha=0.2, color='y')
+ax.set_ylabel('Reconstructed mass (%)')
+ax.set_xlabel('Date')
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(reversed(handles), reversed(labels), loc=1)
+fig.savefig('images/stacked_bar_daily_percentage.png')
+plt.show()
+
+
+# %%
+# %matplotlib widget
 mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
 
 values = mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C'] + mass[1]['salt']
@@ -387,7 +442,7 @@ print(d_methodQuality)
 
 
 # %%
-# #%matplotlib widget
+# %matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
@@ -463,6 +518,7 @@ for method in methods:
         j = 0
         i += 1
     d_methodQuality[method] = np.logical_and(((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+    #d_methodQuality[method] = np.logical_and(((reconst) > 80), ((reconst) < 120)).sum()
 
 for x in range(0, 3):
     axs[x][0].set_ylabel('Mass reconstructed [%]')
@@ -517,20 +573,26 @@ for key1 in ['Cd']:
         
 
 # %%
-method = 'Simon_2011'
-resultNormal = estimation_om_oc(matrix.where(events["Event"]=='no'), method=method)
-resultEvent = estimation_om_oc(matrix.where(events["Event"].isin(["S", "SP", "SN"])), method=method)
-#print(result.summary())
-
-matrix.where(events['Event'].isin(["S", "SP", "SN"]))["PM2.5"].plot(style='o')
-
-#warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
-#result = estimation_om_oc(matrix.loc[warm_season_index])
-print("No events")
-print(resultNormal.summary().as_latex())
-
-print("Events")
-print(resultEvent.summary())
+methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
+for method in methods:
+    resultNormal = estimation_om_oc(matrix.where(events["Event"]=='no'), method=method)
+    resultEvent = estimation_om_oc(matrix.where(events["Event"].isin(["S", "SP", "SN"])), method=method)
+    #print(result.summary())
+    
+    matrix.where(events['Event'].isin(["S", "SP", "SN"]))["PM2.5"].plot(style='o')
+    
+    #warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
+    #result = estimation_om_oc(matrix.loc[warm_season_index])
+    #print("No events")
+    #print(resultNormal.summary().as_latex())
+    
+    #print("Events")
+    
+    
+    print(method, '&', f'{resultEvent.params[1]:.4g}', '&',
+           f'{resultEvent.bse[1]:.2g}', '&',
+           f'{resultEvent.pvalues[1]:.1g}', '\\\\')
 
 
 
@@ -583,17 +645,26 @@ with plt.style.context('ggplot'):
 
 # %%
 fig, ax = plt.subplots()
-ax.plot(matrix['SO4'], matrix['Na no sol'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
-ax.plot(matrix['SO4'], matrix['Na no sol'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
-ax.set_xlabel('SO$_4$')
-ax.set_ylabel('Na total')
+ax.plot(matrix.index, matrix['K'], '.-', label='K')
+ax.set_xlabel('Date')
+ax.set_ylabel('K (µg / m$^3$)')
 plt.show()
 
+# %%
+#fig, ax = plt.subplots()
+#ax.plot(matrix['SO4'], matrix['Na no sol'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+#ax.plot(matrix['SO4'], matrix['Na no sol'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
+#ax.set_xlabel('SO$_4$')
+#ax.set_ylabel('Na total')
+#plt.show()
+
 fig, ax = plt.subplots()
-ax.plot(matrix['SO4'], matrix['Na sol'].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'o')
-ax.plot(matrix['SO4'], matrix['Na sol'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'd')
-ax.set_xlabel('SO$_4$')
-ax.set_ylabel('Na$^+$')
+x = 'Na sol' 
+y = 'Cl'
+ax.plot(matrix[x], matrix[y].where(events['Event'].isin(['S', 'SP', 'SN'])), 'o')
+ax.plot(matrix[x], matrix[y].where(~events['Event'].isin(['S', 'SP', 'SN'])), 'x')
+ax.set_xlabel(x)
+ax.set_ylabel(y)
 plt.show()
 
 fig, ax = plt.subplots()
@@ -656,10 +727,9 @@ ax.plot(matrix['SO4'], )
 #It is often assumed that crustal K is 0.6 Fe
 
 fig, ax = plt.subplots()
-ax.plot(matrix['K'], matrix['Na sol'], 'o')
-#ax.plot(matrix['K'], matrix['K'] / 0.6)
+ax.plot(matrix['K'], matrix['ECPk1 C'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'o')
 ax.set_xlabel('K')
-ax.set_ylabel('Na$^+$')
+ax.set_ylabel('OC')
 plt.show()
 
 fig, ax = plt.subplots()
@@ -687,14 +757,16 @@ ax.plot()
 
 # %%
 fig, ax = plt.subplots()
-ax.plot(gases['SO4'], gases['SO2'], 'o')
-ax.plot(gases['SO4'].where((gases['Na no sol']>2) & (gases['SO4'] <2)), gases['SO2'], 'o')
+ax.plot(gases['SO4'].where(gases['SO4'] < 2),
+         gases['Cl'], 'o')
+# ax.plot(gases['SO4'].where((gases['Na no sol']>2) & (gases['SO4'] <2)), gases['SO2'], 'o')
 
-ax.set_xlabel('SO$_4$')
-ax.set_ylabel('SO$_2$')
+ax.set_xlabel('SO4')
+ax.set_ylabel('Cl')
 plt.show()
 
 # %%
-display(matrix.loc[matrix['SO4'] > 2])
+fig, ax = plt.subplots()
+ax.plot(matrix['Na no sol'], )
 
 
