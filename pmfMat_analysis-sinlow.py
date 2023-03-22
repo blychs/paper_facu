@@ -363,13 +363,17 @@ width=2.5
 
 fig, ax = plt.subplots(nrows=2, figsize=(10, 7), sharex=True)
 
-
+def axvlines(ax=None, xs=[0, 1], ymin=0, ymax=1, **kwargs):
+    ax = ax or plt.gca()
+    for x in xs:
+        ax.axvline(x, ymin=ymin, ymax=ymax, **kwargs)
 
 fig.suptitle('Mass reconstruction')
 #ax.set_title('Mass reconstructed')
 ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=2, marker='.', label='Gravimetric mass')
 ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, capsize=2, capthick=2, marker='.', label='Reconstructed mass')
 ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
+#ax[0].plot(matrix.index, events['Event'].isin(['S', 'SP', 'SN']), 'X')
 ax[0].legend()
 
 ax[1].bar(matrix.index, organic_mass_per['perc'].where(matrix['Na sol'].notna()), width,  label='Organic mass')
@@ -386,6 +390,9 @@ ax[1].set_ylabel('Reconstructed mass (%)')
 ax[1].set_xlabel('Date')
 handles, labels = ax[1].get_legend_handles_labels()
 ax[1].legend(reversed(handles), reversed(labels), loc=1)
+#axvlines(ax=ax[1], xs=matrix.index.where(~events['Event'].isin(['S', 'SP', 'SN'])).dropna(), c='k')
+#axvlines(ax=ax[0], xs=matrix.index.where(events['Event'].isin(['S', 'SP', 'SN'])).dropna(), c='r')
+#ax[1].plot(matrix.index, events['Event'].isin(['S', 'SP', 'SN']) * 150, 'o')
 
 #ax[2].errorbar(matrix.index, (matrix['PM2.5'] - total_reconst_mass),
 #               yerr=np.linalg.norm([unc['PM2.5'], utotal_reconst_mass], axis=0),
@@ -396,6 +403,56 @@ plt.subplots_adjust(hspace=.0)
 plt.subplots_adjust(wspace=.0)
 fig.savefig('images/stacked_bar_daily_percentage.png')
 plt.show()
+
+print(mass.keys())
+# Plot Pie Chart
+labels = "Organic Mass", "Geological Minerals", "Inorganic Ions", "Elemental Carbon", "Sea Salt", "Others", "Unexplained"
+sizes = [mass['organic_mass'].mean(), mass['geological_minerals'].mean(), mass['inorganic_ions'].mean(), 
+         mass['elemental_C'].mean(), mass['salt'].mean(), 
+         (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"]).mean()/2+ (mass_Maenhaut[1]["trace_elements"]).mean(), mass['unexplained'].mean()]
+fig, ax = plt.subplots()
+ax.pie(sizes, labels=labels, autopct='%1.f%%', startangle=-30, pctdistance=0.8)
+ax.set_title('Total results of Mass Reconstruction')
+#ax.set_label(size=15)
+plt.show()
+
+
+def select_events(da, events=events):
+    return(da.where(events['Event'].isin(['S', 'SP', 'SN'])).dropna())
+print(select_events(mass['unexplained']).mean())
+
+
+
+labels = "Organic Mass", "Geological Minerals", "Inorganic Ions", "Elemental Carbon", "Sea Salt", "Others"#, "Unexplained"
+sizes = [select_events(mass['organic_mass']).mean(), select_events(mass['geological_minerals']).mean(),
+         select_events(mass['inorganic_ions']).mean(), 
+         select_events(mass['elemental_C']).mean(), select_events(mass['salt']).mean(), 
+         select_events((mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])).mean()/2+ select_events(mass_Maenhaut[1]["trace_elements"]).mean()]#,
+         #select_events(mass['unexplained']).mean()]
+fig, ax = plt.subplots()
+ax.pie(sizes, labels=labels, autopct='%1.f%%', startangle=-30, pctdistance=0.8)
+ax.set_title('Event results of Mass Reconstruction')
+#ax.set_label(size=15)
+plt.show()
+
+
+def select_no_events(da, events=events):
+    return(da.where(~events['Event'].isin(['S', 'SP', 'SN'])).dropna())
+    #return(da.where(events['Event'].isin(['no'])).dropna())
+
+labels = "Organic Mass", "Geological Minerals", "Inorganic Ions", "Elemental Carbon", "Sea Salt", "Others", "Unexplained"
+sizes = [select_no_events(mass['organic_mass']).mean(), select_no_events(mass['geological_minerals']).mean(),
+         select_no_events(mass['inorganic_ions']).mean(), 
+         select_no_events(mass['elemental_C']).mean(), select_no_events(mass['salt']).mean(), 
+         select_no_events((mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])).mean()/2+ select_no_events(mass_Maenhaut[1]["trace_elements"]).mean(),
+         select_no_events(mass['unexplained']).mean()]
+fig, ax = plt.subplots()
+ax.pie(sizes, labels=labels, autopct='%1.f%%', startangle=-25, pctdistance=0.8)
+ax.set_title('No event results of Mass Reconstruction')
+#ax.set_label(size=15)
+plt.show()
+
+
 
 
 # %%
