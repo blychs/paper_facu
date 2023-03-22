@@ -35,7 +35,7 @@ from load_data import load_data
 matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                                'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                                'BA_events.xlsx')
-display(matrix)
+#display(matrix)
 
 
 # %%
@@ -321,7 +321,7 @@ fig.savefig('stacked_massreconst.png')
 plt.show()
 
 # %%
-# %matplotlib widget
+# #%matplotlib widget
 mass_Simon = mass_reconstruction_mod(matrix, unc, events=events, equation="Simon_2011")
 mass_Hand = mass_reconstruction_mod(matrix, unc, events=events, equation="Hand_2011")
 mass_Maenhaut = mass_reconstruction_mod(matrix, unc, events=events, equation="Maenhaut_2002")
@@ -331,46 +331,69 @@ mass = {}
 for key in mass_Hand[1].keys():
     mass[key] = (mass_Simon[1][key] + mass_Hand[1][key] + mass_Maenhaut[1][key])/3
 
+uncertainty = {}
+
+for key in mass_Hand[3].keys():
+    uncertainty[key] = np.linalg.norm([mass_Hand[3][key], mass_Maenhaut[3][key],
+                                      mass_Simon[3][key]], axis=0)
     
 
+total_reconst_mass = (mass_Simon[0] + mass_Hand[0] + mass_Maenhaut[0])/3
+utotal_reconst_mass = np.linalg.norm([mass_Simon[2], mass_Hand[2], mass_Maenhaut[2]], axis=0)
+#print(utotal_reconst_mass)
 
-organic_mass_per = percentage_with_err(mass['organic_mass'], matrix['PM2.5'], mass[3]['uorganic_mass'], mass[2])
-inorganic_ions_per = percentage_with_err(mass['inorganic_ions'], matrix['PM2.5'], mass[3]['uinorganic_ions'], mass[2])
-geological_minerals_per = percentage_with_err(mass['geological_minerals'], matrix['PM2.5'], mass[3]['ugeological_minerals'], mass[2])
-EC_per = percentage_with_err(mass['elemental_C'], matrix['PM2.5'], mass[3]['uelemental_C'], mass[2])
-ssa_per = percentage_with_err(mass['salt'], matrix['PM2.5'], mass[3]['usalt'], mass[2])
+organic_mass_per = percentage_with_err(mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
+inorganic_ions_per = percentage_with_err(mass['inorganic_ions'], matrix['PM2.5'], uncertainty['uinorganic_ions'], unc['PM2.5'])
+geological_minerals_per = percentage_with_err(mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
+EC_per = percentage_with_err(mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
+ssa_per = percentage_with_err(mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
 
 plt.style.use('seaborn-v0_8-paper')
 
-reconst = mass[0]/matrix['PM2.5'] * 100
-ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5'])**2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+reconst= percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
+                                        totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
+
+
+
 smoke_dates = list(matrix.index.where(events['Event']=='S').dropna())
 print(smoke_dates)
 
 
 width=2.5
 
-fig, ax = plt.subplots(figsize=(10, 5))
+fig, ax = plt.subplots(nrows=2, figsize=(10, 7), sharex=True)
 
-plt.subplots_adjust(hspace=.0)
-plt.subplots_adjust(wspace=.0)
+
 
 fig.suptitle('Mass reconstruction')
 #ax.set_title('Mass reconstructed')
-ax.bar(matrix.index, organic_mass_per['perc'], width,  label='Organic mass')
-ax.bar(matrix.index, inorganic_ions_per['perc'], width,  bottom=organic_mass_per['perc'],label='Inorganic ions')
-ax.bar(matrix.index, geological_minerals_per['perc'], width, 
+ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=2, marker='.', label='Gravimetric mass')
+ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, capsize=2, capthick=2, marker='.', label='Reconstructed mass')
+ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
+ax[0].legend()
+
+ax[1].bar(matrix.index, organic_mass_per['perc'].where(matrix['Na sol'].notna()), width,  label='Organic mass')
+ax[1].bar(matrix.index, inorganic_ions_per['perc'], width,  bottom=organic_mass_per['perc'],label='Inorganic ions')
+ax[1].bar(matrix.index, geological_minerals_per['perc'], width, 
    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']),label='Geological minerals')
-ax.bar(matrix.index, EC_per['perc'], width, 
+ax[1].bar(matrix.index, EC_per['perc'], width, 
     bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']),label='EC')
-ax.bar(matrix.index, ssa_per['perc'], width, yerr=ureconst,
+ax[1].bar(matrix.index, ssa_per['perc'], width, yerr=reconst['uperc'],
     bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']),label='SSA')
-ax.axhline(100, linestyle=':', color='k')
-ax.axhspan(80, 120, alpha=0.2, color='y')
-ax.set_ylabel('Reconstructed mass (%)')
-ax.set_xlabel('Date')
-handles, labels = ax.get_legend_handles_labels()
-ax.legend(reversed(handles), reversed(labels), loc=1)
+ax[1].axhline(100, linestyle=':', color='k')
+ax[1].axhspan(80, 120, alpha=0.2, color='y')
+ax[1].set_ylabel('Reconstructed mass (%)')
+ax[1].set_xlabel('Date')
+handles, labels = ax[1].get_legend_handles_labels()
+ax[1].legend(reversed(handles), reversed(labels), loc=1)
+
+#ax[2].errorbar(matrix.index, (matrix['PM2.5'] - total_reconst_mass),
+#               yerr=np.linalg.norm([unc['PM2.5'], utotal_reconst_mass], axis=0),
+#               capsize=2, capthick=2, marker='.')
+#ax[2].axhline(0, color='k', linestyle='dashed')
+fig.tight_layout()
+plt.subplots_adjust(hspace=.0)
+plt.subplots_adjust(wspace=.0)
 fig.savefig('images/stacked_bar_daily_percentage.png')
 plt.show()
 
