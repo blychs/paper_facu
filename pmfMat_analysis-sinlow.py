@@ -51,10 +51,10 @@ matrix_seasonal = calculate_seasonal(matrix)
 # %matplotlib widget
 fig, ax = plt.subplots()
 
-ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=1, marker='.', zorder=0)
-ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['S'])),  'o', label='Smoke')
-ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SP'])), 'o', label='Smoke previous day')
-ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SN'])), 'o', label='Smoke next day')
+ax.errorbar(matrix.index.where(matrix['PM2.5'].notna()).dropna(), matrix['PM2.5'].dropna(), yerr=unc['PM2.5'].dropna(), capsize=2, capthick=1, color='k', marker='.', zorder=0)
+ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['S', 'SP', 'SN'])), 'o', color='r', label='Smoke')
+#ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SP'])), 'o', label='Smoke previous day')
+#ax.plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['SN'])), 'o', label='Smoke next day')
 ax.axhline(50,   color='c', linestyle='-.', label='Interim target 2')
 ax.axhline(37.5, color='g', linestyle='--', label='Interim target 3')
 ax.axhline(35,   color='y', linestyle=':',  label='Local regulations')
@@ -64,7 +64,7 @@ ax.legend()
 ax.set_xlabel('Date')
 ax.set_ylabel('PM$_{2.5}$ mass concentration (µg m$^{-3}$)')
 # ax.grid()
-fig.savefig('HV_PM25.png')
+fig.savefig('images/HV_PM25.png')
 plt.show()
 
 ## Calculate num exceedances (percentage)
@@ -371,31 +371,40 @@ def axvlines(ax=None, xs=[0, 1], ymin=0, ymax=1, **kwargs):
 
 fig.suptitle('Mass reconstruction')
 #ax.set_title('Mass reconstructed')
-#ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], capsize=2, capthick=2, marker='.', label='Gravimetric mass')
-#ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, capsize=2, capthick=2, marker='.', label='Reconstructed mass')
-#ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
-##ax[0].plot(matrix.index, events['Event'].isin(['S', 'SP', 'SN']), 'X')
-#ax[0].legend()
+ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
+               color='k', capsize=2, capthick=1, lw=1, marker='.', label='Gravimetric mass')
+ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, color='gray',
+                capsize=2, capthick=1, lw=1, marker='.', label='Reconstructed mass')
+ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
+#ax[0].plot(matrix.index, events['Event'].isin(['S', 'SP', 'SN']), 'X')
+ax[0].legend()
 #
-ax[0].bar(matrix.index.values, mass['organic_mass'].where(matrix['Na sol'].notna()).values, width,  label='Organic mass')
-ax[0].bar(matrix.index.values, mass['inorganic_ions'].values, width,  bottom=mass['organic_mass'].values,label='Inorganic ions')
-ax[0].bar(matrix.index.values, mass['geological_minerals'].values, width, 
-    bottom=(mass['organic_mass'] + mass['inorganic_ions']).values,label='Geological minerals')
-ax[0].bar(matrix.index.values, mass['elemental_C'].values, width, 
-    bottom=(mass['organic_mass'] + mass['inorganic_ions'] + mass['geological_minerals']).values,label='Elemental carbon')
-ax[0].bar(matrix.index.values, mass['salt'].values, width, yerr=np.linalg.norm([mass_Simon[2], mass_Hand[2], mass_Maenhaut[2]], axis=0),
-    bottom=(mass['organic_mass'] + mass['inorganic_ions'] + mass['geological_minerals'] + mass['elemental_C']).values,
-    error_kw={'capsize':2, 'capthick':1, 'lw':1, 'ecolor':'gray'}, label='Sea salt')
-ax[0].errorbar(matrix.index.values, matrix['PM2.5'], yerr=unc['PM2.5'],
-               capsize=2, capthick=1, lw=1, fmt='.-', color='k', label='Gravimetric mass')
+def axvlines(ax=None, xs=[0, 1], ymin=0, ymax=1, **kwargs):
+    ax = ax or plt.gca()
+    for x in xs:
+        ax.axvline(x, ymin=ymin, ymax=ymax, **kwargs)
 
+axvlines(ax=ax[0], xs=matrix.index.values, color='silver', lw=0.5, linestyle='dashed', zorder=0)
+axvlines(ax=ax[1], xs=matrix.index.values, color='silver', lw=0.5, linestyle='dashed', zorder=0)
+#ax[0].bar(matrix.index.values, mass['organic_mass'].where(matrix['Na sol'].notna()).values, width,  label='Organic mass')
+#ax[0].bar(matrix.index.values, mass['inorganic_ions'].values, width,  bottom=mass['organic_mass'].values,label='Inorganic ions')
+#ax[0].bar(matrix.index.values, mass['geological_minerals'].values, width, 
+#    bottom=(mass['organic_mass'] + mass['inorganic_ions']).values,label='Geological minerals')
+#ax[0].bar(matrix.index.values, mass['elemental_C'].values, width, 
+#    bottom=(mass['organic_mass'] + mass['inorganic_ions'] + mass['geological_minerals']).values,label='Elemental carbon')
+#ax[0].bar(matrix.index.values, mass['salt'].values, width, yerr=np.linalg.norm([mass_Simon[2], mass_Hand[2], mass_Maenhaut[2]], axis=0),
+#    bottom=(mass['organic_mass'] + mass['inorganic_ions'] + mass['geological_minerals'] + mass['elemental_C']).values,
+#    error_kw={'capsize':2, 'capthick':1, 'lw':1, 'ecolor':'gray'}, label='Sea salt')
+#ax[0].errorbar(matrix.index.values, matrix['PM2.5'], yerr=unc['PM2.5'],
+#               capsize=2, capthick=1, lw=1, fmt='.-', color='k', label='Gravimetric mass')
+#
 
 #ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass,
 #               capsize=2, capthick=1, marker='.', color='g', linestyle='dotted', label='Reconstructed mass')
-ax[0].set_ylabel('Mass (µg/m$^{-3}$)')
-ax[0].set_xlabel('Date')
-handles, labels = ax[0].get_legend_handles_labels()
-ax[0].legend(reversed(handles), reversed(labels))
+#ax[0].set_ylabel('Mass (µg/m$^{-3}$)')
+#ax[0].set_xlabel('Date')
+#handles, labels = ax[0].get_legend_handles_labels()
+#ax[0].legend(reversed(handles), reversed(labels))
 
 ax[1].bar(matrix.index.values, organic_mass_per['perc'].where(matrix['Na sol'].notna()).values, width,  label='Organic mass')
 ax[1].bar(matrix.index.values, inorganic_ions_per['perc'].values, width,  bottom=organic_mass_per['perc'].values,label='Inorganic ions')
@@ -410,8 +419,8 @@ ax[1].axhline(100, linestyle=':', color='k')
 ax[1].axhspan(80, 120, alpha=0.2, color='y')
 ax[1].set_ylabel('Reconstructed mass (%)')
 ax[1].set_xlabel('Date')
-#handles, labels = ax[1].get_legend_handles_labels()
-#ax[1].legend(reversed(handles), reversed(labels), loc=1)
+handles, labels = ax[1].get_legend_handles_labels()
+ax[1].legend(reversed(handles), reversed(labels), loc=1)
 #axvlines(ax=ax[1], xs=matrix.index.where(~events['Event'].isin(['S', 'SP', 'SN'])).dropna(), c='k')
 #axvlines(ax=ax[0], xs=matrix.index.where(events['Event'].isin(['S', 'SP', 'SN'])).dropna(), c='r')
 #ax[1].plot(matrix.index, events['Event'].isin(['S', 'SP', 'SN']) * 150, 'o')
@@ -479,6 +488,18 @@ plt.show()
 # Stacked bar for all filters
 
 fig, ax = plt.subplots()
+categories = 'Total', 'BB Events', 'No Events'
+mean_OM = np.array([mass['organic_mass'].mean(), select_events(mass['organic_mass']).mean(), select_no_events(mass['organic_mass']).mean()])
+mean_II = np.array([mass['inorganic_ions'].mean(), select_events(mass['inorganic_ions']).mean(), select_no_events(mass['inorganic_ions']).mean()])
+mean_GM = np.array([mass['geological_minerals'].mean(), select_events(mass['geological_minerals']).mean(), select_no_events(mass['geological_minerals']).mean()])
+mean_EC = np.array([mass['elemental_C'].mean(), select_events(mass['elemental_C']).mean(), select_no_events(mass['elemental_C']).mean()])
+mean_salt = np.array([mass['salt'].mean(), select_events(mass['salt']).mean(), select_no_events(mass['salt']).mean()])
+ax.bar(categories, mean_OM, label='Organic mass')
+ax.bar(categories, mean_II, bottom=mean_OM, label='Inorganic ions')
+ax.bar(categories, mean_GM, bottom=mean_II+mean_OM, label='Geological minerals')
+ax.bar(categories, mean_EC, bottom=mean_GM+mean_II+mean_OM, label='Elemental carbon')
+ax.bar(categories, mean_salt, bottom=mean_GM+mean_II+mean_OM+mean_EC, label='Sea salt')
+ax.legend()
 
 
 
