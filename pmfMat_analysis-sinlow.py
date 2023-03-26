@@ -10,9 +10,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.11.2
 #   kernelspec:
-#     display_name: Python3 (analysis)
+#     display_name: analysis
 #     language: python
-#     name: analysis
+#     name: python3
 # ---
 
 # %% [markdown]
@@ -204,7 +204,7 @@ inorganic_ions_per = percentage_with_err(mass['inorganic_ions'], matrix['PM2.5']
 geological_minerals_per = percentage_with_err(mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
 EC_per = percentage_with_err(mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
 ssa_per = percentage_with_err(mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
-
+others_per = ((mass_Simon[1]['others'] + mass_Maenhaut[1]['others'])/2 + mass_Maenhaut[1]['trace_elements'])/ total_reconst_mass * 100
 plt.style.use('seaborn-v0_8-paper')
 
 reconst= percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
@@ -245,15 +245,20 @@ def axvlines(ax=None, xs=[0, 1], ymin=0, ymax=1, **kwargs):
 axvlines(ax=ax[0], xs=matrix.index.values, color='silver', lw=0.5, linestyle='dotted', zorder=0)
 axvlines(ax=ax[1], xs=matrix.index.values, color='silver', lw=0.5, linestyle='dotted', zorder=0)
 
-ax[1].bar(matrix.index.values, organic_mass_per['perc'].where(matrix['Na sol'].notna()).values, width,  label='Organic mass')
-ax[1].bar(matrix.index.values, inorganic_ions_per['perc'].values, width,  bottom=organic_mass_per['perc'].values,label='Inorganic ions')
+ax[1].bar(matrix.index.values, organic_mass_per['perc'].where(matrix['Na sol'].notna()).values, width,  label='OM')
+ax[1].bar(matrix.index.values, inorganic_ions_per['perc'].values, width,  bottom=organic_mass_per['perc'].values,label='II')
 ax[1].bar(matrix.index.values, geological_minerals_per['perc'].values, width, 
-    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']).values,label='Geological minerals')
+    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']).values,label='GM')
 ax[1].bar(matrix.index.values, EC_per['perc'].values, width, 
-    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']).values,label='Elemental carbon')
-ax[1].bar(matrix.index.values, ssa_per['perc'].values, width, yerr=reconst['uperc'],
+    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']).values,label='EC')
+ax[1].bar(matrix.index.values, ssa_per['perc'].values, width,
           error_kw={'lw':1, 'capsize':2, 'capthick':1, 'ecolor':'gray', 'marker':'.'},
-    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']).values,label='Sea salt')
+    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']).values,label='SSA')
+ax[1].bar(matrix.index.values, others_per.values, width, yerr=reconst['uperc'],
+          error_kw={'lw':1, 'capsize':2, 'capthick':1, 'ecolor':'gray', 'marker':'.'},
+    bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc'] + ssa_per['perc']).values,
+    label='Others')
+ax[1].axhline(100, linestyle=':', color='k')
 ax[1].axhline(100, linestyle=':', color='k')
 ax[1].axhspan(80, 120, alpha=0.2, color='y')
 ax[1].set_ylabel('Reconstructed mass (%)')
@@ -267,43 +272,6 @@ fig.savefig('images/stacked_bar_daily_percentage.png')
 plt.show()
 
 print(mass.keys())
-
-
-# Plot Pie Chart
-def select_events(da, events=events):
-    return(da.where(events['Event'].isin(['S', 'SP', 'SN'])).dropna())
-
-def select_no_events(da, events=events):
-    return(da.where(~events['Event'].isin(['S', 'SP', 'SN'])).dropna())
-
-labels = "Organic Mass", "Geological Minerals", "Inorganic Ions", "Elemental Carbon", "Sea Salt", "Others"#, "Unexplained"
-sizes = [mass['organic_mass'].mean(), mass['geological_minerals'].mean(), mass['inorganic_ions'].mean(), 
-         mass['elemental_C'].mean(), mass['salt'].mean(), 
-         (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"]).mean()/2+ (mass_Maenhaut[1]["trace_elements"]).mean()]#, mass['unexplained'].mean()]
-fig, ax = plt.subplots(ncols=3, figsize=(15,5))
-ax[0].pie(sizes, labels=labels, autopct='%1.f%%', startangle=-30, pctdistance=0.8)
-ax[0].set_title('Mass reconstruction (total)', size=15)
-
-sizes = [select_events(mass['organic_mass']).mean(), select_events(mass['geological_minerals']).mean(),
-         select_events(mass['inorganic_ions']).mean(), 
-         select_events(mass['elemental_C']).mean(), select_events(mass['salt']).mean(), 
-         select_events((mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])).mean()/2+ select_events(mass_Maenhaut[1]["trace_elements"]).mean()]#,
-
-ax[1].pie(sizes, labels=labels, autopct='%1.f%%', startangle=-30, pctdistance=0.8)
-ax[1].set_title('Mass reconstruction (smoke events)', size=15)
-
-
-
-sizes = [select_no_events(mass['organic_mass']).mean(), select_no_events(mass['geological_minerals']).mean(),
-         select_no_events(mass['inorganic_ions']).mean(), 
-         select_no_events(mass['elemental_C']).mean(), select_no_events(mass['salt']).mean(), 
-         select_no_events((mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])).mean()/2+ select_no_events(mass_Maenhaut[1]["trace_elements"]).mean()]#,
-
-ax[2].pie(sizes, labels=labels, autopct='%1.f%%', startangle=-25, pctdistance=0.8)
-ax[2].set_title('Mass reconstruction (no events)', size=15)
-fig.savefig('images/pie_charts.png')
-plt.show()
-
 
 
 # Stacked bar for all filters
@@ -326,6 +294,20 @@ ax.legend()
 
 # %%
 
+mass_Simon = mass_reconstruction_mod(matrix, unc, events=events, equation="Simon_2011")
+mass_Hand = mass_reconstruction_mod(matrix, unc, events=events, equation="Hand_2011")
+mass_Maenhaut = mass_reconstruction_mod(matrix, unc, events=events, equation="Maenhaut_2002")
+
+mass = {}
+
+for key in mass_Hand[1].keys():
+    mass[key] = (mass_Simon[1][key] + mass_Hand[1][key] + mass_Maenhaut[1][key])/3
+
+uncertainty = {}
+
+for key in mass_Hand[3].keys():
+    uncertainty[key] = np.linalg.norm([mass_Hand[3][key], mass_Maenhaut[3][key],
+                                      mass_Simon[3][key]], axis=0)
 def mass_reconst_to_df(mass):
     dfmass_reconst = pd.DataFrame(data=mass)
 
@@ -361,10 +343,28 @@ def mass_reconst_to_df(mass):
 mass_reconst = mass_reconst_to_df(mass)
 
 mass_reconst["Others"] = (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])/2 + mass_Maenhaut[1]["trace_elements"]
-mass_reconst[["II", "EC", "OM", "GM", "SSA", "Others"]].mean(axis=0).plot.pie(autopct="%1.f%%")
+
+
+fig, ax = plt.subplots(ncols=3, figsize=(15,5))
+fig.suptitle('Origin of reconstructed mass', size=15)
+mass_reconst[["OM", "II", "GM", "EC", "SSA", "Others"]].mean(axis=0).plot.pie(
+    ax=ax[0], autopct="%1.f%%", title='Total', fontsize=12,
+)
+select_events(mass_reconst[["OM", "II", "GM", "EC", "SSA", "Others"]]).mean(axis=0).plot.pie(
+    ax=ax[1], autopct="%1.f%%", title="Smoke", fontsize=12
+)
+select_no_events(mass_reconst[["OM", "II", "GM", "EC", "SSA", "Others"]]).mean(axis=0).plot.pie(
+    ax=ax[2], autopct="%1.f%%", title='No events', fontsize=12
+)
+ax[0].title.set_size(13)
+ax[1].title.set_size(13)
+ax[2].title.set_size(13)
+fig.savefig('images/pie_charts.png')
+plt.show()
 
 
 mass_reconst_perc = mass_reconst.apply(lambda x: x/mass_reconst['Reconstructed mass'] * 100)
+
 
 print("Averaged")
 display(mass_reconst.dropna().describe())
@@ -386,11 +386,18 @@ mass_reconst_Simon_perc = mass_reconst_Simon.apply(lambda x: x/mass_reconst_Simo
 display(mass_reconst_Simon_perc.dropna().describe())
 
 print("Maenhaut")
+print(mass_Maenhaut[1].keys())
 mass_reconst_Maenhaut = mass_reconst_to_df(mass_Maenhaut[1])
 
-mass_reconst_Maenhaut_perc = mass_reconst_Hand.apply(lambda x: x/mass_reconst_Maenhaut['Reconstructed mass'] * 100)
+mass_reconst_Maenhaut_perc = mass_reconst_Maenhaut.apply(lambda x: x/mass_reconst_Maenhaut['Reconstructed mass'] * 100)
 
 display(mass_reconst_Maenhaut_perc.dropna().describe())
+
+
+fig, ax = plt.subplots(nrows=2, figsize=(7,5), sharex=True)
+
+
+
 
 
 # %%
