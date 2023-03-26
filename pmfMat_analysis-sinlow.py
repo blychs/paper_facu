@@ -178,7 +178,7 @@ ax.legend()
 plt.show()
 
 # %%
-# #%matplotlib widget
+# %matplotlib widget
 mass_Simon = mass_reconstruction_mod(matrix, unc, events=events, equation="Simon_2011")
 mass_Hand = mass_reconstruction_mod(matrix, unc, events=events, equation="Hand_2011")
 mass_Maenhaut = mass_reconstruction_mod(matrix, unc, events=events, equation="Maenhaut_2002")
@@ -234,6 +234,7 @@ ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, color
 ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
 ax[0].plot(matrix.index, matrix['PM2.5'].where(events['Event'].isin(['S', 'SN', 'SP'])) * 0, 'd',
            color='gray', label='Smoke events', zorder=3)
+#ax[0].plot(matrix.index, matrix['PM2.5'] - total_reconst_mass, '.-')
 #ax[0].plot(matrix.index, events['Event'].isin(['S', 'SP', 'SN']), 'X')
 ax[0].legend()
 #
@@ -290,7 +291,7 @@ ax.bar(categories, mean_EC, bottom=mean_GM+mean_II+mean_OM, label='Elemental car
 ax.bar(categories, mean_salt, bottom=mean_GM+mean_II+mean_OM+mean_EC, label='Sea salt')
 ax.legend()
 
-
+print((total_reconst_mass/matrix['PM2.5']).loc[total_reconst_mass/matrix['PM2.5']>1.4].dropna())
 
 # %%
 
@@ -373,7 +374,7 @@ display(mass_reconst.dropna().describe())
 print("Hand")
 mass_reconst_Hand = mass_reconst_to_df(mass_Hand[1])
 
-mass_reconst_Hand_perc = mass_reconst_Hand.apply(lambda x: x/mass_reconst_Hand['Reconstructed mass'] * 100)
+mass_reconst_Hand_perc = mass_reconst_Hand.apply(lambda x: x/mass_reconst_Hand['Gravimetric mass'] * 100)
 
 display(mass_reconst_Hand_perc.dropna().describe())
 
@@ -381,7 +382,7 @@ display(mass_reconst_Hand_perc.dropna().describe())
 print("Simon")
 mass_reconst_Simon = mass_reconst_to_df(mass_Simon[1])
 
-mass_reconst_Simon_perc = mass_reconst_Simon.apply(lambda x: x/mass_reconst_Simon['Reconstructed mass'] * 100)
+mass_reconst_Simon_perc = mass_reconst_Simon.apply(lambda x: x/mass_reconst_Simon['Gravimetric mass'] * 100)
 
 display(mass_reconst_Simon_perc.dropna().describe())
 
@@ -389,12 +390,10 @@ print("Maenhaut")
 print(mass_Maenhaut[1].keys())
 mass_reconst_Maenhaut = mass_reconst_to_df(mass_Maenhaut[1])
 
-mass_reconst_Maenhaut_perc = mass_reconst_Maenhaut.apply(lambda x: x/mass_reconst_Maenhaut['Reconstructed mass'] * 100)
+mass_reconst_Maenhaut_perc = mass_reconst_Maenhaut.apply(lambda x: x/mass_reconst_Maenhaut['Gravimetric mass'] * 100)
 
 display(mass_reconst_Maenhaut_perc.dropna().describe())
 
-
-fig, ax = plt.subplots(nrows=2, figsize=(7,5), sharex=True)
 
 
 
