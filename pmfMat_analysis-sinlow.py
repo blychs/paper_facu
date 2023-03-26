@@ -48,7 +48,7 @@ matrix_seasonal = calculate_seasonal(matrix)
 
 
 # %%
-# %matplotlib widget
+
 fig, ax = plt.subplots()
 
 ax.errorbar(matrix.index.where(matrix['PM2.5'].notna()).dropna(), matrix['PM2.5'].dropna(), yerr=unc['PM2.5'].dropna(), capsize=2, capthick=1, color='k', marker='.', zorder=0)
@@ -282,7 +282,7 @@ sizes = [mass['organic_mass'].mean(), mass['geological_minerals'].mean(), mass['
          (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"]).mean()/2+ (mass_Maenhaut[1]["trace_elements"]).mean()]#, mass['unexplained'].mean()]
 fig, ax = plt.subplots(ncols=3, figsize=(15,5))
 ax[0].pie(sizes, labels=labels, autopct='%1.f%%', startangle=-30, pctdistance=0.8)
-ax[0].set_title('Total results of Mass Reconstruction')
+ax[0].set_title('Mass reconstruction (total)', size=15)
 
 sizes = [select_events(mass['organic_mass']).mean(), select_events(mass['geological_minerals']).mean(),
          select_events(mass['inorganic_ions']).mean(), 
@@ -290,7 +290,7 @@ sizes = [select_events(mass['organic_mass']).mean(), select_events(mass['geologi
          select_events((mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])).mean()/2+ select_events(mass_Maenhaut[1]["trace_elements"]).mean()]#,
 
 ax[1].pie(sizes, labels=labels, autopct='%1.f%%', startangle=-30, pctdistance=0.8)
-ax[1].set_title('Event results of Mass Reconstruction')
+ax[1].set_title('Mass reconstruction (smoke events)', size=15)
 
 
 
@@ -300,8 +300,8 @@ sizes = [select_no_events(mass['organic_mass']).mean(), select_no_events(mass['g
          select_no_events((mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])).mean()/2+ select_no_events(mass_Maenhaut[1]["trace_elements"]).mean()]#,
 
 ax[2].pie(sizes, labels=labels, autopct='%1.f%%', startangle=-25, pctdistance=0.8)
-ax[2].set_title('No event results of Mass Reconstruction')
-
+ax[2].set_title('Mass reconstruction (no events)', size=15)
+fig.savefig('images/pie_charts.png')
 plt.show()
 
 
@@ -325,28 +325,25 @@ ax.legend()
 
 
 # %%
-# %matplotlib widget
-mass = mass_reconstruction(matrix, unc, equation="Hand_2011")
+mass_reconst = pd.DataFrame(data=mass)
+mass_reconst["others"] = (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])/2 + mass_Maenhaut[1]["trace_elements"]
 
-values = mass[1]['inorganic_ions'] + mass[1]['geological_minerals'] + mass[1]['elemental_C'] + mass[1]['salt']
-uvalues = mass[3]['uinorganic_ions'] + mass[3]['ugeological_minerals'] + mass[3]['uelemental_C'] + mass[3]['usalt'] 
+mass_reconst["Reconstructed mass"] = (mass['inorganic_ions'] +
+                                      mass["organic_mass"] + 
+                                      mass["elemental_C"] +
+                                      mass["geological_minerals"] +
+                                      mass["salt"] +
+                                      (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])/2 + mass_Maenhaut[1]["trace_elements"]
+                                      )
 
 
-plt.style.use('seaborn-v0_8-paper')
+mass_reconst["Gravimetric mass"] = matrix["PM2.5"]
 
-fig, ax = plt.subplots(figsize=(15,7.5))
 
-#matrix['PM2.5'].plot(style='.-', label='PM2.5', ax=ax)
-ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'], marker='.', linestyle='-', capsize=3, capthick=1, label='PM2.5')
-ax.errorbar(matrix.index, mass[1]['organic_mass'], yerr=mass[3]['uorganic_mass'], marker='.', capsize=3, capthick=1, linestyle='-', label="Organic mass")
-ax.errorbar(matrix.index, values, yerr=uvalues, marker='.', capsize=3, capthick=1, linestyle='-', label="Other")
-ax.errorbar(matrix.index, mass[0], yerr=mass[2], marker='.', capsize=3, capthick=1, linestyle='-', label="Closure")
 
-ax.set_title('Time series')
-ax.set_xlabel("Date")
-ax.set_ylabel("Mass concentration (µg/m$^3$)")
-ax.legend()
-plt.show()
+mass_reconst_perc = mass_reconst.apply(lambda x: x/mass_reconst['Reconstructed mass'] * 100)
+
+display(mass_reconst_perc.dropna().describe())
 
 # %%
 # #%matplotlib widget
