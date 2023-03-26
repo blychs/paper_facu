@@ -325,25 +325,73 @@ ax.legend()
 
 
 # %%
-mass_reconst = pd.DataFrame(data=mass)
-mass_reconst["others"] = (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])/2 + mass_Maenhaut[1]["trace_elements"]
 
-mass_reconst["Reconstructed mass"] = (mass['inorganic_ions'] +
-                                      mass["organic_mass"] + 
-                                      mass["elemental_C"] +
-                                      mass["geological_minerals"] +
-                                      mass["salt"] +
-                                      (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])/2 + mass_Maenhaut[1]["trace_elements"]
-                                      )
+def mass_reconst_to_df(mass):
+    dfmass_reconst = pd.DataFrame(data=mass)
+
+    dfmass_reconst = dfmass_reconst.rename(columns={"inorganic_ions":"II",
+                                                  "elemental_C":"EC",
+                                                  "organic_mass": "OM",
+                                                  "geological_minerals": "GM",
+                                                  "salt": "SSA",
+                                                  "unexplained": "Unexplained"}
+                                                  )
 
 
-mass_reconst["Gravimetric mass"] = matrix["PM2.5"]
 
+    dfmass_reconst["Reconstructed mass"] = (dfmass_reconst['II'] +
+                                            dfmass_reconst["OM"] + 
+                                            dfmass_reconst["EC"] +
+                                            dfmass_reconst["GM"] +
+                                            dfmass_reconst["SSA"] 
+                                            )
+    if "others" in dfmass_reconst:
+        if "trace_elements" in dfmass_reconst:
+            dfmass_reconst["others"] = (dfmass_reconst["others"] +
+                                        dfmass_reconst["trace_elements"])
+            dfmass_reconst = dfmass_reconst.drop(["trace_elements"], axis=1)
+        dfmass_reconst = dfmass_reconst.rename(columns={"others": "Others"})
+        dfmass_reconst["Reconstructed mass"] = (dfmass_reconst["Reconstructed mass"] +
+                                                dfmass_reconst["Others"])
+
+
+    dfmass_reconst["Gravimetric mass"] = matrix["PM2.5"]
+    return dfmass_reconst
+
+mass_reconst = mass_reconst_to_df(mass)
+
+mass_reconst["Others"] = (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])/2 + mass_Maenhaut[1]["trace_elements"]
+mass_reconst[["II", "EC", "OM", "GM", "SSA", "Others"]].mean(axis=0).plot.pie(autopct="%1.f%%")
 
 
 mass_reconst_perc = mass_reconst.apply(lambda x: x/mass_reconst['Reconstructed mass'] * 100)
 
-display(mass_reconst_perc.dropna().describe())
+print("Averaged")
+display(mass_reconst.dropna().describe())
+
+#Each method individually
+print("Hand")
+mass_reconst_Hand = mass_reconst_to_df(mass_Hand[1])
+
+mass_reconst_Hand_perc = mass_reconst_Hand.apply(lambda x: x/mass_reconst_Hand['Reconstructed mass'] * 100)
+
+display(mass_reconst_Hand_perc.dropna().describe())
+
+
+print("Simon")
+mass_reconst_Simon = mass_reconst_to_df(mass_Simon[1])
+
+mass_reconst_Simon_perc = mass_reconst_Simon.apply(lambda x: x/mass_reconst_Simon['Reconstructed mass'] * 100)
+
+display(mass_reconst_Simon_perc.dropna().describe())
+
+print("Maenhaut")
+mass_reconst_Maenhaut = mass_reconst_to_df(mass_Maenhaut[1])
+
+mass_reconst_Maenhaut_perc = mass_reconst_Hand.apply(lambda x: x/mass_reconst_Maenhaut['Reconstructed mass'] * 100)
+
+display(mass_reconst_Maenhaut_perc.dropna().describe())
+
 
 # %%
 # #%matplotlib widget
