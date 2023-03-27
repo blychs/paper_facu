@@ -10,9 +10,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.11.2
 #   kernelspec:
-#     display_name: analysis
+#     display_name: Python3 (analysis)
 #     language: python
-#     name: python3
+#     name: analysis
 # ---
 
 # %% [markdown]
@@ -36,7 +36,9 @@ plt.style.use('seaborn-v0_8-paper')
 matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                                'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                                'BA_events.xlsx')
-#display(matrix)
+
+
+matrix.describe().to_csv('description_statistics_all.csv')
 
 
 # %%
@@ -216,6 +218,12 @@ smoke_dates = list(matrix.index.where(events['Event']=='S').dropna())
 print(smoke_dates)
 
 
+def select_events(df, events=events):
+    return df.where(events['Event'].isin(['S', 'SP', 'SN']))
+def select_no_events(df, events=events):
+    return df.where(~events['Event'].isin(['S', 'SP', 'SN']))
+
+
 width=2.5
 
 fig, ax = plt.subplots(nrows=2, figsize=(7, 5), sharex=True, dpi=200)
@@ -346,35 +354,24 @@ mass_reconst = mass_reconst_to_df(mass)
 mass_reconst["Others"] = (mass_Maenhaut[1]["others"]+ mass_Simon[1]["others"])/2 + mass_Maenhaut[1]["trace_elements"]
 
 
-fig, ax = plt.subplots(ncols=3, figsize=(15,5))
-fig.suptitle('Origin of reconstructed mass', size=15)
-mass_reconst[["OM", "II", "GM", "EC", "SSA", "Others"]].mean(axis=0).plot.pie(
-    ax=ax[0], autopct="%1.f%%", title='Total', fontsize=12,
-)
-select_events(mass_reconst[["OM", "II", "GM", "EC", "SSA", "Others"]]).mean(axis=0).plot.pie(
-    ax=ax[1], autopct="%1.f%%", title="Smoke", fontsize=12
-)
-select_no_events(mass_reconst[["OM", "II", "GM", "EC", "SSA", "Others"]]).mean(axis=0).plot.pie(
-    ax=ax[2], autopct="%1.f%%", title='No events', fontsize=12
-)
-ax[0].title.set_size(13)
-ax[1].title.set_size(13)
-ax[2].title.set_size(13)
-fig.savefig('images/pie_charts.png')
-plt.show()
-
-
 mass_reconst_perc = mass_reconst.apply(lambda x: x/mass_reconst['Reconstructed mass'] * 100)
 
 
 print("Averaged")
 display(mass_reconst.dropna().describe())
 
+print("Averaged Events")
+display(select_events(mass_reconst).dropna().describe())
+
+print("Averaged no events")
+display(select_no_events(mass_reconst).dropna().describe())
+
+
 #Each method individually
 print("Hand")
 mass_reconst_Hand = mass_reconst_to_df(mass_Hand[1])
 
-mass_reconst_Hand_perc = mass_reconst_Hand.apply(lambda x: x/mass_reconst_Hand['Gravimetric mass'] * 100)
+mass_reconst_Hand_perc = mass_reconst_Hand.apply(lambda x: x/mass_reconst_Hand['Reconstructed mass'] * 100)
 
 display(mass_reconst_Hand_perc.dropna().describe())
 
@@ -382,7 +379,7 @@ display(mass_reconst_Hand_perc.dropna().describe())
 print("Simon")
 mass_reconst_Simon = mass_reconst_to_df(mass_Simon[1])
 
-mass_reconst_Simon_perc = mass_reconst_Simon.apply(lambda x: x/mass_reconst_Simon['Gravimetric mass'] * 100)
+mass_reconst_Simon_perc = mass_reconst_Simon.apply(lambda x: x/mass_reconst_Simon['Reconstructed mass'] * 100)
 
 display(mass_reconst_Simon_perc.dropna().describe())
 
@@ -390,13 +387,28 @@ print("Maenhaut")
 print(mass_Maenhaut[1].keys())
 mass_reconst_Maenhaut = mass_reconst_to_df(mass_Maenhaut[1])
 
-mass_reconst_Maenhaut_perc = mass_reconst_Maenhaut.apply(lambda x: x/mass_reconst_Maenhaut['Gravimetric mass'] * 100)
+mass_reconst_Maenhaut_perc = mass_reconst_Maenhaut.apply(lambda x: x/mass_reconst_Maenhaut['Reconstructed mass'] * 100)
 
 display(mass_reconst_Maenhaut_perc.dropna().describe())
 
 
 
-
+fig, ax = plt.subplots(ncols=3, figsize=(15,5))
+fig.suptitle('Origin of reconstructed mass', size=15)
+mass_reconst_perc[["OM", "II", "GM", "EC", "SSA", "Others"]].mean(axis=0).plot.pie(
+    ax=ax[0], autopct="%4.1f%%", title='Total', fontsize=12, pctdistance=0.8
+)
+select_events(mass_reconst_perc[["OM", "II", "GM", "EC", "SSA", "Others"]]).mean(axis=0).plot.pie(
+    ax=ax[1], autopct="%1.1f%%", title="Smoke", fontsize=12, pctdistance=0.8
+)
+select_no_events(mass_reconst_perc[["OM", "II", "GM", "EC", "SSA", "Others"]]).mean(axis=0).plot.pie(
+    ax=ax[2], autopct="%1.1f%%", title='No events', fontsize=12, pctdistance=0.8
+)
+ax[0].title.set_size(13)
+ax[1].title.set_size(13)
+ax[2].title.set_size(13)
+fig.savefig('images/pie_charts.png')
+plt.show()
 
 
 # %%
@@ -709,7 +721,7 @@ plt.show()
 fig, ax = plt.subplots()
 ax.plot(matrix['SO4'], matrix['Na no sol'], 'o', label='Na (total)')
 ax.plot(x, intercept + slope * x,
-       label=f'{slope.round(2)} [SO$_{{{4}}}$] + {intercept.round(2)}', zorder=3)
+       label=f'{slope.round(2)} [SO$_{{{4}}}$] + {intercept.round(2)}')
 ax.plot(matrix['SO4'], matrix['Na sol'], 'rx', label='Na$^+$')
 ax.set_xlabel('SO4')
 ax.set_ylabel('Na total')
