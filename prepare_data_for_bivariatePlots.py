@@ -25,6 +25,13 @@ data['date'] = pd.to_datetime(data['date'])+ dt.timedelta(hours=12)
 data.set_index(data['date'], inplace=True)
 data.drop('date', axis=1, inplace=True)
 
+events = pd.read_excel('BA_events.xlsx')
+events['date'] = pd.to_datetime(events['date'] + dt.timedelta(hours=12))
+events.set_index(events['date'], inplace=True)
+events.drop('date', axis=1, inplace=True)
+data = pd.concat([data, events[['Event']]], axis=1)
+
+
 meteo = readSFC('OBSERVATORIO.SFC')
 
 orig_hours = data.index
