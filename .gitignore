@@ -15,7 +15,7 @@ manifest.txt
 /access
 /stats
 /.ipynb_checkpoints
-/imagenes
+/images
 /Rcode
 /__pycache__
 *.pyc
