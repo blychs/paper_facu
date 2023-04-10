@@ -730,9 +730,103 @@ fig.savefig('SO4_NAtotal_withregress.png')
 plt.show()
 
 # %%
-# SO4 and Cl
-fig, ax = plt.subplots()
-ax.plot(matrix['SO4'], )
+# Na and Cl
+x = matrix['Na sol'].values
+y = matrix['Cl'].values
+mask = ~np.isnan(x) & ~np.isnan(y)
+
+
+
+slope, intercept, r, p, se = linregress(x[mask], y[mask])
+
+x2 = matrix['Na sol'].where(y <= (x*slope + intercept))
+mask2 = ~np.isnan(x2) & ~np.isnan(y)
+
+fit = np.polyfit(x2[mask2], y[mask2], 2)
+values_x = np.linspace(0, 1.2, 100)
+print(fit)
+
+fig, ax = plt.subplots(figsize=(10,10))
+ax.plot(matrix['Na sol'], matrix['Cl'], 'o')
+ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2]), label=f'Bibliografia, Cl/Na = {1/0.55661:.3g}')
+#ax.plot([0, 1.2], slope * np.array([0, 1.2]) + intercept, label=f'{slope:.3g} Na + {intercept:.3g}')
+ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2])+intercept, label=f'Bibliografia - intercept, Cl/Na = {1/0.55661:.3g}')
+ax.plot(values_x, fit[0] * values_x**2 + fit[1] * values_x + fit[2],
+        label=f'{fit[0]:.3g} Na**2 + {fit[1]:.3g} Na + {fit[2]:.3g}')
+ax.set_xlabel('Na$^+$')
+ax.set_ylabel('Cl$^-$')
+
+ax.legend()
+fig.savefig('Nasol_Cl.png')
+plt.show()
+
+# %%
+plt.figure(figsize=(10,5))
+(matrix["Na total"]).plot(style='.-', label='Na total')
+# Na and Cl
+x = matrix['Na sol'].values
+y = matrix['Cl'].values
+mask = ~np.isnan(x) & ~np.isnan(y)
+
+
+
+slope, intercept, r, p, se = linregress(x[mask], y[mask])
+
+x2 = matrix['Na sol'].where(y <= (x*slope + intercept))
+mask2 = ~np.isnan(x2) & ~np.isnan(y)
+
+fit = np.polyfit(x2[mask2], y[mask2], 2)
+values_x = np.linspace(0, 1.2, 100)
+print(fit)
+
+fig, ax = plt.subplots(figsize=(10,10))
+ax.plot(matrix['Na sol'], matrix['Cl'], 'o')
+ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2]), label=f'Bibliografia, Cl/Na = {1/0.55661:.3g}')
+#ax.plot([0, 1.2], slope * np.array([0, 1.2]) + intercept, label=f'{slope:.3g} Na + {intercept:.3g}')
+ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2])+intercept, label=f'Bibliografia - intercept, Cl/Na = {1/0.55661:.3g}')
+ax.plot(values_x, fit[0] * values_x**2 + fit[1] * values_x + fit[2],
+        label=f'{fit[0]:.3g} Na**2 + {fit[1]:.3g} Na + {fit[2]:.3g}')
+ax.set_xlabel('Na$^+$')
+ax.set_ylabel('Cl$^-$')
+
+ax.legend()
+fig.savefig('Nasol_Cl.png')
+plt.show()
+(matrix["Cl"] * 4).plot(style='.-', label='Cl')
+plt.legend()
+
+# %%
+# Na and Cl
+x = matrix['Na total'].values
+y = matrix['Cl'].values
+mask = ~np.isnan(x) & ~np.isnan(y)
+
+
+
+slope, intercept, r, p, se = linregress(x[mask], y[mask])
+
+x2 = matrix['Na total'].where(y <= (x*slope + intercept))
+mask2 = ~np.isnan(x2) & ~np.isnan(y)
+
+fit = np.polyfit(x2[mask2], y[mask2], 2)
+values_x = np.linspace(0, 1.2, 100)
+print(fit)
+
+fig, ax = plt.subplots(figsize=(7,7))
+ax.plot(matrix['Na total'], matrix['Cl'], 'o')
+ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2]), label=f'Bibliografia, Cl/Na = {1/0.55661:.3g}')
+ax.plot([0, 1.2], 35.453/22.9898 * np.array([0, 1.2]), label=f'Bibliografia, Cl/Na = {35/23:.3g}')
+
+#ax.plot([0, 1.2], slope * np.array([0, 1.2]) + intercept, label=f'{slope:.3g} Na + {intercept:.3g}')
+#ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2])+intercept, label=f'Bibliografia - intercept, Cl/Na = {1/0.55661:.3g}')
+#ax.plot(values_x, fit[0] * values_x**2 + fit[1] * values_x + fit[2],
+#        label=f'{fit[0]:.3g} Na**2 + {fit[1]:.3g} Na + {fit[2]:.3g}')
+ax.set_xlabel('Na total')
+ax.set_ylabel('Cl$^-$')
+
+ax.legend()
+fig.savefig('Natotal_Cl.png')
+plt.show()
 
 # %%
 #Separating K source

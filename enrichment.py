@@ -15,13 +15,29 @@ enrichment.rename(columns={'Elementos':'Elements', 'Crustal average':'Crustal av
 enrichment.dropna()
 enrichment['Crustal average (ppmw)'] = enrichment['Crustal average (ppmw)'].replace(',', '.', regex=True).astype('float')
 
-Ti_val = enrichment['Crustal average (ppmw)'].loc[enrichment['Elements']=='Ti']
-enrichment['Ti factor'] = enrichment['Crustal average (ppmw)'] / Ti_val.values
-
+Ti_val_ref = enrichment['Crustal average (ppmw)'].loc[enrichment['Elements']=='Ti']
+enrichment['Ti factor'] = enrichment['Crustal average (ppmw)'] / Ti_val_ref.values
 
 matrix_enriched = matrix.copy()
 matrix_enriched.rename(columns={'Na total':'Na'}, inplace=True)
-matrix_enriched = matrix_enriched[matrix.columns.intersection(list(enrichment['Elements']))]
+
+
+matrix_enriched = matrix_enriched[matrix_enriched.columns.intersection(list(enrichment['Elements']))]
+matrix_enriched = matrix_enriched.div(matrix_enriched['Ti'], axis=0)
+
+for i in matrix_enriched.keys():
+    matrix_enriched[i] = matrix_enriched[i]/(enrichment['Ti factor'].loc[enrichment['Elements']==i].values)
+
+
+matrix_enriched.to_csv('enrichment_factors.csv')
+matrix_enriched.describe().to_csv('enrichment_factos_statistics.csv')
+
+for i in matrix_enriched.keys():
+    fig, ax = plt.subfigures()
+    matrix_enriched.plot(style='.-')
+
+
+
 
 
 
