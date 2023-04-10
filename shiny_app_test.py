@@ -43,9 +43,9 @@ def server(input, output, session):
     @output
     @render.plot(alt="A scatter plot")
     def scatter():
-        x = matrix[input.x()]
+        x = matrix[input.x()].where(events['Event'].isin(['S', 'SP', 'SN']))
         x = x.where((input.xlim()[0] <= x) & (x <= input.xlim()[1]))
-        y = matrix[input.y()]
+        y = matrix[input.y()].where(events['Event'].isin(['S', 'SP', 'SN']))
         y = y.where((input.ylim()[0] <= y) & (y <= input.ylim()[1]))
 
         mask = ~np.isnan(x) & ~np.isnan(y)

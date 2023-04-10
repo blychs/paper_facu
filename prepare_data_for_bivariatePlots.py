@@ -44,7 +44,11 @@ data.sort_index(inplace=True)
 meteo = meteo.loc[list(data.index)]
 
 data = pd.concat([data, meteo[['ws', 'wd']]], axis=1)
-data.to_csv('data_every_hour_duplicate.csv')
+print(data)
+data[data.loc[:, data.columns!='Event'] < 0] = np.nan
+
+data.to_csv('data_every_hour_obs.csv')
+
 
 
 # %%
