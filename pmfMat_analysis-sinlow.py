@@ -10,9 +10,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.11.2
 #   kernelspec:
-#     display_name: Python3 (analysis)
+#     display_name: analysis
 #     language: python
-#     name: analysis
+#     name: python3
 # ---
 
 # %% [markdown]
@@ -739,14 +739,14 @@ mask = ~np.isnan(x) & ~np.isnan(y)
 
 slope, intercept, r, p, se = linregress(x[mask], y[mask])
 
-x2 = matrix['Na sol'].where(y <= (x*slope + intercept))
+x2 = matrix['Na sol'].where(y <= 1.7)# <= (x*slope + intercept))
 mask2 = ~np.isnan(x2) & ~np.isnan(y)
 
 fit = np.polyfit(x2[mask2], y[mask2], 2)
 values_x = np.linspace(0, 1.2, 100)
 print(fit)
 
-fig, ax = plt.subplots(figsize=(10,10))
+fig, ax = plt.subplots(figsize=(7,7))
 ax.plot(matrix['Na sol'], matrix['Cl'], 'o')
 ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2]), label=f'Bibliografia, Cl/Na = {1/0.55661:.3g}')
 #ax.plot([0, 1.2], slope * np.array([0, 1.2]) + intercept, label=f'{slope:.3g} Na + {intercept:.3g}')
@@ -761,38 +761,10 @@ fig.savefig('Nasol_Cl.png')
 plt.show()
 
 # %%
-plt.figure(figsize=(10,5))
-(matrix["Na total"]).plot(style='.-', label='Na total')
-# Na and Cl
-x = matrix['Na sol'].values
-y = matrix['Cl'].values
-mask = ~np.isnan(x) & ~np.isnan(y)
-
-
-
-slope, intercept, r, p, se = linregress(x[mask], y[mask])
-
-x2 = matrix['Na sol'].where(y <= (x*slope + intercept))
-mask2 = ~np.isnan(x2) & ~np.isnan(y)
-
-fit = np.polyfit(x2[mask2], y[mask2], 2)
-values_x = np.linspace(0, 1.2, 100)
-print(fit)
-
-fig, ax = plt.subplots(figsize=(10,10))
-ax.plot(matrix['Na sol'], matrix['Cl'], 'o')
-ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2]), label=f'Bibliografia, Cl/Na = {1/0.55661:.3g}')
-#ax.plot([0, 1.2], slope * np.array([0, 1.2]) + intercept, label=f'{slope:.3g} Na + {intercept:.3g}')
-ax.plot([0, 1.2], 1/0.55661 * np.array([0, 1.2])+intercept, label=f'Bibliografia - intercept, Cl/Na = {1/0.55661:.3g}')
-ax.plot(values_x, fit[0] * values_x**2 + fit[1] * values_x + fit[2],
-        label=f'{fit[0]:.3g} Na**2 + {fit[1]:.3g} Na + {fit[2]:.3g}')
-ax.set_xlabel('Na$^+$')
-ax.set_ylabel('Cl$^-$')
-
-ax.legend()
-fig.savefig('Nasol_Cl.png')
-plt.show()
-(matrix["Cl"] * 4).plot(style='.-', label='Cl')
+plt.figure(figsize=(10,7))
+(matrix["Na total"]/4).plot(style='.-', label='Na total')
+(matrix["Na sol"]).plot(style='.-', label='Na sol')
+(matrix["Cl"]).plot(style='.-', label='Cl')
 plt.legend()
 
 # %%
@@ -872,7 +844,13 @@ ax.set_ylabel('Cl')
 plt.show()
 
 # %%
-fig, ax = plt.subplots()
-ax.plot(matrix['Na no sol'], )
+ef = pd.read_csv('enrichment_factors.csv')
+fig, ax = plt.subplots(figsize=(10, 7))
+ax.errorbar(matrix.index, matrix['Na no sol'], yerr=unc['Na no sol'], marker='.', label='Na no sol', capsize=2, capthick=2)
+ax.errorbar(matrix.index, matrix['Na sol'], yerr=unc['Na sol'], marker='.', label='Na sol', capsize=2, capthick=2)
+ax.plot(matrix.index, np.log10(ef['Na']), '.-', label='EF')
+ax.legend()
+plt.show()
+
 
 
