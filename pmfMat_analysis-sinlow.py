@@ -136,14 +136,24 @@ with plt.rc_context({'axes.labelsize': 15}):
 # %%
 
 with plt.rc_context({'axes.labelsize': 15}):
-    spearman_corr = matrix.corr(numeric_only=True, method='pearson')
+    pearson_corr = matrix.corr(numeric_only=True, method='pearson')
     plt.figure(figsize=(35,20))
     plt.title('Pearson correlation', fontsize=20)
     plt.tick_params(axis='x', which='both', labelsize=10, labelrotation=90, labelbottom = True, bottom=True, top = True, labeltop=True)
     plt.tick_params(axis='y', which='both', labelsize=10, labelleft = True, left=True, labelright = True, right=True)
-    sns.heatmap(spearman_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
+    sns.heatmap(pearson_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
     plt.savefig('heatmap_pearson_corr.png')
     plt.show()
+
+# %%
+axes = pd.plotting.scatter_matrix(matrix, alpha=0.2, figsize=(40,40), diagonal="kde")
+for ax in axes.flatten():
+    ax.xaxis.label.set_rotation(90)
+    ax.yaxis.label.set_rotation(0)
+    ax.yaxis.label.set_ha('right')
+    #ax.yaxis.set_label_position("right")
+plt.savefig('images/scatter_matrix.png')
+plt.close()
 
 # %%
 fig, ax = plt.subplots()
@@ -762,8 +772,9 @@ plt.show()
 
 # %%
 plt.figure(figsize=(10,7))
-(matrix["Na total"]/4).plot(style='.-', label='Na total')
+(matrix["Na total"]).plot(style='.-', label='Na total')
 (matrix["Na sol"]).plot(style='.-', label='Na sol')
+matrix["Na no sol"].plot(style='.-', label='Na no sol')
 (matrix["Cl"]).plot(style='.-', label='Cl')
 plt.legend()
 
