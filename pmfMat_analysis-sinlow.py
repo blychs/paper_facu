@@ -180,7 +180,7 @@ ax.legend()
 plt.show()
 
 # %%
-# %matplotlib widget
+# #%matplotlib widget
 mass_Simon = mass_reconstruction_mod(matrix, unc, events=events, equation="Simon_2011")
 mass_Hand = mass_reconstruction_mod(matrix, unc, events=events, equation="Hand_2011")
 mass_Maenhaut = mass_reconstruction_mod(matrix, unc, events=events, equation="Maenhaut_2002")
