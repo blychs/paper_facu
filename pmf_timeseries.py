@@ -19,6 +19,7 @@ import numpy as np
 import datetime as dt
 import pandas as pd
 #import altair as alt
+#from plotnine import ggplot, geom_smooth, aes, stat_smooth, facet_wrap
 from load_data import load_data
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -27,6 +28,7 @@ import matplotlib.pyplot as plt
 matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                                'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                                'BA_events.xlsx')
+
 
 # %%
 #alt.Chart(matrix.reset_index()).mark_line().encode(
@@ -37,52 +39,39 @@ matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.x
 #%matplotlib widget
 
 fig, ax = plt.subplots()#figsize=(7,7))
-ax.errorbar(
-    x = matrix.index,
-    y = matrix["Ti"],
-    yerr = unc["Ti"],
-    capsize = 2,
-    marker = '.',
-    label = "Ti"
-)
-ax.errorbar(
-    x = matrix.index,
-    y = matrix["Sb"],
-    yerr = unc["Sb"],
-    capsize = 2,
-    label = "Sb"
-)
+ax.errorbar(x = matrix.index, y = matrix["Ti"], yerr = unc["Ti"],
+    capsize = 2, marker = '.', label = "Ti")
+ax.errorbar(x = matrix.index, y = matrix["Sb"], yerr = unc["Sb"],
+    capsize = 2, label = "Sb")
 ax.legend()
 fig.tight_layout()
 plt.show()
 
-fig, ax = plt.subplots(figsize=(5,5), ncols=2)
-ax[0].set_title = "Soil related"
-sns.boxplot(
-    matrix[["Ti", "Mg", "Al"]],
-    ax = ax[0],
-)
-ax[1].set_title = "Break wear"
-sns.boxplot(
-    matrix[["Sb", "Mo", "Cu"]],
-    ax = ax[1],
-)
+over_gram = lambda x: x / (matrix["PM2.5"] / 1000000)
+fig, ax = plt.subplots(figsize=(7.5,5), ncols=4)
+sns.boxplot(matrix[["Ti", "Mg", "Al"]].apply(over_gram),
+    ax = ax[0])
+ax[0].set_ylabel("µg/g")
+ax[0].set_yscale("log")
+ax[0].set_title("Soil related")
+
+sns.boxplot(matrix[["Sb", "Mo", "Cu"]].apply(over_gram),
+    ax = ax[1])
+ax[1].set_yscale("log")
+ax[1].set_title("Break wear")
+
+sns.boxplot(matrix[["Na sol", "Cl", "Mg"]].apply(over_gram),
+            ax = ax[2])
+ax[2].set_yscale("log")
+ax[2].set_title("Sea Salt")
+
+sns.boxplot(matrix[["OC", "EC"]].apply(over_gram),
+            ax = ax[3])
+ax[3].set_yscale("log")
+ax[3].set_title("Carbonaceous")
+
 fig.tight_layout()
 plt.show()
-
-#%%
-
-line = alt.Chart(matrix.reset_index()).mark_line().encode(
-    x = 'date',
-    y = 'Ti'
-)
-
-ebars = alt.Chart(unc.reset_index()).mark_errorbar().encode(
-    x = 'date',
-    y = 'Ti'
-)
-
-line + ebars
 
 #%%
 fig = plt.figure()
