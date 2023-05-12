@@ -9,6 +9,10 @@ print(typeof(data$date))
 
 keys = names(data)[2:45]
 
+data_period2 = data[which(data$date >= as.POSIXct("2019-05-22", format="%Y-%m-%d") & data$date <= as.POSIXct("2019-06-04", format="%Y-%m-%d")), ]
+print(data_period2)
+windRose(data_period2)#, poll = 'Na.sol', stati = 'cpf', percentile=c(0, 100),  main=paste('Na sol','cpf'))
+
 #data[date(data$date) > as.POSIXct('2019-05-23') & date(data$date) < as.POSIXct('2019-06-04') ,-1] = NA
 #data[date(data$date) == as.POSIXct(c('2020-02-21', '2020-02-22')),] = NA
 max_perc = 100
@@ -19,6 +23,9 @@ png(paste('images/median/bv_median_',title,'.png', sep=''))
 polarPlot(data, poll = title, stati = 'median',  main=paste(title,'median'))
 dev.off()
 }
+
+
+polarPlot(data)
 
 
 data_event = data[which(data$Event%in%c('S', 'SP', 'SN')),]
