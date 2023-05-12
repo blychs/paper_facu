@@ -1,5 +1,5 @@
 
-def load_data(data_matrix, unc_matrix, gases, meteo, events):
+def load_data(data_matrix, unc_matrix, gases, meteo, events, clusters=None):
     
     """
     Loads data for analysis of BA_2019
@@ -41,4 +41,11 @@ def load_data(data_matrix, unc_matrix, gases, meteo, events):
     gases['date'] = pd.to_datetime(gases['date'])
     gases.set_index(gases['date'], inplace=True)
     gases = matrix.join(gases)
-    return matrix, unc, meteo, gases, events
+    if clusters == None:
+        return matrix, unc, meteo, gases, events
+    else:
+        clusters = pd.read_csv(clusters)
+        clusters["date"] = pd.to_datetime(clusters["date"])
+        clusters.set_index(clusters["date"], inplace=True)
+        clusters.drop("date", inplace=True, axis=1)
+        return matrix, unc, meteo, gases, events, clusters
