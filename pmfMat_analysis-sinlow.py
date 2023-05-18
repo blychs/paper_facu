@@ -42,11 +42,11 @@ matrix.describe().to_csv('description_statistics_all.csv')
 
 
 # %%
-pd.set_option('display.float_format', '{:.2g}'.format)
+pd.set_option('display.float_format', '{:.4g}'.format)
 
 matrix_seasonal = calculate_seasonal(matrix)
 
-#print(matrix_seasonal.to_latex())
+print(matrix_seasonal.to_latex())
 
 
 # %%
@@ -95,16 +95,18 @@ fig, ax = plt.subplots()
 
 bins, groups = zip(*matrix['PM2.5'].dropna().groupby(matrix['month']))
 lengths = np.array([len(group) for group in groups])
-print(bins)
 max_width = 0.8
 ax.boxplot(groups, widths=max_width * lengths / lengths.max(),
-            patch_artist=True, boxprops={'fill': None})
-ax.set_ylabel('PM$_{2.5}$ concentration (µg m$^{-3}$)')
+            patch_artist=True, boxprops={'fill': None}, showmeans=True,
+            meanprops={'markerfacecolor':'r'})
+#groups.plot(ax=ax)
+#ax.plot(matrix.groupby())
+ax.set_ylabel('PM$_{2.5}$ (µg m$^{-3}$)')
 ax.set_xlabel('Month')
 ax.set_xticklabels(bins, rotation=45, ha='right')
-ax.grid()
+#ax.grid()
 fig.tight_layout()
-fig.savefig('PM_boxplot.png')
+fig.savefig('images/PM_boxplot.png')
 plt.show()
 
 # %%
