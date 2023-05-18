@@ -126,8 +126,12 @@ plt.show()
 with plt.rc_context({'axes.labelsize': 15}):
     spearman_corr = matrix.corr(numeric_only=True, method='spearman')
     plt.figure(figsize=(35,20))
-    plt.tick_params(axis='x', which='both', labelsize=10, labelrotation=90, labelbottom = True, bottom=True, top = True, labeltop=True)
-    plt.tick_params(axis='y', which='both', labelsize=10, labelleft = True, left=True, labelright = True, right=True)
+    plt.tick_params(axis='x', which='both', labelsize=10,
+                    labelrotation=90, labelbottom=True,
+                    bottom=True, top=True, labeltop=True)
+    plt.tick_params(axis='y', which='both', labelsize=10,
+                    labelleft=True, left=True, labelright=True,
+                    right=True)
     sns.heatmap(spearman_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
     plt.title('Spearman correlation', fontsize=20)
     plt.savefig('heatmap_spearman_corr.png')
@@ -139,7 +143,8 @@ with plt.rc_context({'axes.labelsize': 15}):
     pearson_corr = matrix.corr(numeric_only=True, method='pearson')
     plt.figure(figsize=(35,20))
     plt.title('Pearson correlation', fontsize=20)
-    plt.tick_params(axis='x', which='both', labelsize=10, labelrotation=90, labelbottom = True, bottom=True, top = True, labeltop=True)
+    plt.tick_params(axis='x', which='both', labelsize=10, labelrotation=90,
+                    labelbottom=True, bottom=True, top=True, labeltop=True)
     plt.tick_params(axis='y', which='both', labelsize=10, labelleft = True, left=True, labelright = True, right=True)
     sns.heatmap(pearson_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
     plt.savefig('heatmap_pearson_corr.png')
@@ -855,13 +860,24 @@ ax.set_ylabel('Cl')
 plt.show()
 
 # %%
+%matplotlib widget
+poll = "Cl"
+poll2 = "Na sol"
 ef = pd.read_csv('enrichment_factors.csv')
-fig, ax = plt.subplots(figsize=(10, 7))
-ax.errorbar(matrix.index, matrix['Na no sol'], yerr=unc['Na no sol'], marker='.', label='Na no sol', capsize=2, capthick=2)
-ax.errorbar(matrix.index, matrix['Na sol'], yerr=unc['Na sol'], marker='.', label='Na sol', capsize=2, capthick=2)
-ax.plot(matrix.index, np.log10(ef['Na']), '.-', label='EF')
+fig, ax = plt.subplots()#figsize=(10, 7))
+#ax.errorbar(matrix.index, matrix['Na no sol'], yerr=unc['Na no sol'], marker='.', label='Na no sol', capsize=2, capthick=2)
+ax.errorbar(matrix.index, matrix[poll], yerr=unc[poll], marker='X', label=poll, capsize=2, capthick=2)
+ax.errorbar(matrix.index, matrix[poll2], yerr=unc[poll2], marker='X', label=poll2, capsize=2, capthick=2)
+#ax.plot(matrix.index, np.log10(ef['Na']), '.-', label='EF')
 ax.legend()
 plt.show()
 
+
+fig, ax = plt.subplots()
+
+ax.scatter(matrix[poll], matrix[poll2])
+ax.set_xlabel(poll)
+ax.set_ylabel(poll2)
+plt.show()
 
 
