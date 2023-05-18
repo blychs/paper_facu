@@ -27,11 +27,11 @@ matrix, unc, meteo, gases, events, clusters = load_data('PMF_BA_full.xlsx', 'PMF
                                                'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                                'BA_events.xlsx', 'clusters.csv')
 
-#matrix = matrix[['Ag', 'Al', 'As', 'Ba', 'Ca', 'Cd', 'Cl', 'Co', 'Cr', 'Cu', 'EC',
-#       'Fe', 'K', 'Mg', 'Mn', 'Mo', 'NH4', 'NO3', 'Na no sol', 'Na sol', 'Ni', 'OC',
-#       'Pb', 'SO4', 'Sb', 'Se', 'TC', 'Ti', 'V', 'Zn']]
+matrix = matrix[['Ag', 'Al', 'As', 'Ba', 'Ca', 'Cd', 'Cl', 'Co', 'Cr', 'Cu', 'EC',
+       'Fe', 'K', 'Mg', 'Mn', 'Mo', 'NH4', 'NO3', 'Na no sol', 'Na sol', 'Ni', 'OC',
+       'Pb', 'SO4', 'Sb', 'Se', 'Ti', 'V', 'Zn']]
 
-matrix = matrix[['Sb', 'Zn', 'Cu', 'Mo', 'Pb', 'Na sol', 'Cl']]
+#matrix = matrix[['Sb', 'Zn', 'Cu', 'Mo', 'Pb', 'Na sol', 'Cl']]
 matrix = pd.concat([matrix, clusters], axis=1)
 
 
@@ -40,16 +40,19 @@ matrix = matrix.dropna()
 
 pca_model = PCA(matrix.T)
 
-fig, ax = plt.subplots(figsize=(10, 7))
-lines = ax.plot(pca_model.factors.iloc[:, :6], lw=4, alpha=0.6)
+fig, ax = plt.subplots(figsize=(15, 7))
+lines = ax.plot(pca_model.factors.iloc[:, :3], lw=4, alpha=0.6)
 ax.set_xticklabels(matrix.columns.values)
 ax.axhline(0, color='k', linestyle='dashed')
 #ax.set_xlabel("Element", size=17)
-legend = fig.legend(lines, ["PC 1", "PC 2", "PC 3", "PC 4", "PC 5", "PC 6"], loc="center right")
+legend = fig.legend(lines, ["PC 1", "PC 2", "PC 3"], loc="center right")#, "PC 4", "PC 5", "PC 6"], loc="center right")
 plt.show()
 
 fig = pca_model.plot_scree(log_scale=False)
 plt.show()
+
+#%%
+
 #%%
 print(pca_model.factors)
 pca_model.loadings.plot.scatter(x="comp_00", y="comp_01")#, ax=ax)

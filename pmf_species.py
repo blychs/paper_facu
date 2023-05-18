@@ -176,7 +176,8 @@ print(matrix_withunc.loc[
 #%%
 fig, ax = plt.subplots()
 
-matrix["Cl"].plot(label='Cl')
-(0.0004 * matrix['VentCoef']).plot(label='VentCoef')
-(0.1 * matrix["PM2.5"]).plot(label="PM2.5")
+matrix["Cl"].plot(label='Ca')
+matrix["Na total"].plot(label="Na tot")
+#(0.0004 * matrix['VentCoef']).plot(label='VentCoef')
+#(0.1 * matrix["PM2.5"]).plot(label="PM2.5")
 plt.legend()
