@@ -54,5 +54,5 @@ plt.show()
 #%%
 
 #%%
-print(pca_model.factors)
-pca_model.loadings.plot.scatter(x="comp_00", y="comp_01")#, ax=ax)
+print(pca_model.factors.comp_09.sum())
+#pca_model.loadings.plot.scatter(x="comp_00", y="comp_01")#, ax=ax)

@@ -37,34 +37,6 @@ matrix_withunc = pd.concat([matrix, unc, events, clusters], axis=1)
 matrix_withunc["C1"] = matrix_withunc["C1"].astype(float)
 print(matrix_withunc)
 #display(matrix_withunc)
-# %%
-#alt.Chart(matrix.reset_index()).mark_line().encode(
-#    x = 'date',
-#    y = 'Ti'
-#)
-
-#%matplotlib widget
-
-p = (
-    pn.ggplot(matrix_withunc.reset_index().rename(columns={"PM2.5": "PM25",
-                                                           "unc_PM2.5": "unc_PM25"})) +
-    #pn.geom_line(pn.aes(x = "date", y = "Ti"), color='b') +
-    #pn.geom_errorbar(pn.aes(x = "date", ymin = "Ti-unc_Ti",
-    #                         ymax = "Ti+unc_Ti", width=4), color='k') +
-    #pn.geom_point(pn.aes(x = "date", y = "Ti"), color='b') +
-    pn.geom_line(pn.aes(x = "date", y = "PM25"), color='k') +
-    pn.geom_point(pn.aes(x = "date", y = "PM25", color="C1")) +
-    pn.geom_errorbar(pn.aes(x = "date", ymin = f"PM25-unc_PM25",
-                             ymax = f"PM25+unc_PM25", width=4, color="Event")) +
-    pn.scale_y_continuous(trans="log10")
-)
-
-p.draw()
-plt.show()
-
-with plt.style.context('ggplot'):
-    fig, ax = plt.subplots()
-    ax.plot(matrix.index, matrix["PM2.5"], '.-r')
 
 
 #%%
@@ -83,7 +55,7 @@ with plt.style.context('ggplot'):
 with plt.style.context('seaborn-v0_8-paper'):
     over_gram = lambda x: x / (matrix["PM2.5"] / 1000000)
     fig,ax = plt.subplots(figsize=(7.5,5), ncols=5,
-                          gridspec_kw={"width_ratios":[3,5,3,2,2]},
+                          gridspec_kw={"width_ratios":[3,6,2,2,2]},
                           sharey=True)
     sns.boxplot(matrix[["Ti", "Mg", "Al"]].apply(over_gram),
         ax = ax[0])
@@ -91,25 +63,22 @@ with plt.style.context('seaborn-v0_8-paper'):
     ax[0].set_yscale("log")
     ax[0].set_title("Crustal")
 
-    sns.boxplot(matrix[["Sb", "Mo", "Cu", "Pb", "Zn"]].apply(over_gram),
+    sns.boxplot(matrix[["Sb", "Mo", "Cu", "Pb", "V", "Zn"]].apply(over_gram),
         ax = ax[1])
-    ax[1].set_yscale("log")
-    ax[1].set_title("Non-exhaust")
+    ax[1].set_title("Traffic related")
 
-    sns.boxplot(matrix[["V", "Zn"]].apply(over_gram), ax=ax[4])
-    ax[2].set_yscale("log")
-    ax[2].set_title("Exhaust")
-
-    sns.boxplot(matrix[["Na$^+$", "Cl", "Mg"]].apply(over_gram),
+    sns.boxplot(matrix[["Na$^+$", "Cl"]].apply(over_gram),
                 ax = ax[2])
-    ax[3].set_yscale("log")
-    ax[3].set_title("Sea Salt")
+    ax[2].set_xticklabels(["Na$^+$", "Cl$^-$"])
+    ax[2].set_title("Sea Salt")
 
     sns.boxplot(matrix[["OC", "EC"]].apply(over_gram),
                 ax = ax[3])
-    ax[4].set_yscale("log")
-    ax[4].set_title("Carbonaceous")
+    ax[3].set_title("Carbonaceous")
 
+    sns.boxplot(matrix[["K", "Na no sol"]].apply(over_gram),
+                ax=ax[4])
+    ax[4].set_title("Other\nmarkers")
     fig.tight_layout()
     plt.subplots_adjust(hspace=.0, wspace=.0)
     plt.show()
@@ -159,14 +128,13 @@ ax.set(xticklabels=[10 ** int(i.get_text().replace(u'\u2212', '-'))
 plt.show()
 
 #%%
-p = (
-    pn.ggplot(matrix_withunc.reset_index()) +
-    pn.aes(x = "date", y="OC") +
-    pn.geom_point(color="C1") +
-    pn.geom_line(color="C1")
-)
+fig, ax = plt.subplots()
+ax.errorbar(x=matrix.index, y=matrix["Sb"], yerr=unc["unc_Sb"],
+            marker='.', capsize=2, label="Sb")
+ax.errorbar(x=matrix.index, y=matrix["Cu"], yerr=unc["unc_Cu"],
+            marker='.', capsize=2, label="Cu")
+ax.legend()
 
-p.draw()
 plt.show()
 #%%
 #%matplotlib widget
