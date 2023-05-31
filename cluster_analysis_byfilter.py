@@ -176,8 +176,25 @@ plt.show()
 
 # %%
 #display(newmatrix)
-with pd.option_context("display.max_rows", None):
-    print(newmatrix.reset_index().date)
+fig, ax = plt.subplots(figsize=(10,5))
+print(newmatrix.index)
+
+ax.plot(newmatrix.index, newmatrix["Cu"], ':k')
+ax.plot(newmatrix.index, newmatrix["Cu"].where(
+    newmatrix["cluster"]==1), '.-', label="C1")
+ax.plot(newmatrix.index, newmatrix["Cu"].where(
+    newmatrix["cluster"]==2), '.-', label="C2")
+ax.plot(newmatrix.index, newmatrix["Cu"].where(
+    newmatrix["cluster"]==3), '.-', label="C3")
+ax.plot(newmatrix.index, newmatrix["Cu"].where(
+    newmatrix["cluster"]==4), '.-', label="C4")
+ax.plot(newmatrix.index, newmatrix["Cu"].where(
+    newmatrix["cluster"]==5), '.-', label="C5")
+ax.legend()
+ax.set_xlabel("Date")
+ax.set_ylabel("Cu (µg/m$^3$)")
+fig.tight_layout()
+plt.show()
 
 
 # %%

@@ -43,10 +43,14 @@ print(matrix_withunc)
 print(list(matrix.keys()))
 with plt.style.context('ggplot'):
     fig, ax = plt.subplots()#figsize=(7,7))
-    ax.errorbar(x = matrix.index, y = matrix["Ti"], yerr = unc["unc_Ti"],
-        capsize = 2, marker = '.', label = "Ti")
-    ax.errorbar(x = matrix.index, y = matrix["Sb"], yerr = unc["unc_Sb"],
-        capsize = 2, label = "Sb")
+    ax.errorbar(x = matrix.index, y = 15* matrix["Ba"], yerr = unc["unc_Ti"],
+        capsize = 2, marker = '.', label = "Ba")
+    ax.errorbar(x = matrix.index, y = 0.5*matrix["Ca"], yerr = unc["unc_Sb"],
+        capsize = 2, label = "Ca")
+    ax.errorbar(x = matrix.index, y = 0.05 * matrix["Na total"], yerr = unc["unc_Sb"],
+        capsize = 2, label = "Na tot")
+    ax.errorbar(x = matrix.index, y = matrix["Mg"], yerr = unc["unc_Sb"],
+        capsize = 2, label = "Mg")
     ax.legend()
     fig.tight_layout()
     plt.show()
