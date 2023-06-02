@@ -18,12 +18,34 @@
 import numpy as np
 import datetime as dt
 import pandas as pd
+from scipy.stats import lognorm
 #import altair as alt
 import plotnine as pn
 from load_data import load_data
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import t #I'll use it to calculate the confidence interval
 
+
+def describe_element(matrix, species):
+    to_ug_g = lambda x: x/matrix["PM2.5"] * 1e6
+    print(species, 'µg/g')
+    print(matrix.apply(to_ug_g)[species].describe())
+
+
+def confidence_interval(matrix, species, IC=95, n_resamples=10000):
+    """Calculate the unbiased
+    confidence interval
+    based on
+    https://towardsdatascience.com/confidence-intervals-with-python-bfa28ebb81c
+    """
+    values = matrix[species].values
+    confidence = IC/100
+    bootstrap_values = [np.random.choice(values, size=int(len(values)), replace=True).mean()
+                        for i in range(n_resamples)]
+    ic = np.percentile(bootstrap_values, [100*(1-confidence)/2, 100*(1-(1-confidence)/2)])
+    return(ic)
+    
 
 matrix, unc, meteo, gases, events, clusters = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                                'gases_mean.csv', 'datos_meteo_obs_mean.csv',
@@ -35,7 +57,13 @@ matrix.rename(columns={'Na sol': 'Na$^+$'}, inplace=True)
 unc = unc.add_prefix('unc_')
 matrix_withunc = pd.concat([matrix, unc, events, clusters], axis=1)
 matrix_withunc["C1"] = matrix_withunc["C1"].astype(float)
-print(matrix_withunc)
+#print(matrix_withunc)
+
+pollutant = "OC"
+#print(matrix["OC"].describe())
+to_ug_g = lambda x: x/matrix["PM2.5"] * 1e6
+#print(matrix.apply(to_ug_g)[pollutant])
+print(confidence_interval(matrix.apply(to_ug_g).dropna(), pollutant, 95, n_resamples=int(1e5)))
 #display(matrix_withunc)
 
 

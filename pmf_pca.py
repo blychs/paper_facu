@@ -28,11 +28,12 @@ matrix, unc, meteo, gases, events, clusters = load_data('PMF_BA_full.xlsx', 'PMF
                                                'BA_events.xlsx', 'clusters.csv')
 
 matrix = matrix[['Ag', 'Al', 'As', 'Ba', 'Ca', 'Cd', 'Cl', 'Co', 'Cr', 'Cu', 'EC',
-       'Fe', 'K', 'Mg', 'Mn', 'Mo', 'NH4', 'NO3', 'Na no sol', 'Na sol', 'Ni', 'OC',
+       'Fe', 'K', 'Mg', 'Mn', 'Mo', 'NH4', 'NO3', #'Na no sol', 'Na sol',
+         'Ni',# 'OC',
        'Pb', 'SO4', 'Sb', 'Se', 'Ti', 'V', 'Zn']]
 
 #matrix = matrix[['Sb', 'Zn', 'Cu', 'Mo', 'Pb', 'Na sol', 'Cl']]
-matrix = pd.concat([matrix, clusters], axis=1)
+#matrix = pd.concat([matrix, clusters], axis=1)
 
 
 matrix = matrix.dropna()
@@ -56,3 +57,10 @@ plt.show()
 #%%
 print(pca_model.factors.comp_09.sum())
 #pca_model.loadings.plot.scatter(x="comp_00", y="comp_01")#, ax=ax)
+#%%
+fig, ax = plt.subplots()
+ax.scatter(matrix['NH4'], matrix["Cl"])
+ax.set_xlabel("NH4")
+ax.set_ylabel("Cl")
+
+plt.show()
