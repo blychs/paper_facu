@@ -1216,7 +1216,10 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
         soil = (1.89 * concentration_matrix["Al"] + 2.14 * concentration_matrix["Si"] +
                 1.4 * concentration_matrix["Ca"] +
                 1.43 * concentration_matrix["Fe"])
-        salt = concentration_matrix["Cl"] + concentration_matrix["Na sol"]
+        if not ssa_as_Na:
+            salt = concentration_matrix["Cl"] + concentration_matrix["Na sol"]
+        else:
+            salt = 2.54 * concentration_matrix["Na sol"]
         trace = (concentration_matrix['V'] + concentration_matrix['Cr'] +
                  concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                  concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
@@ -1290,7 +1293,10 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
         soil = (2.2 * concentration_matrix["Al"] + 2.49 * concentration_matrix["Si"] +
                 1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
                 2.42 * concentration_matrix["Fe"])
-        salt = concentration_matrix["Cl"] + 1.4486 * concentration_matrix["Na sol"]
+        if not ssa_as_Na:
+            salt = concentration_matrix["Cl"] + 1.4486 * concentration_matrix["Na sol"]
+        else:
+            salt = 2.54 * concentration_matrix["Na sol"]
         trace = (concentration_matrix['V'] + concentration_matrix['Cr'] +
                  concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                  concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
@@ -1353,7 +1359,12 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
         soil = (2.2 * concentration_matrix["Al"] + 2.49 * concentration_matrix["Si"] +
                 1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
                 2.42 * concentration_matrix["Fe"])
-        intercept_base = (concentration_matrix["EC"] + 1.8 * concentration_matrix["Cl"])
+        
+        if not ssa_as_Na:
+            salt = 1.8 * concentration_matrix["Cl"]
+        else:
+            salt = 2.54 * concentration_matrix["Na sol"]
+        intercept_base = (concentration_matrix["EC"] + salt)
         
         y = (concentration_matrix['PM2.5'] - intercept_base).values
         X = np.column_stack((concentration_matrix["OC"].values,
@@ -1384,7 +1395,11 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
         soil = (3.48 * concentration_matrix["Si"] + 1.63 * concentration_matrix["Ca"] +
                 2.42 * concentration_matrix["Fe"] + 1.94 * concentration_matrix["Ti"])
         
-        intercept_base = (concentration_matrix["EC"] + 1.8 * concentration_matrix ["Cl"] +
+        if not ssa_as_Na:
+            salt = 1.8 * concentration_matrix["Cl"]
+        else:
+            salt = 2.54 * concentration_matrix["Na sol"]
+        intercept_base = (concentration_matrix["EC"] + salt +
                           1.2 * (concentration_matrix["K"] - 0.6 * concentration_matrix["Fe"]))
         
     #    print(concentration_matrix)
