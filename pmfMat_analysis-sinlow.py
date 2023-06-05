@@ -684,10 +684,10 @@ for method in methods:
     matrix.where(events['Event'].isin(["S", "SP", "SN"]))[
         "PM2.5"].plot(style='o')
 
-    # warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
-    # result = estimation_om_oc(matrix.loc[warm_season_index])
-    # print("No events")
-    # print(resultNormal.summary().as_latex())
+    warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
+    result = estimation_om_oc(matrix.loc[warm_season_index])
+    print("No events")
+    print(resultEvent.summary())#.as_latex())
 
     # print("Events")
 
