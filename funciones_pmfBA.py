@@ -1085,7 +1085,7 @@ def percentage_with_err(val, totalval, uval, utotalval):
     
     return {'perc': perc, 'uperc': uperc}
 
-def estimation_om_oc(conc_matrix, method='Simon_2011'):
+def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
     from IPython.display import display, Markdown, Latex
     """
     Calculate the OM/OC ratio based on Simon et al 2011, using
