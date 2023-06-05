@@ -22,7 +22,7 @@ import seaborn as sns
 from load_data import load_data
 from statsmodels.multivariate.pca import PCA
 
-#%%
+# %%
 matrix, unc, meteo, gases, events, clusters = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                                'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                                'BA_events.xlsx', 'clusters.csv')
@@ -52,12 +52,12 @@ plt.show()
 fig = pca_model.plot_scree(log_scale=False)
 plt.show()
 
-#%%
+# %%
 
-#%%
+# %%
 print(pca_model.factors.comp_09.sum())
 #pca_model.loadings.plot.scatter(x="comp_00", y="comp_01")#, ax=ax)
-#%%
+# %%
 fig, ax = plt.subplots()
 ax.scatter(matrix['NH4'], matrix["Cl"])
 ax.set_xlabel("NH4")
