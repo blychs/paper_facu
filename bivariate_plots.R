@@ -53,6 +53,8 @@ data_period1 = data[which(data$date < as.POSIXct("2019-07-17", format="%Y-%m-%d"
 data_period2 = data[which(data$date >= as.POSIXct("2019-07-17", format="%Y-%m-%d") & data$date < as.POSIXct("2019-11-14", format="%Y-%m-%d")), ]
 print(data_period2)
 
+polarPlot()
+
 print("Periods")
 for (title in keys) {
   print(paste(title, "Period 1"))
