@@ -59,14 +59,20 @@ matrix_withunc = pd.concat([matrix, unc, events, clusters], axis=1)
 matrix_withunc["C1"] = matrix_withunc["C1"].astype(float)
 #print(matrix_withunc)
 
-pollutant = "OC"
-#print(matrix["OC"].describe())
-to_ug_g = lambda x: x/matrix["PM2.5"] * 1e6
-#print(matrix.apply(to_ug_g)[pollutant])
-print(confidence_interval(matrix.apply(to_ug_g).dropna(), pollutant, 95, n_resamples=int(1e5)))
-#display(matrix_withunc)
+for key in matrix.keys():
+    pollutant = key
+    print(pollutant, "ug/g")
+    to_ug_g = lambda x: x/matrix["PM2.5"] * 1e6
+    print(confidence_interval(matrix.apply(to_ug_g).dropna(),
+                              pollutant, 95, n_resamples=int(1e5)).round(0))
+    print("")
 
-
+#%%
+matrix["OC_EC"] = matrix["OC"]/matrix["EC"]
+print(f"OC/EC\nmin = {matrix.OC_EC.min()}\n\
+max = {matrix.OC_EC.max()}")
+confidence_interval(matrix.dropna(), "OC_EC", 95,
+                     n_resamples=int(1e5))
 #%%
 print(list(matrix.keys()))
 with plt.style.context('ggplot'):
@@ -113,6 +119,7 @@ with plt.style.context('seaborn-v0_8-paper'):
     ax[4].set_title("Other\nmarkers")
     fig.tight_layout()
     plt.subplots_adjust(hspace=.0, wspace=.0)
+    fig.savefig("images/boxplot_by_source.png")
     plt.show()
 
 #%%
