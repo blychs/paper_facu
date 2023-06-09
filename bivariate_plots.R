@@ -6,12 +6,15 @@ setwd("/home/pablo/doctorado/paper_facu")
 data <- read.csv("~/doctorado/paper_facu/data_every_hour_obs.csv")
 data$date <- as.POSIXct(data$date, tz='UTC')
 print(typeof(data$date))
+data$OC_EC = data$C.Orgánico/data$C.Elemental
+polarPlot(data, pollutant = "OC_EC", statistic = "mean",  min.bin = 2, main='OC/EC')
 
 keys = names(data)[2:45]
+print(keys)
 
 data_period2 = data[which(data$date >= as.POSIXct("2019-05-22", format="%Y-%m-%d") & data$date <= as.POSIXct("2019-06-04", format="%Y-%m-%d")), ]
 print(data_period2)
-windRose(data_period2)#, poll = 'Na.sol', stati = 'cpf', percentile=c(0, 100),  main=paste('Na sol','cpf'))
+windRose(data)#, poll = 'Na.sol', stati = 'cpf', percentile=c(0, 100),  main=paste('Na sol','cpf'))
 
 #data[date(data$date) > as.POSIXct('2019-05-23') & date(data$date) < as.POSIXct('2019-06-04') ,-1] = NA
 #data[date(data$date) == as.POSIXct(c('2020-02-21', '2020-02-22')),] = NA
@@ -53,7 +56,7 @@ data_period1 = data[which(data$date < as.POSIXct("2019-07-17", format="%Y-%m-%d"
 data_period2 = data[which(data$date >= as.POSIXct("2019-07-17", format="%Y-%m-%d") & data$date < as.POSIXct("2019-11-14", format="%Y-%m-%d")), ]
 print(data_period2)
 
-polarPlot()
+
 
 print("Periods")
 for (title in keys) {
