@@ -147,7 +147,12 @@ with plt.rc_context({'axes.labelsize': 15}):
     plt.show()
 
 # %%
-
+matrix = matrix[['Ag', 'Al', 'As', 'Ba', 'Ca', 'Cd', 'Cl',
+                 'Co', 'Cr', 'Cu', 'EC', 'Fe', 'K', 'Mg',
+                 'Mn', 'Mo', 'NH4', 'NO3', 'Na no sol', 'Na sol',
+                 'Na total', 'Ni', 'OC', 'PM2.5', 'Pb', 
+                 'SO4', 'Sb', 'Se', 'TC', 'Ti', 'V', 'Zn']]
+#%%
 with plt.rc_context({'axes.labelsize': 15}):
     pearson_corr = matrix.corr(numeric_only=True, method='pearson')
     plt.figure(figsize=(35, 20))
@@ -157,7 +162,7 @@ with plt.rc_context({'axes.labelsize': 15}):
     plt.tick_params(axis='y', which='both', labelsize=10,
                     labelleft=True, left=True, labelright=True, right=True)
     sns.heatmap(pearson_corr, annot=True,  cmap='RdBu_r', vmin=-1, vmax=1)
-    plt.savefig('heatmap_pearson_corr.png')
+    plt.savefig('images/heatmap_pearson_corr.png')
     plt.show()
 
 # %%
@@ -672,28 +677,33 @@ for key1 in ['Cd']:
     plt.close()
 
 # %%
-methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
-           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Simon_2011']
+methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
+           'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
+           'Hand_2011', 'Simon_2011']
 for method in methods:
     resultNormal = estimation_om_oc(matrix.where(
-        events["Event"] == 'no'), method=method)
+        events["Event"] == 'no'), method=method, ssa_as_Na=True)
     resultEvent = estimation_om_oc(matrix.where(
-        events["Event"].isin(["S", "SP", "SN"])), method=method)
+        events["Event"].isin(["S", "SP", "SN"])), method=method,
+        ssa_as_Na=True)
     # print(result.summary())
 
-    matrix.where(events['Event'].isin(["S", "SP", "SN"]))[
-        "PM2.5"].plot(style='o')
+#    matrix.where(events['Event'].isin(["S", "SP", "SN"]))[
+#        "PM2.5"].plot(style='o')
 
-    warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
-    result = estimation_om_oc(matrix.loc[warm_season_index])
-    print("No events")
-    print(resultEvent.summary())#.as_latex())
+#    warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
+#    result = estimation_om_oc(matrix.loc[warm_season_index])
+#    print("Events")
+#    print(resultEvent.summary())#.as_latex())
+#    print("No events")
+#    print(resultNormal.summary())
 
     # print("Events")
 
-    print(method, '&', f'{resultEvent.params[1]:.4g}', '&',
-          f'{resultEvent.bse[1]:.2g}', '&',
-          f'{resultEvent.pvalues[1]:.1g}', '\\\\')
+#    print(method, '&', f'{resultEvent.params[1]:.4g}', '&',
+#          f'{resultEvent.bse[1]:.2g}', '&',
+#          f'{resultEvent.pvalues[1]:.1g}', '\\\\')
 
 
 # %%
