@@ -549,8 +549,8 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
     uncertainty_matrix = unc_matrix.copy()
 #    data_df2 = data_df.fillna(0)
     if 'Si' not in concentration_matrix:
-        concentration_matrix['Si'] = 2.4729 * concentration_matrix['Al']
-        uncertainty_matrix['Si'] = 2.4729 * uncertainty_matrix['Al'] * 2 # Ese * 2 es solo para agrandar la incert Si
+        concentration_matrix['Si'] = 2.174 * concentration_matrix["Al"] #2.4729 * concentration_matrix['Al']
+        uncertainty_matrix['Si'] = 2.174 * concentration_matrix["Al"]#2.4729 * uncertainty_matrix['Al'] * 2 # Ese * 2 es solo para agrandar la incert Si
     concentration_matrix['S'] = concentration_matrix['SO4']/3 
     uncertainty_matrix['S'] = uncertainty_matrix['SO4']/3 
     concentration_matrix['Sr'] = 0
