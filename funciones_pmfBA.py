@@ -1461,5 +1461,9 @@ def calculate_seasonal(conc_matrix):
     matrix_seasonal = matrix_seasonal.reindex(sorted(matrix_seasonal.columns), axis=1)
     #matrix_seasonal = matrix_seasonal.append(count)
     matrix_seasonal = pd.concat([matrix_seasonal, count.to_frame().T], axis=0)
+    matrix_seasonal = matrix_seasonal[[
+        "All_average", "All_std", "DJF", "DJF_std", "MAM", "MAM_std",
+        "JJA", "JJA_std", "SON", "SON_std",
+    ]]
 
     return(matrix_seasonal)
