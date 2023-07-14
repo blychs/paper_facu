@@ -58,20 +58,32 @@ unc = unc.add_prefix('unc_')
 matrix_withunc = pd.concat([matrix, unc, events, clusters], axis=1)
 matrix_withunc["C1"] = matrix_withunc["C1"].astype(float)
 #print(matrix_withunc)
+#%%
+print((matrix["NH4"]/matrix["PM2.5"] * 1e6).#/matrix["EC"]).
+      #where(events["Event"].isin(["S", "SP", "SN"])).
+      mean())
 
-for key in matrix.keys():
+#print(events["Event"].isin(["S", "SN", "SP"]).sum())
+
+#%%
+for key in matrix[["SO4"]].keys():
     pollutant = key
-    print(pollutant, "ug/g")
     to_ug_g = lambda x: x/matrix["PM2.5"] * 1e6
-    print(confidence_interval(matrix.apply(to_ug_g).dropna(),
-                              pollutant, 95, n_resamples=int(1e5)).round(0))
+    values = matrix.apply(to_ug_g)
+    print(pollutant, f"mean concentration:\
+           {(values[key]).mean():.1e}")
+    print(confidence_interval(values.dropna(),
+                              pollutant, 95,
+                                n_resamples=int(1e5)).round(0))
     print("")
 
 #%%
 matrix["OC_EC"] = matrix["OC"]/matrix["EC"]
 print(f"OC/EC\nmin = {matrix.OC_EC.min()}\n\
 max = {matrix.OC_EC.max()}")
-confidence_interval(matrix.dropna(), "OC_EC", 95,
+confidence_interval(matrix.
+                    where(~events["Event"].isin(["S", "SP", "SN"])).
+                    dropna(), "OC_EC", 95,
                      n_resamples=int(1e5))
 #%%
 print(list(matrix.keys()))
@@ -90,37 +102,61 @@ with plt.style.context('ggplot'):
     plt.show()
 
 #%%
+
+meanprops = {"marker": "^",
+             "markeredgecolor": "red",
+             "markerfacecolor": "none",
+             "markeredgewidth": 1,
+            }
+boxprops = {"facecolor": "none"}
+medianprops = {"color": "tab:orange"}
+
+PROPS = {"meanprops": meanprops,
+         "boxprops": boxprops,
+         "medianprops": medianprops}
+        
+
 with plt.style.context('seaborn-v0_8-paper'):
     over_gram = lambda x: x / (matrix["PM2.5"] / 1000000)
-    fig,ax = plt.subplots(figsize=(7.5,5), ncols=5,
-                          gridspec_kw={"width_ratios":[3,6,2,2,2]},
+    fig,ax = plt.subplots(figsize=(8,5), ncols=5,
+                          gridspec_kw={"width_ratios":[2,5,7,1,8]},
                           sharey=True)
-    sns.boxplot(matrix[["Ti", "Mg", "Al"]].apply(over_gram),
-        ax = ax[0])
+    sns.boxplot(matrix[["OC", "EC"]].apply(over_gram),
+        ax = ax[0], showmeans=True,
+        **PROPS)
     ax[0].set_ylabel("µg/g")
     ax[0].set_yscale("log")
-    ax[0].set_title("Crustal")
+    ax[0].set_title("Carbonaceous")
 
-    sns.boxplot(matrix[["Sb", "Mo", "Cu", "Pb", "V", "Zn"]].apply(over_gram),
-        ax = ax[1])
-    ax[1].set_title("Traffic related")
 
-    sns.boxplot(matrix[["Na$^+$", "Cl"]].apply(over_gram),
-                ax = ax[2])
-    ax[2].set_xticklabels(["Na$^+$", "Cl$^-$"])
-    ax[2].set_title("Sea Salt")
+    sns.boxplot(matrix[["SO4", "NO3", "Na$^+$", "Cl", "NH4"]].apply(over_gram),
+                ax = ax[1], showmeans=True,
+                **PROPS)
+    ax[1].set_xticklabels(["SO$_4^{2-}$", "NO$_3^-$", "Na$^+$", "Cl$^-$",
+                            "NH$_4^+$"])
+    ax[1].set_title("SSA and II")
 
-    sns.boxplot(matrix[["OC", "EC"]].apply(over_gram),
-                ax = ax[3])
-    ax[3].set_title("Carbonaceous")
+    sns.boxplot(matrix[["Na no sol", "Ca", "Al", "Mg", "Fe", "Ti", "Mn"]].apply(over_gram),
+                ax = ax[2], showmeans=True,
+                **PROPS)
+    ax[2].set_xticklabels(["Na\n(insol)", "Ca", "Al", "Mg", "Fe", "Ti", "Mn"])
+    ax[2].set_title("Crustal (GM,\nconstruction/demolition)")
 
-    sns.boxplot(matrix[["K", "Na no sol"]].apply(over_gram),
-                ax=ax[4])
-    ax[4].set_title("Other\nmarkers")
+    sns.boxplot(matrix[["K"]].apply(over_gram),
+                ax=ax[3], showmeans=True,
+                **PROPS)
+    ax[3].set_title("K")
     fig.tight_layout()
     plt.subplots_adjust(hspace=.0, wspace=.0)
+
+    sns.boxplot(matrix[["Zn", "Ni", "Pb", "Cu", "Ba", "Sb", "V", "Mo"]].apply(over_gram),
+        ax = ax[4], showmeans=True,
+        **PROPS)
+    ax[4].set_title("Traffic related and industrial\ntrace elements")
+
     fig.savefig("images/boxplot_by_source.png")
     plt.show()
+
 
 #%%
 fig, ax = plt.subplots()

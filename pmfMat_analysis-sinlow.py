@@ -42,11 +42,18 @@ matrix.describe().to_csv('description_statistics_all.csv')
 
 
 # %%
-pd.set_option('display.float_format', '{:.4g}'.format)
+pd.set_option('display.float_format', '{:.1e}'.format)
 
 matrix_seasonal = calculate_seasonal(matrix)
-
+matrix_seasonal = matrix_seasonal
+matrix_seasonal = matrix_seasonal.drop([
+    "ECPk1 C", "ECPk2 C", "ECPk3 C", "ECPk4 C",
+    "ECPk5 C", "ECPk6 C", "Na total", "OCPk1 C",
+    "OCPk2 C", "OCPk3 C", "OCPk4 C", "OCPk5 C",
+    "Pyrol C"], axis=0)
 print(matrix_seasonal.to_latex())
+
+#print(matrix_seasonal.All_average.sort_values())
 
 
 # %%
@@ -343,7 +350,44 @@ plt.subplots_adjust(wspace=.0)
 fig.savefig('images/stacked_bar_daily_percentage.png')
 plt.show()
 
+def confidence_interval(vals, IC=95, n_resamples=10000):
+    """Calculate the unbiased
+    confidence interval
+    based on
+    https://towardsdatascience.com/confidence-intervals-with-python-bfa28ebb81c
+    """
+    values = vals.values
+    confidence = IC/100
+    bootstrap_values = [np.random.choice(values, size=int(len(values)), replace=True).mean()
+                        for i in range(n_resamples)]
+    ic = np.percentile(bootstrap_values, [100*(1-confidence)/2, 100*(1-(1-confidence)/2)])
+    return(ic)
+    
 
+om_ug_g = mass["organic_mass"] * 1e6 / matrix["PM2.5"]
+oc_ec = mass["organic_mass"] / mass["elemental_C"]
+def to_ug_g(species):
+    return species * 1e6 / matrix["PM2.5"]
+print("Organic Mass: no event")
+print(confidence_interval(select_no_events(om_ug_g).dropna(), 95, int(1e5)))
+print("Organic Mass: event")
+print(confidence_interval(select_events(om_ug_g).dropna(), 95, int(1e5)))
+print("OC/EC: no event")
+print(confidence_interval(select_no_events(oc_ec).dropna(), 95, int(1e5)))
+print("OC/EC: event")
+print(confidence_interval(select_events(oc_ec).dropna(), 95, int(1e5)))
+print("OC no event")
+print(confidence_interval(select_no_events(to_ug_g(matrix["OC"])).dropna(),
+                          95, int(1e5)))
+print("OC event")
+print(confidence_interval(select_events(to_ug_g(matrix["OC"])).dropna(),
+                          95, int(1e5)))
+print("EC no event")
+print(confidence_interval(select_no_events(to_ug_g(matrix["EC"])).dropna(),
+                          95, int(1e5)))
+print("EC event")
+print(confidence_interval(select_events(to_ug_g(matrix["EC"])).dropna(),
+                          95, int(1e5)))
 # %%
 # Stacked bar for all filters
 
@@ -977,3 +1021,7 @@ ax.scatter(matrix[poll], matrix[poll2])
 ax.set_xlabel(poll)
 ax.set_ylabel(poll2)
 plt.show()
+
+#%%
+print(mass)
+plt.plot(mass["organic_mass"], matrix["K"].values, '.')
