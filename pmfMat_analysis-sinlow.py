@@ -35,7 +35,7 @@ from load_data import load_data
 plt.style.use('seaborn-v0_8-paper')
 matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
-                                              'BA_events.xlsx')
+                                              'BA_events_test.xlsx')
 
 
 matrix.describe().to_csv('description_statistics_all.csv')
@@ -238,6 +238,8 @@ mass = {}
 for key in mass_Hand[1].keys():
     mass[key] = (mass_Simon[1][key] + mass_Hand[1]
                  [key] + mass_Maenhaut[1][key])/3
+    
+mass
 
 uncertainty = {}
 
@@ -347,9 +349,10 @@ ax[1].legend(reversed(handles), reversed(labels), loc=1)
 fig.tight_layout()
 plt.subplots_adjust(hspace=.0)
 plt.subplots_adjust(wspace=.0)
-fig.savefig('images/stacked_bar_daily_percentage.png')
+fig.savefig('images/stacked_bar_daily_percentage_test.png')
 plt.show()
 
+#%%
 def confidence_interval(vals, IC=95, n_resamples=10000):
     """Calculate the unbiased
     confidence interval
@@ -388,6 +391,7 @@ print(confidence_interval(select_no_events(to_ug_g(matrix["EC"])).dropna(),
 print("EC event")
 print(confidence_interval(select_events(to_ug_g(matrix["EC"])).dropna(),
                           95, int(1e5)))
+
 # %%
 # Stacked bar for all filters
 
@@ -397,6 +401,7 @@ mean_OM = np.array([mass['organic_mass'].mean(), select_events(
     mass['organic_mass']).mean(), select_no_events(mass['organic_mass']).mean()])
 mean_II = np.array([mass['inorganic_ions'].mean(), select_events(
     mass['inorganic_ions']).mean(), select_no_events(mass['inorganic_ions']).mean()])
+
 mean_GM = np.array([mass['geological_minerals'].mean(), select_events(
     mass['geological_minerals']).mean(), select_no_events(mass['geological_minerals']).mean()])
 mean_EC = np.array([mass['elemental_C'].mean(), select_events(
@@ -646,7 +651,7 @@ fig, axs = plt.subplots(4, 3, figsize=(16, 12))
 i, j = 0, 0
 for method in methods:
     d_methodQuality[method] = 0
-    mass = mass_reconstruction_mod(matrix, unc, events, equation=method)
+    mass = mass_reconstruction_mod(matrix, unc, events, equation=method, all_together=False)
     reconst = mass[0]/matrix['PM2.5'] * 100
     ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
                        2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
@@ -727,28 +732,38 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Hand_2011', 'Simon_2011']
 for method in methods:
     resultNormal = estimation_om_oc(matrix.where(
-        events["Event"] == 'no'), method=method, ssa_as_Na=True)
+        events["Event"] == 'no'), method=method, ssa_as_Na=False)
     resultEvent = estimation_om_oc(matrix.where(
         events["Event"].isin(["S", "SP", "SN"])), method=method,
-        ssa_as_Na=True)
+        ssa_as_Na=False)
+    resultAll = estimation_om_oc(matrix, method=method,
+        ssa_as_Na=False)
     # print(result.summary())
 
-#    matrix.where(events['Event'].isin(["S", "SP", "SN"]))[
-#        "PM2.5"].plot(style='o')
+    matrix.where(events['Event'].isin(["S", "SP", "SN"]))[
+        "PM2.5"].plot(style='o')
 
-#    warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
-#    result = estimation_om_oc(matrix.loc[warm_season_index])
+    warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
+    result = estimation_om_oc(matrix.loc[warm_season_index])
+    print(f"{method}")
+#    print("No events")
+#    print(resultNormal.summary())#.as_latex())
+#    print(method, '&', f'{resultNormal.params[1]:.4g}', '&',
+#          f'{resultNormal.bse[1]:.2g}', '&',
+#          f'{resultNormal.pvalues[1]:.3g}', '\\\\')
 #    print("Events")
 #    print(resultEvent.summary())#.as_latex())
-#    print("No events")
-#    print(resultNormal.summary())
-
-    # print("Events")
-
 #    print(method, '&', f'{resultEvent.params[1]:.4g}', '&',
 #          f'{resultEvent.bse[1]:.2g}', '&',
-#          f'{resultEvent.pvalues[1]:.1g}', '\\\\')
-
+#          f'{resultEvent.pvalues[1]:.3g}', '\\\\')
+    print("All")
+    print(resultAll.summary())#.as_latex())
+    print(method, '&', f'{resultAll.params[1]:.4g}', '&',
+          f'{resultAll.bse[1]:.2g}', '&',
+          f'{resultAll.pvalues[1]:.3g}', '\\\\')
+#    print(method, '&', f'{resultAll.params[2]:.4g}', '&',
+#          f'{resultAll.bse[2]:.2g}', '&',
+#          f'{resultAll.pvalues[2]:.3g}', '\\\\')
 
 # %%
 # print(result.fittedvalues)

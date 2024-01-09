@@ -536,7 +536,8 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
 
 
 
-def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011'):
+def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011',
+                            all_together=False):
     
     
     """
@@ -574,9 +575,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4NO3']
         uinorganic_ions = np.linalg.norm( [uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -616,9 +621,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm([ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -671,9 +680,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -726,9 +739,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = 4.125 * concentration_matrix['S']
         uinorganic_ions = 4.125 * uncertainty_matrix['S']
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
          
         elemental_C = concentration_matrix['EC']
@@ -761,9 +778,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'],
                                            uncertainty_matrix['NH4'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -811,9 +832,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -863,9 +888,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = 4.125 * concentration_matrix['S'] + 1.29 * concentration_matrix["NO3"]
         uinorganic_ions = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -896,9 +925,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm( [uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -952,9 +985,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = 4.125 * concentration_matrix['S'] + 1.29 * concentration_matrix['NO3']
         uinorganic_ions = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
@@ -984,10 +1021,16 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
     if equation == 'Hand_2011':
         inorganic_ions = 1.375 * concentration_matrix['SO4'] + 1.29 * concentration_matrix['NO3']
         uinorganic_ions = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'] ] ,axis=0)
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+
         elemental_C = concentration_matrix['EC'] # Un solo elemento
         uelemental_C = uncertainty_matrix['EC']
         geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
@@ -1032,9 +1075,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4NO3']
         uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'] ], axis=0)
         
-        organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
-                        + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
-        uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+        if all_together == True:
+            organic_mass = (2.3 * concentration_matrix['OC'])
+            uorganic_mass = (2.3 * uncertainty_matrix['OC'])
+        else:
+            organic_mass = (2 * concentration_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
+                            + 2.6 * concentration_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
+            uorganic_mass = (2 * uncertainty_matrix['OC'].where(~events['Event'].isin(['SP', 'S', 'SN']), other=0)
                         + 2.6 * uncertainty_matrix['OC'].where(events['Event'].isin(['SP', 'S', 'SN']), other=0))
         
         elemental_C = concentration_matrix['EC']
