@@ -29,34 +29,51 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Hand_2011', 'Simon_2011']
 
 columnName="Event_M"
+omoc_noevent=[]
+omoc_event=[]
+omoc_all=[]
+
 for method in methods:
     resultNormal = estimation_om_oc(matrix.where(
         events[columnName] == 'no'), method=method, ssa_as_Na=False)
+    omoc_noevent.append(resultNormal.params[1])
     resultEvent = estimation_om_oc(matrix.where(
-        events[columnName].isin(["S", "SP", "SN", "DS"])), method=method,
+        events[columnName].isin(["S", "SP", "SN","SL"])), method=method,
         ssa_as_Na=False)
+    omoc_event.append(resultEvent.params[1])
     resultAll = estimation_om_oc(matrix, method=method,
         ssa_as_Na=False)
+    omoc_all.append(resultAll.params[1])
     #print(result.summary())
 
     # matrix.where(events[columnName].isin(["S", "SP", "SN","DS"]))[
     #     "PM2.5"].plot(style='o')
 
-    warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
-    result = estimation_om_oc(matrix.loc[warm_season_index])
-    print(f"{method}")
-    print("No events")
-    print(resultNormal.summary())#.as_latex())
-    print(method, '&', f'{resultNormal.params[1]:.4g}', '&',
-         f'{resultNormal.bse[1]:.2g}', '&',
-         f'{resultNormal.pvalues[1]:.3g}', '\\\\')
-    print("Events")
-    print(resultEvent.summary())#.as_latex())
-    print(method, '&', f'{resultEvent.params[1]:.4g}', '&',
-         f'{resultEvent.bse[1]:.2g}', '&',
-         f'{resultEvent.pvalues[1]:.3g}', '\\\\')
+    # warm_season_index = matrix.index.where(matrix.index.month >= 9).dropna()
+    # result = estimation_om_oc(matrix.loc[warm_season_index])
+    # print(f"{method}")
+    # print("No events")
+    # print(resultNormal.summary())#.as_latex())
+    # print(method, '&', f'{resultNormal.params[1]:.4g}', '&',
+    #      f'{resultNormal.bse[1]:.2g}', '&',
+    #      f'{resultNormal.pvalues[1]:.3g}', '\\\\')
+    # print("Events")
+    # print(resultEvent.summary())#.as_latex())
+    # print(method, '&', f'{resultEvent.params[1]:.4g}', '&',
+    #      f'{resultEvent.bse[1]:.2g}', '&',
+    #      f'{resultEvent.pvalues[1]:.3g}', '\\\\')
     # print("All")
     # print(resultAll.summary())#.as_latex())
     # print(method, '&', f'{resultAll.params[1]:.4g}', '&',
     #       f'{resultAll.bse[1]:.2g}', '&',
     #       f'{resultAll.pvalues[1]:.3g}', '\\\\')
+    print("No Events & ", method, '&', f'{resultNormal.params[1]:.4g}', '&',
+         f'{resultNormal.bse[1]:.2g}', '&',
+         f'{resultNormal.pvalues[1]:.3g}', '\\\\')
+    print("Events & ",method, '&', f'{resultEvent.params[1]:.4g}', '&',
+         f'{resultEvent.bse[1]:.2g}', '&',
+         f'{resultEvent.pvalues[1]:.3g}', '\\\\')
+    print("All together & ",method, '&', f'{resultAll.params[1]:.4g}', '&',
+         f'{resultAll.bse[1]:.2g}', '&',
+         f'{resultAll.pvalues[1]:.3g}', '\\\\')
+    print(f'{np.mean(omoc_noevent):.2g}', f'{np.mean(omoc_event):.2g}',f'{np.mean(omoc_all):.2g}')
