@@ -239,8 +239,6 @@ for key in mass_Hand[1].keys():
     mass[key] = (mass_Simon[1][key] + mass_Hand[1]
                  [key] + mass_Maenhaut[1][key])/3
     
-mass
-
 uncertainty = {}
 
 for key in mass_Hand[3].keys():
