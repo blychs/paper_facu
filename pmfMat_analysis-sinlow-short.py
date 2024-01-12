@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -19,10 +20,6 @@ matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.x
 
 matrix.describe().to_csv('description_statistics_allM.csv')
 
-# methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
-#            'Malm_1994', 'Chow_1996', 'Andrews_2000',
-#            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
-#            'Hand_2011', 'Simon_2011']
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
@@ -77,16 +74,20 @@ for method in methods:
     print("All together & ",method, '&', f'{resultAll.params[1]:.4g}', '&',
          f'{resultAll.bse[1]:.2g}', '&',
          f'{resultAll.pvalues[1]:.3g}', '\\\\')
-print(f'{np.mean(omoc_noevent):.2g}', f'{np.mean(omoc_event):.2g}',f'{np.mean(omoc_all):.2g}')
-    
+# print(f'{np.mean(omoc_noevent):.2g}', f'{np.mean(omoc_event):.2g}',f'{np.mean(omoc_all):.2g}')
+beta_omoc_noevent=np.round(np.mean(omoc_noevent),1)
+beta_omoc_event=np.round(np.mean(omoc_event),1)
+beta_omoc_all=np.round(np.mean(omoc_all),1)
+print(beta_omoc_all,beta_omoc_event,beta_omoc_noevent)
+
 # %%
 # #%matplotlib widget
 mass_Simon = mass_reconstruction_mod(
-    matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, event_column=event_columnname, omoc_event=2.6, omoc_noevent=1.9, omoc_all=2.3, all_together=False)
+    matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
 mass_Hand = mass_reconstruction_mod(
-    matrix, unc, events=events, equation="Hand_2011", event_labels=event_labels, event_column=event_columnname, omoc_event=2.6, omoc_noevent=1.9, omoc_all=2.3, all_together=False)
+    matrix, unc, events=events, equation="Hand_2011", event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
 mass_Maenhaut = mass_reconstruction_mod(
-    matrix, unc, events=events, equation="Maenhaut_2002", event_labels=event_labels, event_column=event_columnname, omoc_event=2.6, omoc_noevent=1.9, omoc_all=2.3, all_together=False)
+    matrix, unc, events=events, equation="Maenhaut_2002", event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
 
 mass = {}
 
@@ -203,5 +204,20 @@ fig.tight_layout()
 plt.subplots_adjust(hspace=.0)
 plt.subplots_adjust(wspace=.0)
 fig.savefig('images/stacked_bar_daily_percentage_testM.png')
-plt.show()
+#plt.show()
 
+# %% Calculo de Tabla 4
+mass=pd.DataFrame.from_dict(mass)
+keys = ['organic_mass', 'geological_minerals','inorganic_ions','elemental_C','salt','unexplained']
+print('Category & Total ($\mu$g/m$^{3}$) & No event ($\mu$g/m$^{3}$) & Event ($\mu$g/m$^{3}$) \\\\ \\hline')
+for key in keys:
+    mass_events=mass[key].where(events[event_columnname].isin(event_labels))
+    mass_noevents=mass[key].where(~events[event_columnname].isin(event_labels))
+    print(key,'&',np.round(np.min(mass[key]),decimals=2),'--',np.round(np.max(mass[key]),decimals=2),'(',np.round(np.mean(mass[key]),decimals=2),') &', 
+          np.round(np.min(mass_noevents),decimals=2) ,'--', np.round(np.max(mass_noevents),decimals=2), '(', np.round(np.mean(mass_noevents),decimals=2),') &',
+          np.round(np.min(mass_events),decimals=2) ,'--', np.round(np.max(mass_events),decimals=2), '(', np.round(np.mean(mass_events),decimals=2),') \\\\')
+          
+#np.round(np.min(mass[key]),decimals=2),'-',np.round(np.max(mass[key]),decimals=2),'(',np.round(np.mean(mass[key]),decimals=2),') \\\\')
+#matrix.where(events['Event'].isin(["S", "SP", "SN"]))["PM2.5"].plot(style='o')
+# mass.where(events[event_columnname].isin(event_labels))[key]
+# %%
