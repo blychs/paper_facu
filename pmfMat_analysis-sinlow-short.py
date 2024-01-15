@@ -25,7 +25,7 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
            'Hand_2011', 'Simon_2011']
 
-event_columnname="Event"
+event_columnname="Event_M"
 event_labels= ["S", "SP", "SN","SL"]
 omoc_noevent=[]
 omoc_event=[]
@@ -94,7 +94,9 @@ mass = {}
 for key in mass_Hand[1].keys():
     mass[key] = (mass_Simon[1][key] + mass_Hand[1]
                  [key] + mass_Maenhaut[1][key])/3
-    
+mass['others'] = ((mass_Simon[1]['others'] + mass_Maenhaut[1]['others']) /
+              2 + mass_Maenhaut[1]['trace_elements'])
+
 uncertainty = {}
 
 for key in mass_Hand[3].keys():
@@ -208,16 +210,17 @@ fig.savefig('images/stacked_bar_daily_percentage_testM.png')
 
 # %% Calculo de Tabla 4
 mass=pd.DataFrame.from_dict(mass)
-keys = ['organic_mass', 'geological_minerals','inorganic_ions','elemental_C','salt','unexplained']
+mass = mass.rename(columns={'organic_mass': 'Organic mass', 
+                            'geological_minerals': 'Geological minerals',
+                            'inorganic_ions': 'Inorganic ions', 
+                            'elemental_C':'Elemental carbon',
+                            'salt': 'Sea salt', 
+                            'others': 'Others'})
+keys = ['Organic mass', 'Geological minerals','Inorganic ions','Elemental carbon','Sea salt','Others']
 print('Category & Total ($\mu$g/m$^{3}$) & No event ($\mu$g/m$^{3}$) & Event ($\mu$g/m$^{3}$) \\\\ \\hline')
 for key in keys:
     mass_events=mass[key].where(events[event_columnname].isin(event_labels))
     mass_noevents=mass[key].where(~events[event_columnname].isin(event_labels))
-    print(key,'&',np.round(np.min(mass[key]),decimals=2),'--',np.round(np.max(mass[key]),decimals=2),'(',np.round(np.mean(mass[key]),decimals=2),') &', 
-          np.round(np.min(mass_noevents),decimals=2) ,'--', np.round(np.max(mass_noevents),decimals=2), '(', np.round(np.mean(mass_noevents),decimals=2),') &',
-          np.round(np.min(mass_events),decimals=2) ,'--', np.round(np.max(mass_events),decimals=2), '(', np.round(np.mean(mass_events),decimals=2),') \\\\')
-          
-#np.round(np.min(mass[key]),decimals=2),'-',np.round(np.max(mass[key]),decimals=2),'(',np.round(np.mean(mass[key]),decimals=2),') \\\\')
-#matrix.where(events['Event'].isin(["S", "SP", "SN"]))["PM2.5"].plot(style='o')
-# mass.where(events[event_columnname].isin(event_labels))[key]
-# %%
+    print(f"{key} & {np.min(mass[key]):.2f} -- {np.max(mass[key]):.2f} ({np.mean(mass[key]):.2f}) & "
+      f"{np.min(mass_noevents):.2f} -- {np.max(mass_noevents):.2f} ({np.mean(mass_noevents):.2f}) & "
+      f"{np.min(mass_events):.2f} -- {np.max(mass_events):.2f} ({np.mean(mass_events):.2f}) \\\\")
