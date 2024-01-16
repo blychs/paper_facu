@@ -25,7 +25,7 @@ matrix.describe().to_csv('description_statistics_allM.csv')
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
-           'Hand_2011','Hand_2011_mod','Simon_2011']
+           'Hand_2011','Simon_2011']
 
 event_columnname="Event_M"
 event_labels= ["S", "SP", "SN","SL"]
