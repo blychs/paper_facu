@@ -480,7 +480,40 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                        2.42 * uncertainty_matrix['Fe'],
                                        1.8 * uncertainty_matrix['Cl'] ], axis=0)
         
-       
+    if equation == 'Hand_2011_mod':
+        inorganic_ions = 1.375 * concentration_matrix['SO4'] + 1.29 * concentration_matrix['NO3']
+        uinorganic_ions = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'] ] ,axis=0)
+        organic_mass = 1.8 * concentration_matrix['OC']
+        uorganic_mass = 1.8 * uncertainty_matrix['OC'] # Un solo elemento
+        elemental_C = concentration_matrix['EC'] # Un solo elemento
+        uelemental_C = uncertainty_matrix['EC']
+        geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
+                               1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
+                               2.42 * concentration_matrix['Fe'] + 1.35 * concentration_matrix['Na no sol'])
+        ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                               1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                               2.42 * uncertainty_matrix['Fe'], 1.35 * uncertainty_matrix['Na no sol'] ], axis=0)
+        salt = 1.8 * concentration_matrix['Cl']
+        usalt = 1.8 * uncertainty_matrix['Cl'] # Un solo elemento
+        
+        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
+                      'salt': salt}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 
+                      'uelemental_C': uelemental_C,
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt': usalt}
+        
+        uclosure = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'], 
+                                       1.8 * uncertainty_matrix['OC'],
+                                       uncertainty_matrix['EC'],
+                                       2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                       1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                       2.42 * uncertainty_matrix['Fe'],
+                                       1.8 * uncertainty_matrix['Cl'] , 
+                                       1.35 * uncertainty_matrix['Na no sol']], axis=0)
+               
     if equation == 'Simon_2011':
         # Consider all SO4 and NO3 with ammonium as counterion
         
@@ -921,7 +954,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
                                     2.42 * uncertainty_matrix['Fe'] ], axis=0)
         
         
-    if equation == 'Maenhaut_2002':
+    if (equation == 'Maenhaut_2002' or equation=='Maenhaut_2002_mod'):
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm( [uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
         
@@ -974,7 +1007,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
                                     2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                     1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                     2.42 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'], 1.4486 * (uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol']),
+                                    uncertainty_matrix['Cl'], 1.4486 * (uncertainty_matrix['Na sol']),
                                     uncertainty_matrix['K'],  uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                     uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -1018,7 +1051,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
                                     2.42 * uncertainty_matrix['Fe'] ], axis=0)
         
             
-    if equation == 'Hand_2011':
+    if (equation == 'Hand_2011' or equation== "Hand_2011_mod"):
         inorganic_ions = 1.375 * concentration_matrix['SO4'] + 1.29 * concentration_matrix['NO3']
         uinorganic_ions = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'] ] ,axis=0)
 
@@ -1036,9 +1069,16 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
         geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
                                1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
                                2.42 * concentration_matrix['Fe'])
-        ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
-                               1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
-                               2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        if equation == "Hand_2011_mod":
+            geological_minerals = geological_minerals + concentration_matrix['Na no sol']
+        if equation =="Hand_2011":    
+            ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        else:
+            ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                2.42 * uncertainty_matrix['Fe'] , uncertainty_matrix['Na no sol']], axis=0)
         salt = 1.8 * concentration_matrix['Cl']
         usalt = 1.8 * uncertainty_matrix['Cl'] # Un solo elemento
         
@@ -1051,14 +1091,23 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Hand_2011
                        'ugeological_minerals': ugeological_minerals,
                        'usalt': usalt}
         
-        uclosure = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'], 
+        if equation=="Hand_2011":
+            uclosure = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'], 
                                        uorganic_mass,
                                        uncertainty_matrix['EC'],
                                        2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                        1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                        2.42 * uncertainty_matrix['Fe'],
                                        1.8 * uncertainty_matrix['Cl'] ], axis=0)
-        
+        else:
+            uclosure = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'], 
+                                       uorganic_mass,
+                                       uncertainty_matrix['EC'],
+                                       2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                       1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                       2.42 * uncertainty_matrix['Fe'],
+                                       1.8 * uncertainty_matrix['Cl'], uncertainty_matrix['Na no sol'] ], 
+                                      axis=0)
        
     if equation == 'Simon_2011':
         # Consider all SO4 and NO3 with ammonium as counterion
@@ -1134,7 +1183,7 @@ def percentage_with_err(val, totalval, uval, utotalval):
     
     return {'perc': perc, 'uperc': uperc}
 
-def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
+def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False, display_latex=False):
     from IPython.display import display, Markdown, Latex
     """
     Calculate the OM/OC ratio based on Simon et al 2011, using
@@ -1185,12 +1234,14 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
         X = sm.add_constant(X)
         model = sm.OLS(y, X)
         results = model.fit()       
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
-                {results.params[3].round(2)} NH$_4$NO$_3$ +\
-                {results.params[4].round(2)} SOIL + trace +\
-                 EC'))   
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                    {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                    {results.params[4].round(2)} SOIL + trace +\
+                    EC'))   
            
     
     if method=="Chow_1994" or method=="Solomon_1989":
@@ -1220,14 +1271,16 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
                              soil.values))
         X = sm.add_constant(X)
         model = sm.OLS(y, X)
-        results = model.fit()       
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} SO$_4$ +\
-                {results.params[3].round(2)} NO$_3$ +\
-                {results.params[4].round(2)} NH$_4$ +\
-                {results.params[5].round(2)} SOIL + trace +\
-                 EC'))   
+        results = model.fit()
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} SO$_4$ +\
+                    {results.params[3].round(2)} NO$_3$ +\
+                    {results.params[4].round(2)} NH$_4$ +\
+                    {results.params[5].round(2)} SOIL + trace +\
+                    EC'))   
            
     
     if method=="Malm_1994":
@@ -1248,11 +1301,12 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
     #    print(y)
         model = sm.OLS(y, X)
         results = model.fit()
-        print(method)
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
-                {results.params[3].round(2)} SOIL'))   
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                    {results.params[3].round(2)} SOIL'))   
     
     
     if method=="Chow_1996":
@@ -1285,14 +1339,16 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
                              soil.values))
         X = sm.add_constant(X)
         model = sm.OLS(y, X)
-        results = model.fit()       
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} SO$_4$ +\
-                {results.params[3].round(2)} NO$_3$ +\
-                {results.params[4].round(2)} NH$_4$ +\
-                {results.params[5].round(2)} SOIL + trace +\
-                 EC + Cl + Na'))   
+        results = model.fit()
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} SO$_4$ +\
+                    {results.params[3].round(2)} NO$_3$ +\
+                    {results.params[4].round(2)} NH$_4$ +\
+                    {results.params[5].round(2)} SOIL + trace +\
+                    EC + Cl + Na'))
            
     
     if method=="Andrews_2000":
@@ -1322,18 +1378,20 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
                              soil.values))
         X = sm.add_constant(X)
         model = sm.OLS(y, X)
-        results = model.fit()       
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} SO$_4$ +\
-                {results.params[3].round(2)} NO$_3$ +\
-                {results.params[4].round(2)} NH$_4$ +\
-                {results.params[5].round(2)} SOIL + trace +\
-                 EC'))   
+        results = model.fit()
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} SO$_4$ +\
+                    {results.params[3].round(2)} NO$_3$ +\
+                    {results.params[4].round(2)} NH$_4$ +\
+                    {results.params[5].round(2)} SOIL + trace +\
+                    EC'))   
         
         
     
-    if method=="Maenhaut_2002": # Por algún motivo tuve que sacar Sr y Hg
+    if (method=="Maenhaut_2002" or method=="Maenhaut_2002_mod"): # Por algún motivo tuve que sacar Sr y Hg
         concentration_matrix = concentration_matrix.dropna(subset=["SO4", "NO3", "NH4", "Si", "Al",
                                                                    "Ca", "Ti", "Fe", "Cl", "Na sol",
                                                                    "V", "Cr", "Mn", "Ni", 
@@ -1364,13 +1422,15 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
         X = sm.add_constant(X)
         model = sm.OLS(y, X)
         results = model.fit()       
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} SO$_4$ +\
-                {results.params[3].round(2)} NO$_3$ +\
-                {results.params[4].round(2)} NH$_4$ +\
-                {results.params[5].round(2)} SOIL + trace + KNON +\
-                 EC + Cl + 1.4486 Na'))   
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} SO$_4$ +\
+                    {results.params[3].round(2)} NO$_3$ +\
+                    {results.params[4].round(2)} NH$_4$ +\
+                    {results.params[5].round(2)} SOIL + trace + KNON +\
+                    EC + Cl + 1.4486 Na'))   
         
         
     if (method=="DeBell_2006" or method =="Malm_2000"):
@@ -1394,20 +1454,25 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
     #    print(y)
         model = sm.OLS(y, X)
         results = model.fit()
-        print(method)
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
-                {results.params[3].round(2)} NH$_4$NO$_3$ +\
-                {results.params[4].round(2)} SOIL'))       
+
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                    {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                    {results.params[4].round(2)} SOIL'))       
            
-    if method=="Hand_2011":
+    if (method=="Hand_2011" or method=="Hand_2011_mod"):
         concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "Si", "Al",
                                                                    "Ca", "Fe", "Ti", "EC", "Cl",
                                                                    "Fe", "PM2.5", "OC"], axis=0)
         soil = (2.2 * concentration_matrix["Al"] + 2.49 * concentration_matrix["Si"] +
                 1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
                 2.42 * concentration_matrix["Fe"])
+        
+        if method=="Hand_2011_mod":
+            soil= soil + concentration_matrix["Na no sol"]
         
         if not ssa_as_Na:
             salt = 1.8 * concentration_matrix["Cl"]
@@ -1425,15 +1490,14 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
     #    print(y)
         model = sm.OLS(y, X)
         results = model.fit()
-        print(method)
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
-                {results.params[3].round(2)} NH$_4$NO$_3$ +\
-                {results.params[4].round(2)} SOIL +\
-                 1.8 Cl$^-$ + EC'))       
-        
-    
+        if display_latex:
+            print(method)
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                    {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                    {results.params[4].round(2)} SOIL +\
+                    1.8 Cl$^-$ + EC'))       
     
     if method=="Simon_2011":
         concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "Si",
@@ -1463,13 +1527,15 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False):
     #    print(y)
         model = sm.OLS(y, X)
         results = model.fit()
-        print("method")
-        display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
-                {results.params[1].round(2)} OC +\
-                {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
-                {results.params[3].round(2)} NH$_4$NO$_3$ +\
-                {results.params[4].round(2)} SOIL +\
-                 1.8 Cl$^-$ + 1.2 KNON + EC'))
+
+        if display_latex:
+            print("method")
+            display(Latex(f'PM$_{{{2.5}}}$ = {results.params[0].round(2)} µg m$^{{{-3}}}$ +\
+                    {results.params[1].round(2)} OC +\
+                    {results.params[2].round(2)} (NH$_4$)$_2$SO$_4$ +\
+                    {results.params[3].round(2)} NH$_4$NO$_3$ +\
+                    {results.params[4].round(2)} SOIL +\
+                    1.8 Cl$^-$ + 1.2 KNON + EC'))
     return(results)
 
 def calculate_seasonal(conc_matrix):

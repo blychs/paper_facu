@@ -1,3 +1,4 @@
+
 #%%
 import numpy as np
 import datetime as dt
@@ -10,6 +11,7 @@ import statsmodels.api as sm
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
 from funciones_pmfBA import estimation_om_oc, calculate_seasonal
 from load_data import load_data
+from mass_reconstruction_plot import mass_reconstruction_plot, axvlines
 
 
 plt.style.use('seaborn-v0_8-paper')
@@ -23,7 +25,7 @@ matrix.describe().to_csv('description_statistics_allM.csv')
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
-           'Hand_2011', 'Simon_2011']
+           'Hand_2011','Hand_2011_mod','Simon_2011']
 
 event_columnname="Event_M"
 event_labels= ["S", "SP", "SN","SL"]
@@ -33,14 +35,14 @@ omoc_all=[]
 
 for method in methods:
     resultNormal = estimation_om_oc(matrix.where(
-        events[event_columnname] == 'no'), method=method, ssa_as_Na=False)
+        events[event_columnname] == 'no'), method=method, ssa_as_Na=False, display_latex=True)
     omoc_noevent.append(resultNormal.params[1])
     resultEvent = estimation_om_oc(matrix.where(
         events[event_columnname].isin(event_labels)), method=method,
-        ssa_as_Na=False)
+        ssa_as_Na=False, display_latex=True)
     omoc_event.append(resultEvent.params[1])
     resultAll = estimation_om_oc(matrix, method=method,
-        ssa_as_Na=False)
+        ssa_as_Na=False, display_latex=True)
     omoc_all.append(resultAll.params[1])
     #print(result.summary())
 
@@ -94,8 +96,8 @@ mass = {}
 for key in mass_Hand[1].keys():
     mass[key] = (mass_Simon[1][key] + mass_Hand[1]
                  [key] + mass_Maenhaut[1][key])/3
-mass['others'] = ((mass_Simon[1]['others'] + mass_Maenhaut[1]['others']) /
-              2 + mass_Maenhaut[1]['trace_elements'])
+# Hand no tiene Others y Maenhaut tiene other + trace_elements
+mass['others'] = (mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3
 
 uncertainty = {}
 
@@ -119,18 +121,11 @@ EC_per = percentage_with_err(
     mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
 ssa_per = percentage_with_err(
     mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
-others_per = ((mass_Simon[1]['others'] + mass_Maenhaut[1]['others']) /
-              2 + mass_Maenhaut[1]['trace_elements']) / total_reconst_mass * 100
+others_per = ((mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3)/ total_reconst_mass * 100
 plt.style.use('seaborn-v0_8-paper')
 
 reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
                               totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
-
-
-# smoke_dates = list(matrix.index.where(events[event_columnname] == 'S').dropna())
-# print(smoke_dates)
-
-
 def select_events(df, events=events):
     return df.where(events[event_columnname].isin(event_labels))
 
@@ -141,6 +136,10 @@ def select_no_events(df, events=events):
 
 width = 2.5
 
+# mass_reconstruction_plot(matrix,events,total_reconst_mass, utotal_reconst_mass, unc, 
+#                          event_labels=event_labels,
+#                          savefig=True,imagepath='images/stacked_bar_daily_percentage_testM.png',
+#                          showplot=True)
 fig, ax = plt.subplots(nrows=2, figsize=(7, 5), sharex=True, dpi=200)
 
 
@@ -224,3 +223,89 @@ for key in keys:
     print(f"{key} & {np.min(mass[key]):.2f} -- {np.max(mass[key]):.2f} ({np.mean(mass[key]):.2f}) & "
       f"{np.min(mass_noevents):.2f} -- {np.max(mass_noevents):.2f} ({np.mean(mass_noevents):.2f}) & "
       f"{np.min(mass_events):.2f} -- {np.max(mass_events):.2f} ({np.mean(mass_events):.2f}) \\\\")
+
+# %% Table 3
+# #%matplotlib widget
+
+methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Hand_2011_mod' , 'Simon_2011']
+
+d_methodQuality = {}
+d_methodQuality_modall = {}
+d_methodQuality_moddis = {}
+
+for method in methods:
+    d_methodQuality[method] = 0
+    # mass = mass_reconstruction(matrix, unc, equation=method)
+    # reconst = mass[0]/matrix['PM2.5'] * 100
+    # ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+    #                    2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+    # d_methodQuality[method] = np.logical_and(
+    #     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+    
+    d_methodQuality_modall[method] = 0
+    mass = mass_reconstruction_mod(matrix, unc, events, equation=method, all_together=True)
+    reconst = mass[0]/matrix['PM2.5'] * 100
+    ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+                       2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+    d_methodQuality_modall[method] = np.logical_and(
+        ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+    
+    
+    d_methodQuality_moddis[method] = 0
+    mass = mass_reconstruction_mod(matrix, unc, events, equation=method, all_together=False)
+    reconst = mass[0]/matrix['PM2.5'] * 100
+    ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+                       2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+    d_methodQuality_moddis[method] = np.logical_and(
+        ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+
+#method_quality = pd.concat([pd.DataFrame([d]) for d in [d_methodQuality, d_methodQuality_modall, d_methodQuality_moddis]]).T
+#method_quality.set_index("Original","Modified all", "Modified disaggregated")
+#print(method_quality)
+# print(d_methodQuality)
+print(d_methodQuality_modall)
+print(d_methodQuality_moddis)
+
+# %%
+d_methodQuality = {}
+
+plt.style.use('seaborn-v0_8-paper')
+fig, axs = plt.subplots(4, 3, figsize=(16, 12))
+
+i, j = 0, 0
+for method in methods:
+    d_methodQuality[method] = 0
+    mass = mass_reconstruction(matrix, unc, equation=method)
+    reconst = mass[0]/matrix['PM2.5'] * 100
+    ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+                       2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+    axs[i][j].errorbar(matrix.index, reconst,  yerr=ureconst, capsize=2,
+                       capthick=1, marker='.', ecolor='cornflowerblue', zorder=0)
+    axs[i][j].plot(matrix.index, reconst.where(
+        events['Event'] == 'S'), 'o', label='Smoke', zorder=1)
+    axs[i][j].plot(matrix.index, reconst.where(events['Event'] ==
+                   'SP'), 'D', label='Smoke previous day', zorder=2)
+    axs[i][j].plot(matrix.index, reconst.where(
+        events['Event'] == 'SN'), 's', label='Smoke next day', zorder=3)
+    axs[i][j].set_title(method)
+    axs[i][j].legend(loc=9)
+    axs[i][j].axhline(80, color='k')
+    axs[i][j].axhline(120, color='k')
+    axs[i][j].tick_params(labelrotation=0)
+    j += 1
+    if j % 3 == 0:
+        j = 0
+        i += 1
+    d_methodQuality[method] = np.logical_and(
+        ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+
+for x in range(0, 3):
+    axs[x][0].set_ylabel('Mass reconstructed [%]')
+    axs[-1][x].set_xlabel('Date')
+
+plt.show()
+print(d_methodQuality)
+
+
+# %%
