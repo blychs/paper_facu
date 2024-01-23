@@ -136,10 +136,10 @@ with plt.style.context('seaborn-v0_8-paper'):
                             "NH$_4^+$"])
     ax[1].set_title("SSA and II")
 
-    sns.boxplot(matrix[["Na no sol", "Ca", "Al", "Mg", "Fe", "Ti", "Mn"]].apply(over_gram),
+    sns.boxplot(matrix[["Ca", "Al", "Mg", "Fe", "Ti", "Mn"]].apply(over_gram),
                 ax = ax[2], showmeans=True,
                 **PROPS)
-    ax[2].set_xticklabels(["Na\n(insol)", "Ca", "Al", "Mg", "Fe", "Ti", "Mn"])
+    ax[2].set_xticklabels(["Ca", "Al", "Mg", "Fe", "Ti", "Mn"])
     ax[2].set_title("Crustal (GM,\nconstruction/demolition)")
 
     sns.boxplot(matrix[["K"]].apply(over_gram),
