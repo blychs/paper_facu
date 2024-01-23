@@ -84,6 +84,9 @@ print(beta_omoc_all,beta_omoc_event,beta_omoc_noevent)
 
 # %%
 # #%matplotlib widget
+beta_omoc_noevent=1.8
+beta_omoc_event=2.3
+beta_omoc_all=2.1
 mass_Simon = mass_reconstruction_mod(
     matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
 mass_Hand = mass_reconstruction_mod(
@@ -196,7 +199,7 @@ ax[1].bar(matrix.index.values, others_per.values, width, yerr=reconst['uperc'],
           label='Others')
 ax[1].axhline(100, linestyle=':', color='k')
 ax[1].axhline(100, linestyle=':', color='k')
-ax[1].axhspan(80, 120, alpha=0.2, color='y')
+ax[1].axhspan(80, 120, alpha=0.3, color='y')
 ax[1].set_ylabel('Reconstructed mass (%)')
 ax[1].set_xlabel('Date')
 handles, labels = ax[1].get_legend_handles_labels()
@@ -228,7 +231,7 @@ for key in keys:
 # #%matplotlib widget
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
-           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011', 'Hand_2011_mod' , 'Simon_2011']
+           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011',  'Simon_2011']
 
 d_methodQuality = {}
 d_methodQuality_modall = {}
@@ -236,34 +239,115 @@ d_methodQuality_moddis = {}
 
 for method in methods:
     d_methodQuality[method] = 0
-    # mass = mass_reconstruction(matrix, unc, equation=method)
+    mass = mass_reconstruction(matrix, unc, equation=method)
     # reconst = mass[0]/matrix['PM2.5'] * 100
     # ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
     #                    2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
     # d_methodQuality[method] = np.logical_and(
     #     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
-    
+    perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
+    d_methodQuality[method] = np.logical_and(
+   ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)).sum()
+
     d_methodQuality_modall[method] = 0
-    mass = mass_reconstruction_mod(matrix, unc, events, equation=method, all_together=True)
-    reconst = mass[0]/matrix['PM2.5'] * 100
-    ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
-                       2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+    mass = mass_reconstruction_mod(matrix, unc, events, equation=method, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=True)
+    # reconst = mass[0]/matrix['PM2.5'] * 100
+    # ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+    #                    2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+    # d_methodQuality_modall[method] = np.logical_and(
+    #     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+    perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
     d_methodQuality_modall[method] = np.logical_and(
-        ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
-    
+   ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)).sum()
+
     
     d_methodQuality_moddis[method] = 0
-    mass = mass_reconstruction_mod(matrix, unc, events, equation=method, all_together=False)
-    reconst = mass[0]/matrix['PM2.5'] * 100
-    ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
-                       2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
-    d_methodQuality_moddis[method] = np.logical_and(
-        ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+    mass = mass_reconstruction_mod(matrix, unc, events, equation=method, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
+    # reconst = mass[0]/matrix['PM2.5'] * 100
+    # ureconst = np.sqrt((1/matrix['PM2.5'] * mass[2]) **
+    #                    2 + (matrix['PM2.5']/mass[0]/mass[0] * unc['PM2.5'])**2) * 100
+    # d_methodQuality_moddis[method] = np.logical_and(
+    #     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+    perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
+    # d_methodQuality_moddis[method] = np.logical_and(
+    #     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
 
-#method_quality = pd.concat([pd.DataFrame([d]) for d in [d_methodQuality, d_methodQuality_modall, d_methodQuality_moddis]]).T
+    d_methodQuality_moddis[method] = np.logical_and(
+    ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)
+    ).sum()
+
+method="Lichtig_2024"
+d_methodQuality[method] = 0
+mass_Simon = mass_reconstruction(
+    matrix, unc,  equation="Simon_2011")
+mass_Hand = mass_reconstruction(
+    matrix, unc, equation="Hand_2011")
+mass_Maenhaut = mass_reconstruction(
+    matrix, unc, equation="Maenhaut_2002")
+
+mass = average_mass_reconstruction(mass_Hand,mass_Maenhaut,mass_Simon)
+
+# reconst = mass[0]/matrix['PM2.5'] * 100
+# ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+#                     2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+# d_methodQuality[method] = np.logical_and(
+#     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+
+perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
+d_methodQuality[method] = np.logical_and(
+   ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)).sum()
+
+d_methodQuality_modall[method] = 0
+
+mass_Simon = mass_reconstruction_mod(
+    matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=True)
+mass_Hand = mass_reconstruction_mod(
+    matrix, unc, events=events, equation="Hand_2011", event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=True)
+mass_Maenhaut = mass_reconstruction_mod(
+    matrix, unc, events=events, equation="Maenhaut_2002", event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=True)
+
+mass=average_mass_reconstruction(mass_Hand,mass_Maenhaut,mass_Simon)
+
+# reconst = mass[0]/matrix['PM2.5'] * 100
+# ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+#                     2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
+# d_methodQuality_moddis[method] = np.logical_and(
+#     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+
+d_methodQuality_modall[method] = np.logical_and(
+   ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)
+).sum()
+# d_methodQuality_modall[method] = np.logical_and(
+#     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+
+
+d_methodQuality_moddis[method] = 0
+mass_Simon = mass_reconstruction_mod(
+    matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
+mass_Hand = mass_reconstruction_mod(
+    matrix, unc, events=events, equation="Hand_2011", event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
+mass_Maenhaut = mass_reconstruction_mod(
+    matrix, unc, events=events, equation="Maenhaut_2002", event_labels=event_labels, event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
+
+mass = average_mass_reconstruction(mass_Hand,mass_Maenhaut,mass_Simon)
+
+# reconst = mass[0]/matrix['PM2.5'] * 100
+# ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
+#                     2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
+
+perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
+# d_methodQuality_moddis[method] = np.logical_and(
+#     ((reconst + ureconst) > 80), ((reconst - ureconst) < 120)).sum()
+
+d_methodQuality_moddis[method] = np.logical_and(
+   ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)
+).sum()
+
+method_quality = pd.concat([pd.DataFrame([d]) for d in [d_methodQuality, d_methodQuality_modall, d_methodQuality_moddis]]).T
 #method_quality.set_index("Original","Modified all", "Modified disaggregated")
-#print(method_quality)
-# print(d_methodQuality)
+print(method_quality)
+print(d_methodQuality)
 print(d_methodQuality_modall)
 print(d_methodQuality_moddis)
 
@@ -272,22 +356,27 @@ d_methodQuality = {}
 
 plt.style.use('seaborn-v0_8-paper')
 fig, axs = plt.subplots(4, 3, figsize=(16, 12))
-
+# methods=['Maenhaut_2002','Hand_2011','Simon_2011']
 i, j = 0, 0
 for method in methods:
     d_methodQuality[method] = 0
-    mass = mass_reconstruction(matrix, unc, equation=method)
+    mass = mass_reconstruction_mod(
+        matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, 
+        event_column=event_columnname, omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, 
+        omoc_all=beta_omoc_all, all_together=False)
     reconst = mass[0]/matrix['PM2.5'] * 100
     ureconst = np.sqrt((1/matrix['PM2.5'] * unc['PM2.5']) **
                        2 + (matrix['PM2.5']/mass[0]/mass[0] * mass[2])**2) * 100
     axs[i][j].errorbar(matrix.index, reconst,  yerr=ureconst, capsize=2,
                        capthick=1, marker='.', ecolor='cornflowerblue', zorder=0)
     axs[i][j].plot(matrix.index, reconst.where(
-        events['Event'] == 'S'), 'o', label='Smoke', zorder=1)
+        events[event_columnname] == 'S'), 'o', label='Smoke', zorder=1)
     axs[i][j].plot(matrix.index, reconst.where(events['Event'] ==
                    'SP'), 'D', label='Smoke previous day', zorder=2)
     axs[i][j].plot(matrix.index, reconst.where(
-        events['Event'] == 'SN'), 's', label='Smoke next day', zorder=3)
+        events[event_columnname] == 'SN'), 's', label='Smoke next day', zorder=3)
+    axs[i][j].plot(matrix.index, reconst.where(
+        events[event_columnname] == 'SL'), 'o', label='Smoke local', zorder=4)
     axs[i][j].set_title(method)
     axs[i][j].legend(loc=9)
     axs[i][j].axhline(80, color='k')
@@ -307,5 +396,24 @@ for x in range(0, 3):
 plt.show()
 print(d_methodQuality)
 
+
+# %%
+def average_mass_reconstruction(mass_Hand,mass_Maenhaut,mass_Simon):
+
+    categories = {}
+
+    for key in mass_Hand[1].keys():
+        categories[key] = (mass_Simon[1][key] + mass_Hand[1][key] + mass_Maenhaut[1][key])/3
+    # Hand no tiene Others y Maenhaut tiene other + trace_elements
+    categories['others'] = (mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3
+    
+    ucategories = {}
+
+    for key in mass_Hand[3].keys():
+        ucategories[key] = np.linalg.norm([mass_Hand[3][key], mass_Maenhaut[3][key], mass_Simon[3][key]], axis=0)
+
+    closure = (mass_Simon[0] + mass_Hand[0] + mass_Maenhaut[0])/3
+    uclosure = np.linalg.norm([mass_Simon[2], mass_Hand[2], mass_Maenhaut[2]], axis=0)
+    return closure, categories, uclosure, ucategories
 
 # %%
