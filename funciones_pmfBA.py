@@ -1194,6 +1194,12 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                               betas_all[2] * concentration_matrix['NH4NO3'])
             uinorganic_ions = np.linalg.norm( [  betas_all[1] * uncertainty_matrix['(NH4)2SO4'],  
                                                betas_all[2] * uncertainty_matrix['NH4NO3'] ], axis=0)
+            
+            geological_minerals = betas_all[3] * (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
+                                   2.42 * concentration_matrix['Fe'] + 1.94 * concentration_matrix['Ti'])
+            ugeological_minerals = betas_all[3] * np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
+                                                    2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'] ], 
+                                                  axis=0)
         else:
             organic_mass = (betas_noevent[0] * concentration_matrix_noevent['OC']
                             + betas_event[0] * concentration_matrix_event['OC'])
@@ -1204,18 +1210,32 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                               betas_event[2] * concentration_matrix_event['NH4NO3'] +
                               betas_noevent[1] * concentration_matrix_noevent['(NH4)2SO4'] + 
                               betas_noevent[2] * concentration_matrix_noevent['NH4NO3'])
+            
+            
             uinorganic_ions = np.linalg.norm( [(betas_event[1] * uncertainty_matrix_event['(NH4)2SO4'] +
                                                 betas_event[2] * uncertainty_matrix_noevent['(NH4)2SO4']),
                                                (betas_noevent[1] * uncertainty_matrix_noevent['(NH4)2SO4'] + 
-                                                betas_noevent[2] * uncertainty_matrix_noevent['NH4NO3'])],
-                                             axis=0)        
+                                                betas_noevent[2] * uncertainty_matrix_noevent['NH4NO3'])], axis=0)        
+        
+            geological_minerals = (betas_event[3] * (3.48 * concentration_matrix_event['Si'] + 
+                                                    1.63 * concentration_matrix_event['Ca'] +
+                                                    2.42 * concentration_matrix_event['Fe'] + 
+                                                    1.94 * concentration_matrix_event['Ti']) + 
+                                   betas_noevent[3] * (3.48 * concentration_matrix_event['Si'] + 
+                                                    1.63 * concentration_matrix_noevent['Ca'] +
+                                                    2.42 * concentration_matrix_noevent['Fe'] + 
+                                                    1.94 * concentration_matrix_noevent['Ti']) )
+            ugeological_minerals = np.linalg.norm( [betas_event[3] * 3.48 * uncertainty_matrix_event['Si'], 
+                                                    betas_event[3] * 1.63 * uncertainty_matrix_event['Ca'],
+                                                    betas_event[3] * 2.42 * uncertainty_matrix_event['Fe'], 
+                                                    betas_event[3] * 1.94 * uncertainty_matrix_event['Ti'],
+                                                    betas_noevent[3] * 3.48 * uncertainty_matrix_noevent['Si'], 
+                                                    betas_noevent[3] * 1.63 * uncertainty_matrix_noevent['Ca'],
+                                                    betas_noevent[3] * 2.42 * uncertainty_matrix_noevent['Fe'], 
+                                                    betas_noevent[3] * 1.94 * uncertainty_matrix_noevent['Ti']], axis=0)
+        
         elemental_C = concentration_matrix['EC']
         uelemental_C = uncertainty_matrix['EC']
-        
-        geological_minerals = (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
-                               2.42 * concentration_matrix['Fe'] + 1.94 * concentration_matrix['Ti'])
-        ugeological_minerals = np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
-                               2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'] ], axis=0)
         
         salt = 1.8 * concentration_matrix['Cl']
         usalt = 1.8 * uncertainty_matrix['Cl']
@@ -1232,13 +1252,29 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
         
         # Sumo directo uorganic_mass a uclosure porque es el unico termino de esa sumatoria en ambos casos, si agrego terminos 
         # a la sumatoria hay que agregar cada termino por separado y agregar el if de si es alltogether o no. Se está trabajando con error en norma 2 
-        uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
-                                    uorganic_mass,
-                                    uncertainty_matrix['EC'],
-                                    3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
-                                    2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'],
-                                    1.8 * uncertainty_matrix['Cl'],
-                                    1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        if all_together == True:
+            uclosure = np.linalg.norm( [ betas_all[1] * uncertainty_matrix['(NH4)2SO4'], 
+                                        betas_all[2] * uncertainty_matrix['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        betas_all[3] * 3.48 * uncertainty_matrix['Si'], 
+                                        betas_all[3] * 1.63 * uncertainty_matrix['Ca'],
+                                        betas_all[3] * 2.42 * uncertainty_matrix['Fe'], 
+                                        betas_all[3] * 1.94 * uncertainty_matrix['Ti'],
+                                        1.8 * uncertainty_matrix['Cl'],
+                                        1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        else:
+            uclosure = np.linalg.norm( [ betas_event[1] * uncertainty_matrix_event['(NH4)2SO4'] + betas_noevent[1] * uncertainty_matrix_noevent['(NH4)2SO4'], 
+                                        betas_event[2] * uncertainty_matrix_event['NH4NO3'] + betas_noevent[2] * uncertainty_matrix_noevent['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        3.48 * (betas_event[3] * uncertainty_matrix_event['Si'] + betas_noevent[3] * uncertainty_matrix_noevent['Si']), 
+                                        1.63 * (betas_event[3] * uncertainty_matrix_event['Ca'] + betas_noevent[3] * uncertainty_matrix_noevent['Ca']),
+                                        2.42 * (betas_event[3] * uncertainty_matrix_event['Fe'] +  betas_noevent[3] * uncertainty_matrix_noevent['Fe']),
+                                        1.94 * (betas_event[3] * uncertainty_matrix_event['Ti'] + betas_noevent[3] * uncertainty_matrix_noevent['Ti']),
+                                        1.8 * uncertainty_matrix_event['Cl'],
+                                        1.2 * uncertainty_matrix_event['K'], 
+                                        1.2 * 0.6 * uncertainty_matrix_event['Fe'] ], axis=0)
      
     closure = sum(categories.values())
     # categories['unexplained'] = concentration_matrix['PM2.5'] - closure
@@ -1263,8 +1299,7 @@ def linear_estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False, d
     from IPython.display import display, Markdown, Latex
     """
     Calculate the OM/OC ratio based on Simon et al 2011, using
-    a multiple regresion with ordinary least squares to adjust
-    functions from the method.
+    a linear regresion to adjust functions from the method.
     Default is Simon 2011:
     PM25 = mOC OC + msulf (NH4)2SO4 + mnit NH4NO3 + bsoil SOIL
            + EC + 1.8 Cl- + 1.2 (K - 0.6 Fe) + e
@@ -1903,6 +1938,69 @@ def calculate_seasonal(conc_matrix):
     ]]
 
     return(matrix_seasonal)
+
+
+def axvlines(ax=None, xs=[0, 1], ymin=0, ymax=1, **kwargs):
+    ax = ax or plt.gca()
+    for x in xs:
+        ax.axvline(x, ymin=ymin, ymax=ymax, **kwargs)
+
+def select_events(df, events=events):
+    return df.where(events[event_columnname].isin(event_labels))
+
+
+def select_no_events(df, events=events):
+    return df.where(~events[event_columnname].isin(event_labels))
+
+
+def average_mass_reconstruction(mass_Hand,mass_Maenhaut,mass_Simon):
+    # TypeError: loop of ufunc does not support argument 0 of type dict_values which has no callable conjugate method
+    categories = {}
+
+    for key in mass_Hand[1].keys():
+        categories[key] = (mass_Simon[1][key] + mass_Hand[1][key] + mass_Maenhaut[1][key])/3
+    # Hand no tiene Others y Maenhaut tiene other + trace_elements
+    categories['others'] = (mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3
+    
+    ucategories = {}
+    
+    for key in mass_Hand[3].keys():
+        ucategories[key] = np.linalg.norm([mass_Hand[3][key], mass_Maenhaut[3][key], mass_Simon[3][key]], ord=1, axis=0)/3
+    
+    ucategories["uothers"] = np.linalg.norm(
+        [mass_Simon[3]["uothers"], mass_Maenhaut[3]["uothers"], mass_Maenhaut[3]["utrace_elements"]],
+        ord=1, axis=0)/3
+
+    closure = sum(categories.values())
+    # print(pd.DataFrame.from_dict(ucategories))
+    uclosure = np.linalg.norm(pd.DataFrame.from_dict(ucategories), axis=1)
+    # print(uclosure)
+    return closure, categories, uclosure, ucategories
+
+def print_stats(model, X, y):
+    
+    params = np.append(model.intercept_,model.coef_)
+    predictions = model.predict(X)
+
+
+    newX = pd.DataFrame({"Constant":np.ones(len(X))}).join(pd.DataFrame(X))
+    MSE = (sum((y-predictions)**2))/(len(newX)-len(newX.columns))
+
+    var_b = MSE*(np.linalg.inv(np.dot(newX.T,newX)).diagonal())
+    sd_b = np.sqrt(var_b)
+    ts_b = params/ sd_b
+
+    p_values =[2*(1-stats.t.cdf(np.abs(i),(len(newX)-len(X[0])))) for i in ts_b]
+
+    sd_b = np.round(sd_b,3)
+    ts_b = np.round(ts_b,3)
+    p_values = np.round(p_values,3)
+    params = np.round(params,4)
+
+    myDF3 = pd.DataFrame()
+    myDF3["Coefficients"],myDF3["Standard Errors"],myDF3["t values"],myDF3["p-value"] = [params,sd_b,ts_b,p_values]
+    print(myDF3)
+
 class Equation:
     """Class that represent a equation for mass reconstruction"""
     def __init__(self, name, filenameParameters):

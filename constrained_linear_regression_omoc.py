@@ -13,6 +13,7 @@ from scipy.stats import linregress, spearmanr, zscore
 import statsmodels.api as sm
 from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
 from funciones_pmfBA import estimation_om_oc, calculate_seasonal, linear_estimation_om_oc
+from funciones_pmfBA import print_stats
 from load_data import load_data
 import statsmodels
 import statsmodels.api as sm
@@ -74,8 +75,12 @@ intercept_base = (concentration_matrix["EC"] + salt +
 model = ConstrainedLinearRegression()
 min_coef = np.array([1,0.59,-0.9,0.41])
 # min_coef = np.array([-np.inf,-np.inf,-np.inf,-np.inf])
+min_coef = np.array([-np.inf,1,1,1])
+
 max_coef = np.array([3.8,1.53,1.35,1.63])
 # max_coef = np.array([np.inf,np.inf,np.inf,np.inf])
+max_coef = np.array([np.inf,1,1,1])
+
 
 print("Events")        
 y = (concentration_matrix['PM2.5'] - intercept_base).where(events[event_columnname].isin(event_labels)).dropna().values
@@ -86,30 +91,8 @@ X = np.column_stack((concentration_matrix["OC"].where(events[event_columnname].i
 model.fit(X, y, max_coef=max_coef, min_coef=min_coef)
 # print(model.intercept_)
 print(model.coef_)
-params = np.append(model.intercept_,model.coef_)
-predictions = model.predict(X)
-
-newX = pd.DataFrame({"Constant":np.ones(len(X))}).join(pd.DataFrame(X))
-MSE = (sum((y-predictions)**2))/(len(newX)-len(newX.columns))
-
-# Note if you don't want to use a DataFrame replace the two lines above with
-# newX = np.append(np.ones((len(X),1)), X, axis=1)
-# MSE = (sum((y-predictions)**2))/(len(newX)-len(newX[0]))
-
-var_b = MSE*(np.linalg.inv(np.dot(newX.T,newX)).diagonal())
-sd_b = np.sqrt(var_b)
-ts_b = params/ sd_b
-
-p_values =[2*(1-stats.t.cdf(np.abs(i),(len(newX)-len(X[0])))) for i in ts_b]
-
-sd_b = np.round(sd_b,3)
-ts_b = np.round(ts_b,3)
-p_values = np.round(p_values,3)
-params = np.round(params,4)
-
-myDF3 = pd.DataFrame()
-myDF3["Coefficients"],myDF3["Standard Errors"],myDF3["t values"],myDF3["Probabilities"] = [params,sd_b,ts_b,p_values]
-print(myDF3)
+betas_event=model.coef_
+print_stats(model, X, y)
 
 print("No Events")    
 y = (concentration_matrix['PM2.5'] - intercept_base).where(events[event_columnname] == 'no').dropna().values
@@ -120,30 +103,8 @@ X = np.column_stack((concentration_matrix["OC"].where(events[event_columnname] =
 model.fit(X, y, max_coef=max_coef, min_coef=min_coef)
 # print(model.intercept_)
 print(model.coef_)
-params = np.append(model.intercept_,model.coef_)
-predictions = model.predict(X)
-
-newX = pd.DataFrame({"Constant":np.ones(len(X))}).join(pd.DataFrame(X))
-MSE = (sum((y-predictions)**2))/(len(newX)-len(newX.columns))
-
-# Note if you don't want to use a DataFrame replace the two lines above with
-# newX = np.append(np.ones((len(X),1)), X, axis=1)
-# MSE = (sum((y-predictions)**2))/(len(newX)-len(newX[0]))
-
-var_b = MSE*(np.linalg.inv(np.dot(newX.T,newX)).diagonal())
-sd_b = np.sqrt(var_b)
-ts_b = params/ sd_b
-
-p_values =[2*(1-stats.t.cdf(np.abs(i),(len(newX)-len(X[0])))) for i in ts_b]
-
-sd_b = np.round(sd_b,3)
-ts_b = np.round(ts_b,3)
-p_values = np.round(p_values,3)
-params = np.round(params,4)
-
-myDF3 = pd.DataFrame()
-myDF3["Coefficients"],myDF3["Standard Errors"],myDF3["t values"],myDF3["Probabilities"] = [params,sd_b,ts_b,p_values]
-print(myDF3)
+betas_noevent=model.coef_
+print_stats(model, X, y)
 
 print("All together")    
 y = (concentration_matrix['PM2.5'] - intercept_base).values
@@ -153,33 +114,9 @@ X = np.column_stack((concentration_matrix["OC"].values,
                     soil.values))
 model.fit(X, y, max_coef=max_coef, min_coef=min_coef)
 print(model.coef_)
-
-params = np.append(model.intercept_,model.coef_)
-predictions = model.predict(X)
-
-
-newX = pd.DataFrame({"Constant":np.ones(len(X))}).join(pd.DataFrame(X))
-MSE = (sum((y-predictions)**2))/(len(newX)-len(newX.columns))
-
-# Note if you don't want to use a DataFrame replace the two lines above with
-# newX = np.append(np.ones((len(X),1)), X, axis=1)
-# MSE = (sum((y-predictions)**2))/(len(newX)-len(newX[0]))
-
-var_b = MSE*(np.linalg.inv(np.dot(newX.T,newX)).diagonal())
-sd_b = np.sqrt(var_b)
-ts_b = params/ sd_b
-
-p_values =[2*(1-stats.t.cdf(np.abs(i),(len(newX)-len(X[0])))) for i in ts_b]
-
-sd_b = np.round(sd_b,3)
-ts_b = np.round(ts_b,3)
-p_values = np.round(p_values,3)
-params = np.round(params,4)
-
-myDF3 = pd.DataFrame()
-myDF3["Coefficients"],myDF3["Standard Errors"],myDF3["t values"],myDF3["Probabilities"] = [params,sd_b,ts_b,p_values]
-print(myDF3)
-# print(model.intercept_)
+betas_all=model.coef_
+print_stats(model, X, y)
 
 
 # %%
+
