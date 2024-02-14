@@ -72,7 +72,7 @@ print(beta_omoc_all,beta_omoc_event,beta_omoc_noevent)
 
 # %% TypeError: loop of ufunc does not support argument 0 of type dict_values which has no callable conjugate method
 
-beta_omoc_noevent=2
+beta_omoc_noevent=1.9
 beta_omoc_event=2.6
 beta_omoc_all=2.3
 mass_Simon = mass_reconstruction_mod(
@@ -216,7 +216,7 @@ for key in keys:
 #####################################################################################
 # %% Table 3
 # #%matplotlib widget
-beta_omoc_noevent=2
+beta_omoc_noevent=1.9       
 beta_omoc_event=2.6
 beta_omoc_all=2.3
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',

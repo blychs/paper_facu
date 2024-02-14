@@ -1945,11 +1945,11 @@ def axvlines(ax=None, xs=[0, 1], ymin=0, ymax=1, **kwargs):
     for x in xs:
         ax.axvline(x, ymin=ymin, ymax=ymax, **kwargs)
 
-def select_events(df, events=events):
+def select_events(df):#, events=events):
     return df.where(events[event_columnname].isin(event_labels))
 
 
-def select_no_events(df, events=events):
+def select_no_events(df):#, events=events):
     return df.where(~events[event_columnname].isin(event_labels))
 
 
