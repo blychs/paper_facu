@@ -47,17 +47,20 @@ lonlatinc <- 0.5
 # PSCF loop ####
 keys = names(trajconchem)[c(14:44, 46,52)]
 print(keys)
+for (title in keys) {
+  print(title)
+  png(paste0(pathgraphs,"/PSCF500m_75p_",title,".png"), width = 590 * 3, height =592* 3, res = 300)
+  pscf<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
+                  pollutant = title , statistic = "pscf", limits = pscflims, percentile = 75,
+                  projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                  cols = "heat", smooth = F,  border = NA, 
+                  grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                  origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                  lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+  dev.off()
+  }
 
-png(paste0(pathgraphs,"/PSCF500m_75p_EC.png"), width = 590 * 3, height =592* 3, res = 300)
-pscf<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
-                pollutant = "EC", statistic = "pscf", 
-                percentile = 75,
-                projection = "stereographic",   orientation=c(0,-65,0), 
-                parameters = NULL,
-                cols = "heat", smooth = F,  border = NA, 
-                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
-                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
-                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+
 dev.off()
 
 # PSCF EC ####
