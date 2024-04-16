@@ -234,6 +234,7 @@ for key in keys:
 #####################################################################################
 # %% Table 3
 # #%matplotlib widget
+<<<<<<< HEAD
 # sin c
 beta_omoc_noevent=1.7       
 beta_omoc_event=2.5
@@ -243,6 +244,11 @@ beta_omoc_all=2.0
 # beta_omoc_noevent=1.9       
 # beta_omoc_event=2.4
 # beta_omoc_all=2.2
+=======
+beta_omoc_noevent=1.7       
+beta_omoc_event=2.5
+beta_omoc_all=2.0
+>>>>>>> origin/meli
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011',  'Simon_2011']
 
