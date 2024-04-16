@@ -28,6 +28,9 @@ plt.style.use('seaborn-v0_8-paper')
 matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                               'BA_events_testM.xlsx')
+datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31']
+matrix=matrix.drop(datesdrop,axis=0)
+events=events.drop(datesdrop,axis=0)
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_1994', 'Chow_1996', 'Andrews_2000',
@@ -35,7 +38,7 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Hand_2011','Simon_2011']
 
 event_columnname="Event_M"
-event_labels= ["S", "SP", "SN","SL"]
+event_labels= ["S", "SP", "SN","SL","SC"]
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]
@@ -75,11 +78,11 @@ intercept_base = (concentration_matrix["EC"] + salt +
 model = ConstrainedLinearRegression()
 min_coef = np.array([1,0.59,-0.9,0.41])
 # min_coef = np.array([-np.inf,-np.inf,-np.inf,-np.inf])
-min_coef = np.array([-np.inf,1,1,1])
+#min_coef = np.array([-np.inf,1,1,1])
 
 max_coef = np.array([3.8,1.53,1.35,1.63])
 # max_coef = np.array([np.inf,np.inf,np.inf,np.inf])
-max_coef = np.array([np.inf,1,1,1])
+#max_coef = np.array([np.inf,1,1,1])
 
 
 print("Events")        
