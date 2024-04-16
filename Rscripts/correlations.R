@@ -27,8 +27,9 @@ PMF_BA_full <- read_excel("PMF_BA_full.xlsx",
                                                         "numeric", "numeric", "numeric"),
                           na ='-999')
 PMF_BA_full=dplyr::rename(PMF_BA_full, EC = 'C Elemental',TC = 'C Total',OC = 'C Orgánico')
+PMF_BA_full$OC_EC = PMF_BA_full$OC/PMF_BA_full$EC
+PMF_BA_full$OC_K=PMF_BA_full$OC/PMF_BA_full$K
 PMF_BA_full_so=PMF_BA_full[PMF_BA_full$date<=as.POSIXct('2019-05-23') | PMF_BA_full$date>=as.POSIXct('2019-06-02'),]
-       
 corPlot(PMF_BA_full_so, dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
 corPlot(PMF_BA_full, dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
 

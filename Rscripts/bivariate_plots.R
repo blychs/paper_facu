@@ -42,6 +42,7 @@ rm(data)
 # rm(meteodata)
 
 mergeddata$OC_EC = mergeddata$`C.Orgánico`/mergeddata$`C.Elemental`
+mergeddata$OC_K=mergeddata$`C.Orgánico`/mergeddata$K
 #polarPlot(mergeddata, pollutant = "OC_EC", statistic = "mean",  min.bin = 2, main='OC/EC')
 ppEC<-polarPlot(mergeddata, pollutant = "C.Elemental", statistic = "mean",  min.bin = 2, 
           upper =upper_windspeed, key.footer="[ug/m3]",key.header = "EC",mis.col = "transparent",
