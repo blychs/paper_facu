@@ -32,12 +32,14 @@ PMF_BA_full$OC_K=PMF_BA_full$OC/PMF_BA_full$K
 PMF_BA_full_so=PMF_BA_full[PMF_BA_full$date<=as.POSIXct('2019-05-23') | PMF_BA_full$date>=as.POSIXct('2019-06-02'),]
 corPlot(PMF_BA_full_so, dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
 corPlot(PMF_BA_full, dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-
+quantile(mydata$`PM2,5`, na.rm = T, 0.9)
+quantile(mydata$`PM2,5`, na.rm = T, 0.95)
+quantile(mydata$`PM2,5`, na.rm = T, 0.99)
 corPlot(PMF_BA_full, dendrogram = TRUE,method = "spearman", main ="R spearman, matriz completa")
 corPlot(PMF_BA_full_so, dendrogram = TRUE,method = "spearman", main ="R spearman, sin outliers")
 
 # Define event levels
-event_levels <- c("SN", "SL", "S")
+event_levels <- c("SN", "SL", "S", "SC")
 
 # Count the number of events
 event_count <- sum(table(BA_events_testM$Event_M[month(BA_events_testM$date)>=3&month(BA_events_testM$date)<=5])[event_levels])

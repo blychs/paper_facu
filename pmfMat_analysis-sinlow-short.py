@@ -21,7 +21,9 @@ matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.x
                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                               'BA_events_testM.xlsx')
 
-
+datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31']
+matrix=matrix.drop(datesdrop,axis=0)
+events=events.drop(datesdrop,axis=0)
 matrix.describe().to_csv('description_statistics_allM.csv')
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
@@ -31,7 +33,7 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
 
 
 event_columnname="Event_M"
-event_labels= ["S", "SP", "SN","SL"]
+event_labels= ["S", "SP", "SN","SL","SC"]
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]
@@ -55,26 +57,42 @@ for method in methods:
     resultAll = estimation_om_oc(matrix, method=method,
         ssa_as_Na=False, display_latex=False)
     omoc_all.append(resultAll.params[1])
-    print("No Events & ", method, '&', f'{resultNormal.params[1]:.4g}', '&',
+    # print("No Events & ", method, '&', f'{resultNormal.params[1]:.4g}', '&',
+    #      f'{resultNormal.bse[1]:.2g}', '&',
+    #      f'{resultNormal.pvalues[1]:.3g}', '\\\\')
+    # print("Events & ",method, '&', f'{resultEvent.params[1]:.4g}', '&',
+    #      f'{resultEvent.bse[1]:.2g}', '&',
+    #      f'{resultEvent.pvalues[1]:.3g}', '\\\\')
+    # print("All together & ",method, '&', f'{resultAll.params[1]:.4g}', '&',
+    #      f'{resultAll.bse[1]:.2g}', '&',
+    #      f'{resultAll.pvalues[1]:.3g}', '\\\\')
+    print(method, '&', f'{resultNormal.params[1]:.2g}', '&',
          f'{resultNormal.bse[1]:.2g}', '&',
-         f'{resultNormal.pvalues[1]:.3g}', '\\\\')
-    print("Events & ",method, '&', f'{resultEvent.params[1]:.4g}', '&',
+         f'{resultNormal.pvalues[1]:.2g}', "& ", f'{resultEvent.params[1]:.2g}', '&',
          f'{resultEvent.bse[1]:.2g}', '&',
-         f'{resultEvent.pvalues[1]:.3g}', '\\\\')
-    print("All together & ",method, '&', f'{resultAll.params[1]:.4g}', '&',
+         f'{resultEvent.pvalues[1]:.2g}', "& ", f'{resultAll.params[1]:.2g}', '&',
          f'{resultAll.bse[1]:.2g}', '&',
-         f'{resultAll.pvalues[1]:.3g}', '\\\\')
+         f'{resultAll.pvalues[1]:.2g}', '\\\\')
 beta_omoc_noevent=np.round(np.mean(omoc_noevent),1)
 beta_omoc_event=np.round(np.mean(omoc_event),1)
 beta_omoc_all=np.round(np.mean(omoc_all),1)
-print(beta_omoc_all,beta_omoc_event,beta_omoc_noevent)
+print(beta_omoc_noevent,beta_omoc_event,beta_omoc_all)
 
 
 # %% TypeError: loop of ufunc does not support argument 0 of type dict_values which has no callable conjugate method
+# Volver a cargar la matriz porque necesitamos las fechas con iones grandes
+matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
+                                              'gases_mean.csv', 'datos_meteo_obs_mean.csv',
+                                              'BA_events_testM.xlsx')
 
-beta_omoc_noevent=1.9
-beta_omoc_event=2.6
-beta_omoc_all=2.3
+datesdrop=['2020-03-01','2020-01-31']
+matrix=matrix.drop(datesdrop,axis=0)
+events=events.drop(datesdrop,axis=0)
+unc=unc.drop(datesdrop,axis=0)
+
+beta_omoc_noevent=1.7
+beta_omoc_event=2.5
+beta_omoc_all=2.0
 mass_Simon = mass_reconstruction_mod(
     matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, event_column=event_columnname, 
     omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
@@ -216,9 +234,9 @@ for key in keys:
 #####################################################################################
 # %% Table 3
 # #%matplotlib widget
-beta_omoc_noevent=1.9       
-beta_omoc_event=2.6
-beta_omoc_all=2.3
+beta_omoc_noevent=1.7       
+beta_omoc_event=2.5
+beta_omoc_all=2.0
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011',  'Simon_2011']
 
