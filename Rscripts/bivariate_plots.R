@@ -99,6 +99,18 @@ print(ppAs$plot,split=c(1, 1, 2, 1))
 print(ppSb$plot,split=c(2, 1, 2, 1), newpage=FALSE)
 dev.off()
 
+ppNi<-polarPlot(mergeddata, pollutant = "Ni", statistic = "mean",  min.bin = 2, 
+                upper =upper_windspeed, key.header="Ni",key.footer="[ug/m3]",
+                mis.col = "transparent", cols=colorset)
+ppV<-polarPlot(mergeddata, pollutant = "V", statistic = "mean",  min.bin = 2, 
+                upper =upper_windspeed, key.header ="V",key.footer="[ug/m3]",
+                mis.col = "transparent", cols=colorset)
+png(paste0(pathgraphs,"/polarplotNiV_",colorset,".png"), width = 717 * 5, height = 339* 5, res = 300)
+print(ppNi$plot,split=c(1, 1, 2, 1))
+print(ppV$plot,split=c(2, 1, 2, 1), newpage=FALSE)
+dev.off()
+
+scatterPlot(PMF_BA_full_so,x="NH4",y="nssSO4")
 # ## codigo anterior Pablo
 # keys = names(data)[2:45]
 # print(keys)
