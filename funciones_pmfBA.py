@@ -2008,3 +2008,4 @@ class Equation:
         self.name = name
         self.ocEvents = ocEvents
         self.ocNevents = ocNoevents
+# %%

@@ -17,13 +17,14 @@ from load_data import load_data
 
 
 plt.style.use('seaborn-v0_8-paper')
-matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
+matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv2.xlsx', 'data/PMF_BA_fullv2.xlsx',
                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
                                               'BA_events_testM.xlsx')
 
-datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31']
-matrix=matrix.drop(datesdrop,axis=0)
-events=events.drop(datesdrop,axis=0)
+# datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31','2019-08-04','2019-08-07','2019-08-10']
+# datesdrop=['2020-03-01','2020-01-31']
+# matrix=matrix.drop(datesdrop,axis=0)
+# events=events.drop(datesdrop,axis=0)
 matrix.describe().to_csv('description_statistics_allM.csv')
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
@@ -81,18 +82,18 @@ print(beta_omoc_noevent,beta_omoc_event,beta_omoc_all)
 
 # %% TypeError: loop of ufunc does not support argument 0 of type dict_values which has no callable conjugate method
 # Volver a cargar la matriz porque necesitamos las fechas con iones grandes
-matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
-                                              'gases_mean.csv', 'datos_meteo_obs_mean.csv',
-                                              'BA_events_testM.xlsx')
+# matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
+                                            #   'gases_mean.csv', 'datos_meteo_obs_mean.csv',
+                                            #   'BA_events_testM.xlsx')
 
-datesdrop=['2020-03-01','2020-01-31']
-matrix=matrix.drop(datesdrop,axis=0)
-events=events.drop(datesdrop,axis=0)
-unc=unc.drop(datesdrop,axis=0)
+# datesdrop=['2020-03-01','2020-01-31']
+# matrix=matrix.drop(datesdrop,axis=0)
+# events=events.drop(datesdrop,axis=0)
+# unc=unc.drop(datesdrop,axis=0)
 
-beta_omoc_noevent=1.7
-beta_omoc_event=2.5
-beta_omoc_all=2.0
+beta_omoc_noevent=1.9
+beta_omoc_event=2.6
+beta_omoc_all=2.2
 mass_Simon = mass_reconstruction_mod(
     matrix, unc, events=events, equation="Simon_2011",  event_labels=event_labels, event_column=event_columnname, 
     omoc_event=beta_omoc_event, omoc_noevent=beta_omoc_noevent, omoc_all=beta_omoc_all, all_together=False)
@@ -236,14 +237,14 @@ for key in keys:
 # #%matplotlib widget
 
 # sin c
-beta_omoc_noevent=1.7       
-beta_omoc_event=2.5
-beta_omoc_all=2.0
+beta_omoc_noevent=1.9       
+beta_omoc_event=2.6
+beta_omoc_all=2.2
 
-#con c
-# beta_omoc_noevent=1.9       
+# #con c
+# beta_omoc_noevent=1.6       
 # beta_omoc_event=2.4
-# beta_omoc_all=2.2
+# beta_omoc_all=2.0
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994', 'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006', 'Hand_2011',  'Simon_2011']
@@ -459,7 +460,9 @@ EC_per = percentage_with_err(
     mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
 ssa_per = percentage_with_err(
     mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
-others_per = ((mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3)/ total_reconst_mass * 100
+# others_per = ((mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3)/ total_reconst_mass * 100
+others_per = (mass_Simon[1]['others'])/ total_reconst_mass * 100
+
 plt.style.use('seaborn-v0_8-paper')
 
 reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
@@ -471,12 +474,12 @@ fig, ax = plt.subplots(nrows=3, figsize=(7, 7.5), sharex=True, dpi=200)
 
 ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
                color='k', capsize=2, capthick=1, lw=1, marker='.', label='Gravimetric mass', zorder=1)
-ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, color='red',
+ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, color='r',
                capsize=2, capthick=1, lw=1, marker='.', label='Reconstructed mass', zorder=0)
 ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
-ax[0].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(['S', 'SN', 'SP','SL'])) * 0, 'd',
-
+ax[0].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)) * 0, 'd',
            color='gray', label='Smoke events', zorder=3)
+
 # ax[0].plot(matrix.index, matrix['PM2.5'] - total_reconst_mass, '.-')
 # ax[0].plot(matrix.index, events[event_columnname].isin(event_labels), 'X')
 ax[0].legend()
@@ -534,3 +537,100 @@ fig.tight_layout()
 plt.subplots_adjust(hspace=.0)
 plt.subplots_adjust(wspace=.0)
 fig.savefig('images/stacked_bar_daily_percentage_Simon_residuosycategories.png')
+
+# %%
+#%% Solo Simon plot - Un panel
+
+total_reconst_mass, mass, utotal_reconst_mass, uncertainty = mass_reconstruction_mod(matrix, unc, events, 
+                                                                                     equation="Simon_2011", 
+                                                                                     omoc_event=beta_omoc_event, 
+                                                                                     omoc_noevent=beta_omoc_noevent, 
+                                                                                     omoc_all=beta_omoc_all, 
+                                                                                     all_together=False)
+organic_mass_per = percentage_with_err(
+    mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
+inorganic_ions_per = percentage_with_err(
+    mass['inorganic_ions'], matrix['PM2.5'], uncertainty['uinorganic_ions'], unc['PM2.5'])
+geological_minerals_per = percentage_with_err(
+    mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
+EC_per = percentage_with_err(
+    mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
+ssa_per = percentage_with_err(
+    mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
+others_per = ((mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3)/ total_reconst_mass * 100
+plt.style.use('seaborn-v0_8-paper')
+
+reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
+                              totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
+
+width = 2.5
+
+fig, ax = plt.subplots(nrows=1, figsize=(7, 4), sharex=True, dpi=200)
+
+ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
+               color='k', capsize=2, capthick=1, lw=0.5, linestyle='--', marker='.', 
+               label='Gravimetric mass', zorder=4)
+ax.set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
+# ax.plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels))*0+3, 'd', 
+#            color='gray', label='Smoke events', zorder=8)
+# ax.errorbar(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)), yerr=unc['PM2.5'],
+#                color='r', capsize=2, capthick=1, lw=0.5, linestyle='None', marker='.', label='Smoke events', zorder=5)
+ax.plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)), '.',
+           color='r', label='Smoke events', zorder=8)
+
+axvlines(ax=ax, xs=matrix.index.values, color='silver',
+         lw=0.5, linestyle='dashed', zorder=0)
+# axvlines(ax=ax, xs=matrix.index.values, color='silver',
+#          lw=0.5, linestyle='dashed', zorder=0)
+# axvlines(ax=ax, xs=matrix.index.values, color='silver',
+#          lw=0.5, linestyle='dashed', zorder=0)
+
+ax.bar(matrix.index.values, mass['organic_mass'].where(matrix['Na sol'].notna()).values, 
+          width,  label='OM')
+ax.bar(matrix.index.values, mass['inorganic_ions'].values,
+          width,  bottom=mass['organic_mass'].values, label='II')
+ax.bar(matrix.index.values, mass['geological_minerals'].values, width,
+          bottom=(mass['inorganic_ions'] + mass['organic_mass']).values, label='GM')
+ax.bar(matrix.index.values, mass['elemental_C'].values, width,
+          bottom=(mass['inorganic_ions'] + mass['organic_mass'] + mass['geological_minerals']).values, 
+          label='EC')
+ax.bar(matrix.index.values, mass['salt'].values, width,
+          bottom=(mass['elemental_C']+mass['inorganic_ions'] + mass['organic_mass'] + mass['geological_minerals']).values, 
+          label='SSA')
+ax.bar(matrix.index.values, mass['others'].values, width, yerr=utotal_reconst_mass,
+          error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
+                    'ecolor': '#696462', 'marker': 'o'},
+          bottom=(mass['salt']+ mass['elemental_C']+mass['inorganic_ions'] + mass['organic_mass'] + mass['geological_minerals']).values,
+          label='Others')
+ax.legend()
+
+
+# ax[1].axhline(100, linestyle=':', color='k')
+# ax[1].axhline(100, linestyle=':', color='k')
+# ax[1].axhspan(80, 120, alpha=0.3, color='y')
+# ax[1].set_ylabel('reconstructed mass (%)')
+# # ax[1].legend(ncol=3)
+# # ax[1].set_xlabel('date')
+# handles, labels = ax[1].get_legend_handles_labels()
+# ax[1].legend(reversed(handles), reversed(labels), loc=1,ncol=2)
+
+# ax[2].axhline(0, color="gray")
+# ax[2].errorbar(matrix.index, total_reconst_mass - matrix['PM2.5'],
+#                yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
+#                color='tab:blue', capsize=2, capthick=1, elinewidth=1,
+#                marker='o', label='no event', zorder=3)
+# ax[2].errorbar(matrix.index,
+#                (total_reconst_mass - matrix['PM2.5']).where(
+#                    events[event_columnname].isin(event_labels)),
+#                yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
+#                color='tab:red', capsize=2, capthick=1, elinewidth=1,
+#                marker='o', label='smoke event', zorder=3)
+# ax[2].set_ylim(bottom=-20, top=20)
+# ax[2].set_xlabel("date")
+# ax[2].set_ylabel("reconstructed - gravimetric ($\mu$g/m$^3$)")
+# ax[2].legend()
+fig.tight_layout()
+plt.subplots_adjust(hspace=.0)
+plt.subplots_adjust(wspace=.0)
+fig.savefig('images/stacked_bar_daily_Simon_residuosycategories.png')
+# %%
