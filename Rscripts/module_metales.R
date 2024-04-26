@@ -9,7 +9,7 @@ calculo_de_blanco <- function (Blancos, metodo) {
            Blanco_para_restar$Lote=as.factor(levels(Blancos$Lote))
          },
          "promedioporlote"={
-           Blanco_para_restar <- aggregate(Blancos[,c(-31,-32)], list(as.numeric(as.character(Blancos$Lote))), FUN=mean, na.rm=TRUE)
+           Blanco_para_restar <- aggregate(Blancos, list(as.numeric(as.character(Blancos$Lote))), FUN=mean, na.rm=TRUE)
            Blanco_para_restar <- Blanco_para_restar[,c(-31,-30)]
            Blanco_para_restar<- dplyr::rename(Blanco_para_restar, Lote=Group.1)
            Blanco_para_restar$Lote <- as.factor(Blanco_para_restar$Lote)
@@ -17,9 +17,16 @@ calculo_de_blanco <- function (Blancos, metodo) {
            Blanco_para_restar <- Blanco_para_restar[,c(6:29,1)]
          },
          "promediosinmaxnimin"={
+           # Blanco_para_restar <- Blancos %>% 
+           #   summarise(across(5:28, ~ {
+           #     x <- .[!.%in% c(min(., na.rm = TRUE), max(., na.rm = TRUE))]
+           #     mean(x, na.rm = TRUE)
+           #   }))
            Blanco_para_restar <- Blancos %>% 
              summarise(across(5:28, ~ {
-               x <- .[!.%in% c(min(., na.rm = TRUE), max(., na.rm = TRUE))]
+               min_val <- min(., na.rm = TRUE)
+               max_val <- max(., na.rm = TRUE)
+               x <- .[! (. == min_val | . == max_val) | (duplicated(.) & (. == min_val | . == max_val))]
                mean(x, na.rm = TRUE)
              }))
            Blanco_para_restar <- lapply(Blanco_para_restar, function(x) replace(x, is.nan(x), NA))

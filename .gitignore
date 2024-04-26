@@ -2,7 +2,6 @@
 *.tex
 *.zip
 *.ods
-*.xlsx
 elsarticle*
 *.ipynb
 *.docx
@@ -26,6 +25,5 @@ S_BsAs.csv
 .Rhistory
 .RData
 .Rhistory
-.gitignore
 .gitignore
 .Rproj.user

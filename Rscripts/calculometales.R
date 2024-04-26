@@ -14,6 +14,22 @@ source("Rscripts/module_metales.R")
 # extrafont::font_import()
 extrafont::loadfonts()
 # Cargar datos ####
+PMF_BA_full <- read_excel("PMF_BA_full.xlsx", 
+                          col_types = c("date", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric", 
+                                        "numeric", "numeric", "numeric"),na ='-999')
 BA_events_testM <- read_excel("BA_events_testM.xlsx",
                               col_types = c("date", "skip","numeric", "numeric", "numeric",
                                             "skip", "text","numeric"))
@@ -32,16 +48,22 @@ LD <- read_excel("data/Limites de detección.xlsx")
 Planilla_conjunta_Metales <- read_excel("data/Planilla conjunta Metales.xlsx", sheet = "Sheet1")
 # completando la serie temporal con los valores de limites de detección
 # Planilla_conjunta_Metales <- Planilla_conjunta_Metales %>%  mutate_at(vars(5:28), ~ replace(., . =="n.d", 0))
-nd=Planilla_conjunta_Metales$Be[1]
+nd=as.character(Planilla_conjunta_Metales$Be[1])
 Planilla_conjunta_Metales <- Planilla_conjunta_Metales %>% mutate(across(.cols = 5:28, .fns = ~ {
-  compuesto <- as.character(colnames(.))
-  limites_compuesto <- LD$LD[match(compuesto, LD$Compuesto)]
+  compuesto <- as.character(cur_column())
+  limites_compuesto <- LD$LD[which(LD$Compuesto==compuesto)]/2
+  replace(., . == nd, limites_compuesto)
+}))
+nd="d"
+Planilla_conjunta_Metales <- Planilla_conjunta_Metales %>% mutate(across(.cols = 5:28, .fns = ~ {
+  compuesto <- as.character(cur_column())
+  limites_compuesto <- (LD$LC[which(LD$Compuesto==compuesto)]-LD$LD[which(LD$Compuesto==compuesto)])/2
   replace(., . == nd, limites_compuesto)
 }))
 Planilla_conjunta_Metales$Lote=as.factor(Planilla_conjunta_Metales$Lote)
 Planilla_conjunta_Metales$Blanco=as.factor(Planilla_conjunta_Metales$Blanco)
-
-# summary(Planilla_conjunta_Metales)
+Planilla_conjunta_Metales[,c(5:28)]=sapply(Planilla_conjunta_Metales[,c(5:28)], as.numeric)
+write.csv2(Planilla_conjunta_Metales, file="data/Planilla_conjunta_MetalesconLDnum.csv", row.names = F)
 
 # Procesamiento de datos de ug/l a ug ####
 ugtotales=merge(Planilla_conjunta_Metales, volumen_tish, by="ID",all.x = TRUE)
@@ -51,7 +73,7 @@ ugtotales[,c(5:28)]=ugtotales[,c(5:28)]*ugtotales$volumen_aforo/1000*ugtotales$a
 Filtros=ugtotales[which(ugtotales$Blanco==0),]
 Filtros=merge(Filtros,BA_events_testM,by="ID")
 
-Blancos=ugtotales[which(ugtotales$Blanco==1),]
+Blancos=ugtotales[which(ugtotales$Blanco==1),c(-32,-31)]
 
 
 # Calculo de Blancos #### 
@@ -126,6 +148,13 @@ ggplot(Filtros)+geom_point(aes(x=date, y=Ca, color="Ca"))+geom_line(aes(x=date, 
 ggplot(Filtros)+geom_point(aes(x=date, y=Ca, color="Ca"))+geom_line(aes(x=date, y=Ca, color="Ca"))+
   geom_point(aes(x=date, y=K, color="K orig"),data=PMF_BA_full)+geom_line(aes(x=date, y=Ca, color="Ca orig"), 
                                                                      data=PMF_BA_full)
+
+columnas_comunes <- intersect(colnames(Filtros), colnames(PMF_BA_full))
+for (col in columnas_comunes) {
+  PMF_BA_full[[col]] <- Filtros[[col]]
+}
+
+write.csv2(PMF_BA_full,file = "data/PMF_BA_full_new.csv", row.names = F)
 #LD/2 para no detectados y 
 #(LC-LD)/2 para lo que estan entre detectado y cuatificado.
 # en los blancos  reemplazar por LD/2 
