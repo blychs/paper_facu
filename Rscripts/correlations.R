@@ -41,8 +41,8 @@ corPlot(PMF_BA_full_so, dendrogram = TRUE,method = "spearman", main ="R spearman
 corPlot(PMF_BA_full[,c(2:5,7,10:30,43:46)], dendrogram = TRUE,method = "spearman", main ="R spearman, matriz completa")
 corPlot(PMF_BA_full[,c(2:5,7,10:30,43:46)], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
 
-
-
+scatterPlot(PMF_BA_full, x="Ni", y="V")
+ggplot(PMF_BA_full)+ geom_point(aes(x=Ni, y=V))+geom_abline(slope = 0.7)+geom_abline(slope = 0.15)+geom_abline(slope =2.8)
 # Define event levels
 event_levels <- c("SN", "SL", "S", "SC")
 

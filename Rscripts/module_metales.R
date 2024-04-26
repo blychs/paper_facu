@@ -1,5 +1,9 @@
 calculo_de_blanco <- function (Blancos, metodo) {
   library(dplyr)
+  library(readxl)
+  library(readr) 
+  library(ranger)
+  library(plyr)
   switch(metodo,
          "promedio" = {
            Blanco_para_restar =  as.data.frame(t(apply(Blancos[,c(5:28)], 2, mean, na.rm=TRUE)))
