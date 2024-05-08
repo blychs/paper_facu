@@ -570,7 +570,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
 
 
 
-def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_2011', event_labels=['SP', 'S', 'SN','SL'], 
+def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_2011', event_labels=['SP', 'S', 'SN','SL','SC'], 
                             event_column="Event", omoc_event=2.6, omoc_noevent=2, omoc_all=2.3, 
                             betas_event=[1,1,1,1], betas_noevent=[1,1,1,1], betas_all =[1,1,1,1],
                             all_together=False):
@@ -1276,6 +1276,97 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                         1.2 * uncertainty_matrix_event['K'], 
                                         1.2 * 0.6 * uncertainty_matrix_event['Fe'] ], axis=0)
      
+    if equation == 'Simon_2011_linmod':
+        
+        if "(NH4)2SO4" not in concentration_matrix:
+            # Assume all SO4 is (NH4)2SO4
+            concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * concentration_matrix["SO4"]
+            uncertainty_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * uncertainty_matrix["SO4"]
+        if "NH4NO3" not in concentration_matrix:
+            # Assume all NO3 is NH4NO3
+            concentration_matrix["NH4NO3"] =  (80.043 / 62.004 ) * concentration_matrix["NO3"]
+            uncertainty_matrix["NH4NO3"] = (80.043 / 62.004 ) * uncertainty_matrix["NO3"]
+        
+        concentration_matrix_event=concentration_matrix.where(events[event_column].isin(event_labels), other=0)
+        concentration_matrix_noevent=concentration_matrix.where(~events[event_column].isin(event_labels), other=0)
+        uncertainty_matrix_event=uncertainty_matrix.where(events[event_column].isin(event_labels), other=0)
+        uncertainty_matrix_noevent=uncertainty_matrix.where(~events[event_column].isin(event_labels), other=0)
+        
+               
+        if all_together == True:
+            organic_mass = (betas_all[0] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[0] * uncertainty_matrix['OC'])
+            
+            residual = betas_all[1] + concentration_matrix['OC']*0
+        else:
+            organic_mass = (betas_noevent[0] * concentration_matrix_noevent['OC']
+                            + betas_event[0] * concentration_matrix_event['OC'])
+            uorganic_mass = (betas_noevent[0] * uncertainty_matrix_noevent['OC']
+                        + betas_event[0] * uncertainty_matrix_event['OC'])
+            
+            residual = (betas_noevent[1] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[1]
+                )
+        
+        inorganic_ions = (concentration_matrix['(NH4)2SO4'] + 
+                              concentration_matrix['NH4NO3'])
+        uinorganic_ions = np.linalg.norm( [  uncertainty_matrix['(NH4)2SO4'], 
+                                           uncertainty_matrix['NH4NO3'] ], axis=0)
+            
+        geological_minerals = (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
+                               2.42 * concentration_matrix['Fe'] + 1.94 * concentration_matrix['Ti'])
+        ugeological_minerals = np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
+                                                2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'] ], 
+                                                axis=0)
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        salt = 1.8 * concentration_matrix['Cl']
+        usalt = 1.8 * uncertainty_matrix['Cl']
+        
+        others = 1.2 * (concentration_matrix['K'] - 0.6 * concentration_matrix['Fe'])
+        uothers = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        
+
+        categories = {'inorganic_ions': inorganic_ions, 'organic_mass': organic_mass, 
+              'elemental_C': elemental_C, 'geological_minerals': geological_minerals,
+              'salt': salt, 'others': others, 'residual':residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 'uorganic_mass': uorganic_mass, 'usalt': usalt,
+                      'uelemental_C': uelemental_C, 'ugeological_minerals': ugeological_minerals, 
+                      'uothers': uothers}
+        
+        # Sumo directo uorganic_mass a uclosure porque es el unico termino de esa sumatoria en ambos casos, si agrego terminos 
+        # a la sumatoria hay que agregar cada termino por separado y agregar el if de si es alltogether o no. Se está trabajando con error en norma 2 
+        if all_together == True:
+            uclosure = np.linalg.norm( [uncertainty_matrix['(NH4)2SO4'], 
+                                        uncertainty_matrix['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        3.48 * uncertainty_matrix['Si'], 
+                                        1.63 * uncertainty_matrix['Ca'],
+                                        2.42 * uncertainty_matrix['Fe'], 
+                                        1.94 * uncertainty_matrix['Ti'],
+                                        1.8 * uncertainty_matrix['Cl'],
+                                        1.2 * uncertainty_matrix['K'], 
+                                        1.2 * 0.6 * uncertainty_matrix['Fe']], axis=0)
+        else:
+            uclosure = np.linalg.norm( [ uncertainty_matrix_event['(NH4)2SO4'] + 
+                                        uncertainty_matrix_noevent['(NH4)2SO4'], 
+                                        uncertainty_matrix_event['NH4NO3'] + 
+                                        uncertainty_matrix_noevent['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        3.48 * (uncertainty_matrix_event['Si'] +uncertainty_matrix_noevent['Si']), 
+                                        1.63 * (uncertainty_matrix_event['Ca'] +uncertainty_matrix_noevent['Ca']),
+                                        2.42 * (uncertainty_matrix_event['Fe'] +uncertainty_matrix_noevent['Fe']),
+                                        1.94 * (uncertainty_matrix_event['Ti'] +uncertainty_matrix_noevent['Ti']),
+                                        1.8 * uncertainty_matrix_event['Cl'],
+                                        1.2 * uncertainty_matrix_event['K'], 
+                                        1.2 * 0.6 * uncertainty_matrix_event['Fe'] ], axis=0)
+    
+    
     closure = sum(categories.values())
     # categories['unexplained'] = concentration_matrix['PM2.5'] - closure
     # ucategories['uunexplained'] = np.linalg.norm( [uclosure, uncertainty_matrix['PM2.5'] ], axis=0)

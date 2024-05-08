@@ -29,7 +29,7 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Hand_2011', 'Simon_2011']
 
 event_columnname="Event"
-event_labels= ["S", "SP", "SN","SL"]
+event_labels= ["S", "SP", "SN","SL","SC"]
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]

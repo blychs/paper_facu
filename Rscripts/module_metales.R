@@ -39,4 +39,5 @@ calculo_de_blanco <- function (Blancos, metodo) {
            Blanco_para_restar <- bind_rows(replicate(3, Blanco_para_restar, simplify = FALSE))
            Blanco_para_restar$Lote=as.factor(levels(Blancos$Lote))
          })
+  return(Blanco_para_restar)
   }
