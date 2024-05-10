@@ -3,7 +3,7 @@
 
 # In[ ]:
  
-
+ 
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -20,6 +20,1080 @@ def corr_matrix(df, minimum=-1, maximum=1, method='pearson'):
     máximas y mínimas'''
     correlation = df.corr(method)
     return correlation.where(correlation >= minimum).where(correlation <= maximum)
+
+
+def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_2011', event_labels=['SP', 'S', 'SN','SL','SC'], 
+                            event_column="Event_M", betas_event=[0,2.6,1,1,1], betas_noevent=[0,2,1,1,1], betas_all =[0,1.5,1,1,1],
+                            type_reconstruction="original"):
+    ''' type: original = Ecuación sin modificar
+              alltogether = Ecuación con ajuste de betaomoc para todos juntos
+              events = Ecuación con ajuste de beta omoc discriminando evento y no evento
+              
+              betas= [epsilon, OC, SO4, NO3, geological_minerals]
+              '''
+    closure = 0
+    concentration_matrix = conc_matrix.copy()
+    uncertainty_matrix = unc_matrix.copy()
+#    data_df2 = data_df.fillna(0)
+    if 'Si' not in concentration_matrix:
+        concentration_matrix['Si'] = 2.4729 * concentration_matrix['Al']
+        uncertainty_matrix['Si'] = 2.4729 * uncertainty_matrix['Al'] * 2 # Ese * 2 es solo para agrandar la incert Si
+    concentration_matrix['S'] = concentration_matrix['SO4']/3 
+    uncertainty_matrix['S'] = uncertainty_matrix['SO4']/3 
+    concentration_matrix['Sr'] = 0
+    uncertainty_matrix['Sr'] = 0
+    concentration_matrix['Hg'] = 0
+    uncertainty_matrix['Hg'] = 0
+    if "(NH4)2SO4" not in concentration_matrix:
+        # Assume all SO4 is (NH4)2SO4
+        concentration_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * concentration_matrix["SO4"]
+        uncertainty_matrix["(NH4)2SO4"] = (132.14 / 96.06 ) * uncertainty_matrix["SO4"]
+    if "NH4NO3" not in concentration_matrix:
+        # Assume all NO3 is NH4NO3
+        concentration_matrix["NH4NO3"] =  (80.043 / 62.004 ) * concentration_matrix["NO3"]
+        uncertainty_matrix["NH4NO3"] = (80.043 / 62.004 ) * uncertainty_matrix["NO3"]
+    if type_reconstruction =="original":
+            betas_all = [0,1.4,1,1,1]
+
+    
+    if equation == 'Macias_1981':
+        if type_reconstruction =="original":
+            betas_all = [0,1.5,1,1,1]
+        
+        
+        inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4NO3']
+        uinorganic_ions = np.linalg.norm( [uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (1.89 * concentration_matrix['Al'] + 2.14 * concentration_matrix['Si'] +
+                               1.4 * concentration_matrix['Ca'] + 1.2 * concentration_matrix['K'] +
+                               1.43 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                                1.4 * uncertainty_matrix['Ca'], 1.2 * uncertainty_matrix['K'],
+                                                1.43 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        trace_elements = (1.25 * concentration_matrix['Cu'] + 1.24 * concentration_matrix['Zn'] +
+                          1.08 * concentration_matrix['Pb'])
+        utrace_elements = np.linalg.norm( [1.25 * uncertainty_matrix['Cu'], 1.24 * uncertainty_matrix['Zn'],
+                                              1.08 * uncertainty_matrix['Pb'] ], axis=0)
+        
+        salt = concentration_matrix['Cl'] *0
+        usalt =uncertainty_matrix['Cl'] *0
+        
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        
+        uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                        1.4 * uncertainty_matrix['Ca'], 1.2 * uncertainty_matrix['K'],
+                                        1.43 * uncertainty_matrix['Fe'],
+                                        1.25 * uncertainty_matrix['Cu'], 1.24 * uncertainty_matrix['Zn'],
+                                        1.08 * uncertainty_matrix['Pb'] ], axis=0)
+        
+    if equation == 'Solomon_1989':
+        inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
+        uinorganic_ions = np.linalg.norm([ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+            
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (1.89 * concentration_matrix['Al'] + 2.14 * concentration_matrix['Si'] +
+                               1.4 * concentration_matrix['Ca'] + 1.43 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [1.89 * uncertainty_matrix['Al'] + 2.14 * uncertainty_matrix['Si'] +
+                               1.4 * uncertainty_matrix['Ca'] + 1.43 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        # Pide que sean por XRF salvo Na+ y Mg++, que deberían ser por AAS. No es el caso en ninguno
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+                          concentration_matrix['K'] +
+                          concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
+                          concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                          concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                          concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
+                          concentration_matrix['Sb'])
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+                                           uncertainty_matrix['K'] +
+                          uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
+                          uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
+                          uncertainty_matrix['Zn'] + uncertainty_matrix['As'] + uncertainty_matrix['Se'] +
+                          uncertainty_matrix['Sr'] + uncertainty_matrix['Pb'] + uncertainty_matrix['Hg'] +
+                          uncertainty_matrix['Sb'] ], axis=0)
+        
+        salt = concentration_matrix['Cl'] *0
+        usalt =uncertainty_matrix['Cl'] *0
+        
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        
+        uclosure = np.linalg.norm( [uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
+                                    uorganic_mass,
+                                    uncertainty_matrix['EC'],
+                                    1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                    1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
+                                    uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+                                    uncertainty_matrix['K'] +
+                                    uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
+                                    uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
+                                    uncertainty_matrix['Zn'] + uncertainty_matrix['As'] + uncertainty_matrix['Se'] +
+                                    uncertainty_matrix['Sr'] + uncertainty_matrix['Pb'] + uncertainty_matrix['Hg'] +
+                                    uncertainty_matrix['Sb'] ], axis=0)
+                                    
+    if equation == 'Chow_1994':
+        inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
+        uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+            
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (1.89 * concentration_matrix['Al'] + 2.14 * concentration_matrix['Si'] +
+                               1.4 * concentration_matrix['Ca'] + 1.43 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+                          concentration_matrix['K'] +
+                          concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
+                          concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                          concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                          concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
+                          concentration_matrix['Sb'])
+        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['Na no sol'],
+                                            uncertainty_matrix['K'],
+                                            uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+                                            uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                                            uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                                            uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
+                                            uncertainty_matrix['Sb'] ], axis=0)     
+        
+                
+        salt = concentration_matrix['Cl'] *0
+        usalt =uncertainty_matrix['Cl'] *0
+
+
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        # Pablo, este uclosure era el único multiplicado por 1.4
+        uclosure = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
+                                    uorganic_mass,
+                                    uncertainty_matrix['EC'],
+                                    1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                    1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
+                                    uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'],
+                                    uncertainty_matrix['K'],
+                                    uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+                                    uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                                    uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                                    uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
+                                    uncertainty_matrix['Sb'] ], axis=0)
+                                    
+        
+    if equation == 'Malm_1994':
+        inorganic_ions = 4.125 * concentration_matrix['S']
+        uinorganic_ions = 4.125 * uncertainty_matrix['S']
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+         
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
+                               1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
+                               2.42 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                               1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                               2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        salt = concentration_matrix['Cl'] *0
+        usalt =uncertainty_matrix['Cl'] *0
+        
+        trace_elements = concentration_matrix['Cl'] *0
+        utrace_elements =uncertainty_matrix['Cl'] *0
+        
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        uclosure = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'],
+                                    uorganic_mass,
+                                    uncertainty_matrix['EC'],
+                                    2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                    1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                    2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        
+    if equation == 'Chow_1996':
+        inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
+        uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'],
+                                           uncertainty_matrix['NH4'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (1.89 * concentration_matrix['Al'] + 2.14 * concentration_matrix['Si'] +
+                               1.4 * concentration_matrix['Ca'] + 1.43 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [ 1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                                 1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        salt = concentration_matrix['Na sol'] + concentration_matrix['Na no sol']  + concentration_matrix['Cl']
+        usalt = np.linalg.norm( [ uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'] ], axis=0)
+        
+        trace_elements = (concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
+                          concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                          concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                          concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
+                          concentration_matrix['Sb'])
+        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+                          uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                          uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                          uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
+                          uncertainty_matrix['Sb'] ], axis=0)
+       
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        uclosure = np.linalg.norm( [uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
+                                    uorganic_mass,
+                                    1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                    1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
+                                    uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'],
+                                    uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+                                    uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                                    uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                                    uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
+                                    uncertainty_matrix['Sb'] ], axis=0)
+        
+    if equation == 'Andrews_2000':
+        inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
+        uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (1.89 * concentration_matrix['Al'] + 2.14 * concentration_matrix['Si'] +
+                               2 * concentration_matrix['Ca'] + 1.43 * concentration_matrix['Fe'] +
+                               1.67 * concentration_matrix['Ti'])
+        ugeological_minerals = np.linalg.norm( [ 1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                                1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
+                                                1.67 * uncertainty_matrix['Ti'] ], axis=0)
+        
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+                          concentration_matrix['K'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
+                          concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                          concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                          concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
+                          concentration_matrix['Sb'])
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+                                           uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
+                                           uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                                           uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                                           uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Sb'] ], axis=0)
+        
+        salt = concentration_matrix['Cl'] * 0
+        usalt = uncertainty_matrix['Cl'] * 0
+        
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        uclosure = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
+                                     uorganic_mass,
+                                     uncertainty_matrix['EC'],
+                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
+                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
+                                     1.67 * uncertainty_matrix['Ti'],
+                                     uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+                                     uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
+                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                                     uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                                     uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Sb'] ], axis=0)
+        
+        
+    if equation == 'Malm_2000':
+        inorganic_ions = 4.125 * concentration_matrix['S'] + 1.29 * concentration_matrix["NO3"]
+        uinorganic_ions = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
+                               1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
+                               2.42 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [ 2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                                1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                                2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        
+        trace_elements =concentration_matrix['Cl'] * 0
+        utrace_elements= uncertainty_matrix['Cl'] * 0
+        salt = concentration_matrix['Cl'] * 0
+        usalt = uncertainty_matrix['Cl'] * 0
+        
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        uclosure = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'],
+                                    uorganic_mass,
+                                    uncertainty_matrix['EC'],
+                                    2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                    1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                    2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        
+    if (equation == 'Maenhaut_2002' or equation=='Maenhaut_2002_mod'):
+        inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
+        uinorganic_ions = np.linalg.norm( [uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+
+        geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
+                               1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
+                               2.42 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [ 2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                               1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                               2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        salt = concentration_matrix['Cl'] + 1.4486 * (concentration_matrix['Na sol'])
+        usalt = np.linalg.norm([ uncertainty_matrix['Cl'], 1.4486 * uncertainty_matrix['Na sol']], axis=0)
+        
+        trace_elements = (concentration_matrix['V'] + concentration_matrix['Cr'] +
+                          concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+                          concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+                          concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
+                          concentration_matrix['Sb'])  # CHEQUEAR
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+                                           uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                                           uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                                           uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
+                                           uncertainty_matrix['Sb'] ], axis=0)  # CHEQUEAR
+        others = concentration_matrix['K'] - 0.6 * concentration_matrix['Fe']
+        uothers = np.linalg.norm( [ uncertainty_matrix['K'], 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        uclosure = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
+                                    uorganic_mass,
+                                    uncertainty_matrix['EC'],
+                                    2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                    1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                    2.42 * uncertainty_matrix['Fe'],
+                                    uncertainty_matrix['Cl'], 1.4486 * (uncertainty_matrix['Na sol']),
+                                    uncertainty_matrix['K'],  uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+                                    uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+                                    uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+                                    uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
+                                    uncertainty_matrix['Sb'] ], axis=0)
+        
+    if equation == 'DeBell_2006':
+        if type_reconstruction =="original":
+            betas_all = [0,1.8,1,1,1]
+        inorganic_ions = 4.125 * concentration_matrix['S'] + 1.29 * concentration_matrix['NO3']
+        uinorganic_ions = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
+                               1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
+                               2.42 * concentration_matrix['Fe'])
+        ugeological_minerals = np.linalg.norm( [ 2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                                 1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                                 2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        
+        trace_elements =concentration_matrix['Cl'] * 0
+        utrace_elements= uncertainty_matrix['Cl'] * 0
+        salt = concentration_matrix['Cl'] * 0
+        usalt = uncertainty_matrix['Cl'] * 0
+        
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        uclosure = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'],
+                                    uorganic_mass,
+                                    uncertainty_matrix['EC'],
+                                    2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                    1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                    2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        
+            
+    if (equation == 'Hand_2011' or equation== "Hand_2011_mod"):
+        if type_reconstruction =="original":
+            betas_all = [0,1.8,1,1,1]
+            
+        inorganic_ions = 1.375 * concentration_matrix['SO4'] + 1.29 * concentration_matrix['NO3']
+        uinorganic_ions = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'] ] ,axis=0)
+
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+
+        elemental_C = concentration_matrix['EC'] # Un solo elemento
+        uelemental_C = uncertainty_matrix['EC']
+        geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
+                               1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
+                               2.42 * concentration_matrix['Fe'])
+        if equation == "Hand_2011_mod":
+            geological_minerals = geological_minerals + concentration_matrix['Na no sol']
+        if equation =="Hand_2011":    
+            ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                2.42 * uncertainty_matrix['Fe'] ], axis=0)
+        else:
+            ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                2.42 * uncertainty_matrix['Fe'] , uncertainty_matrix['Na no sol']], axis=0)
+        salt = 1.8 * concentration_matrix['Cl']
+        usalt = 1.8 * uncertainty_matrix['Cl'] # Un solo elemento
+
+        
+        trace_elements =concentration_matrix['Cl'] * 0
+        utrace_elements= uncertainty_matrix['Cl'] * 0
+
+        
+        others = concentration_matrix['K'] * 0
+        uothers =uncertainty_matrix['K'] * 0
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        if equation=="Hand_2011":
+            uclosure = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'], 
+                                       uorganic_mass,
+                                       uncertainty_matrix['EC'],
+                                       2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                       1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                       2.42 * uncertainty_matrix['Fe'],
+                                       1.8 * uncertainty_matrix['Cl'] ], axis=0)
+        else:
+            uclosure = np.linalg.norm( [ 1.375 * uncertainty_matrix['SO4'], 1.29 * uncertainty_matrix['NO3'], 
+                                       uorganic_mass,
+                                       uncertainty_matrix['EC'],
+                                       2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
+                                       1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
+                                       2.42 * uncertainty_matrix['Fe'],
+                                       1.8 * uncertainty_matrix['Cl'], uncertainty_matrix['Na no sol'] ], 
+                                      axis=0)
+       
+    if equation == 'Simon_2011':
+        if type_reconstruction =="original":
+            betas_all = [0,1.8,1,1,1]
+        
+        inorganic_ions = concentration_matrix['(NH4)2SO4'] + concentration_matrix['NH4NO3']
+        uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'] ], axis=0)
+        
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                            + betas_event[1] * concentration_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix['OC'].where(~events[event_column].isin(event_labels), other=0)
+                        + betas_event[1] * uncertainty_matrix['OC'].where(events[event_column].isin(event_labels), other=0))
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else:
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+            
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        geological_minerals = (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
+                               2.42 * concentration_matrix['Fe'] + 1.94 * concentration_matrix['Ti'])
+        ugeological_minerals = np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
+                               2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'] ], axis=0)
+        
+        salt = 1.8 * concentration_matrix['Cl']
+        usalt = 1.8 * uncertainty_matrix['Cl']
+        
+        others = 1.2 * (concentration_matrix['K'] - 0.6 * concentration_matrix['Fe'])
+        uothers = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        
+        trace_elements =concentration_matrix['Cl'] * 0
+        utrace_elements= uncertainty_matrix['Cl'] * 0
+        
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        # Sumo directo uorganic_mass a uclosure porque es el unico termino de esa sumatoria en ambos casos, si agrego terminos 
+        # a la sumatoria hay que agregar cada termino por separado y agregar el if de si es alltogether o no. Se está trabajando con error en norma 2 
+        uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
+                                    uorganic_mass,
+                                    uncertainty_matrix['EC'],
+                                    3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
+                                    2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'],
+                                    1.8 * uncertainty_matrix['Cl'],
+                                    1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+     
+       
+    if equation == 'Simon_2011_mod':
+        if type_reconstruction =="original":
+            betas_all = [0,1.8,1,1,1]
+        
+        concentration_matrix_event=concentration_matrix.where(events[event_column].isin(event_labels), other=0)
+        concentration_matrix_noevent=concentration_matrix.where(~events[event_column].isin(event_labels), other=0)
+        uncertainty_matrix_event=uncertainty_matrix.where(events[event_column].isin(event_labels), other=0)
+        uncertainty_matrix_noevent=uncertainty_matrix.where(~events[event_column].isin(event_labels), other=0)
+        
+               
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            
+            inorganic_ions = (betas_all[2] * concentration_matrix['(NH4)2SO4'] + 
+                              betas_all[3] * concentration_matrix['NH4NO3'])
+            uinorganic_ions = np.linalg.norm( [  betas_all[1] * uncertainty_matrix['(NH4)2SO4'],  
+                                               betas_all[2] * uncertainty_matrix['NH4NO3'] ], axis=0)
+            
+            geological_minerals = betas_all[4] * (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
+                                   2.42 * concentration_matrix['Fe'] + 1.94 * concentration_matrix['Ti'])
+            ugeological_minerals = betas_all[4] * np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
+                                                    2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'] ], 
+                                                  axis=0)
+            residual = betas_all[0] + concentration_matrix['OC']*0
+            
+        elif type_reconstruction == "events":
+            organic_mass = (betas_noevent[1] * concentration_matrix_noevent['OC']
+                            + betas_event[1] * concentration_matrix_event['OC'])
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix_noevent['OC'] 
+                             + betas_event[1] * uncertainty_matrix_event['OC'])
+            
+            inorganic_ions = (betas_event[2] * concentration_matrix_event['(NH4)2SO4'] + 
+                              betas_event[3] * concentration_matrix_event['NH4NO3'] +
+                              betas_noevent[2] * concentration_matrix_noevent['(NH4)2SO4'] + 
+                              betas_noevent[3] * concentration_matrix_noevent['NH4NO3'])
+            
+            
+            uinorganic_ions = np.linalg.norm( [(betas_event[2] * uncertainty_matrix_event['(NH4)2SO4'] +
+                                                betas_event[3] * uncertainty_matrix_noevent['(NH4)2SO4']),
+                                               (betas_noevent[2] * uncertainty_matrix_noevent['(NH4)2SO4'] + 
+                                                betas_noevent[3] * uncertainty_matrix_noevent['NH4NO3'])], axis=0)        
+        
+            geological_minerals = (betas_event[4] * (3.48 * concentration_matrix_event['Si'] + 
+                                                    1.63 * concentration_matrix_event['Ca'] +
+                                                    2.42 * concentration_matrix_event['Fe'] + 
+                                                    1.94 * concentration_matrix_event['Ti']) + 
+                                   betas_noevent[4] * (3.48 * concentration_matrix_event['Si'] + 
+                                                    1.63 * concentration_matrix_noevent['Ca'] +
+                                                    2.42 * concentration_matrix_noevent['Fe'] + 
+                                                    1.94 * concentration_matrix_noevent['Ti']) )
+            ugeological_minerals = np.linalg.norm( [betas_event[4] * 3.48 * uncertainty_matrix_event['Si'], 
+                                                    betas_event[4] * 1.63 * uncertainty_matrix_event['Ca'],
+                                                    betas_event[4] * 2.42 * uncertainty_matrix_event['Fe'], 
+                                                    betas_event[4] * 1.94 * uncertainty_matrix_event['Ti'],
+                                                    betas_noevent[4] * 3.48 * uncertainty_matrix_noevent['Si'], 
+                                                    betas_noevent[4] * 1.63 * uncertainty_matrix_noevent['Ca'],
+                                                    betas_noevent[4] * 2.42 * uncertainty_matrix_noevent['Fe'], 
+                                                    betas_noevent[4] * 1.94 * uncertainty_matrix_noevent['Ti']], axis=0)
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else: 
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        salt = 1.8 * concentration_matrix['Cl']
+        usalt = 1.8 * uncertainty_matrix['Cl']
+        
+        others = 1.2 * (concentration_matrix['K'] - 0.6 * concentration_matrix['Fe'])
+        uothers = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        
+        trace_elements =concentration_matrix['Cl'] * 0
+        utrace_elements= uncertainty_matrix['Cl'] * 0
+        
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        # Sumo directo uorganic_mass a uclosure porque es el unico termino de esa sumatoria en ambos casos, si agrego terminos 
+        # a la sumatoria hay que agregar cada termino por separado y agregar el if de si es alltogether o no. Se está trabajando con error en norma 2 
+        if type_reconstruction in ("original","alltogether"):
+            uclosure = np.linalg.norm( [ betas_all[2] * uncertainty_matrix['(NH4)2SO4'], 
+                                        betas_all[3] * uncertainty_matrix['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        betas_all[4] * 3.48 * uncertainty_matrix['Si'], 
+                                        betas_all[4] * 1.63 * uncertainty_matrix['Ca'],
+                                        betas_all[4] * 2.42 * uncertainty_matrix['Fe'], 
+                                        betas_all[4] * 1.94 * uncertainty_matrix['Ti'],
+                                        1.8 * uncertainty_matrix['Cl'],
+                                        1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        else:
+            uclosure = np.linalg.norm( [ betas_event[2] * uncertainty_matrix_event['(NH4)2SO4'] + betas_noevent[2] * uncertainty_matrix_noevent['(NH4)2SO4'], 
+                                        betas_event[3] * uncertainty_matrix_event['NH4NO3'] + betas_noevent[3] * uncertainty_matrix_noevent['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        3.48 * (betas_event[4] * uncertainty_matrix_event['Si'] + betas_noevent[4] * uncertainty_matrix_noevent['Si']), 
+                                        1.63 * (betas_event[4] * uncertainty_matrix_event['Ca'] + betas_noevent[4] * uncertainty_matrix_noevent['Ca']),
+                                        2.42 * (betas_event[4] * uncertainty_matrix_event['Fe'] +  betas_noevent[4] * uncertainty_matrix_noevent['Fe']),
+                                        1.94 * (betas_event[4] * uncertainty_matrix_event['Ti'] + betas_noevent[4] * uncertainty_matrix_noevent['Ti']),
+                                        1.8 * uncertainty_matrix_event['Cl'],
+                                        1.2 * uncertainty_matrix_event['K'], 
+                                        1.2 * 0.6 * uncertainty_matrix_event['Fe'] ], axis=0)
+     
+    if equation == 'Simon_2011_linmod':
+        if type_reconstruction =="original":
+            betas_all = [0,1.8,1,1,1]
+               
+        if type_reconstruction in ("original","alltogether"):
+            organic_mass = (betas_all[1] * concentration_matrix['OC'])
+            uorganic_mass = (betas_all[1] * uncertainty_matrix['OC'])
+            
+            residual = betas_all[0] + concentration_matrix['OC']*0
+        elif type_reconstruction == "events":
+            concentration_matrix_event=concentration_matrix.where(events[event_column].isin(event_labels), other=0)
+            concentration_matrix_noevent=concentration_matrix.where(~events[event_column].isin(event_labels), other=0)
+            uncertainty_matrix_event=uncertainty_matrix.where(events[event_column].isin(event_labels), other=0)
+            uncertainty_matrix_noevent=uncertainty_matrix.where(~events[event_column].isin(event_labels), other=0)
+            organic_mass = (betas_noevent[1] * concentration_matrix_noevent['OC']
+                            + betas_event[1] * concentration_matrix_event['OC'])
+            uorganic_mass = (betas_noevent[1] * uncertainty_matrix_noevent['OC']
+                        + betas_event[1] * uncertainty_matrix_event['OC'])
+            
+            residual = (betas_noevent[0] + concentration_matrix['OC']*0).where(
+                ~events[event_column].isin(event_labels), other=betas_event[0]
+                )
+        else: 
+            print("type_reconstruction no reconocido. Chequear el help para ver valores posibles")
+        
+        inorganic_ions = (concentration_matrix['(NH4)2SO4'] + 
+                              concentration_matrix['NH4NO3'])
+        uinorganic_ions = np.linalg.norm( [  uncertainty_matrix['(NH4)2SO4'], 
+                                           uncertainty_matrix['NH4NO3'] ], axis=0)
+            
+        geological_minerals = (3.48 * concentration_matrix['Si'] + 1.63 * concentration_matrix['Ca'] +
+                               2.42 * concentration_matrix['Fe'] + 1.94 * concentration_matrix['Ti'])
+        ugeological_minerals = np.linalg.norm( [3.48 * uncertainty_matrix['Si'], 1.63 * uncertainty_matrix['Ca'],
+                                                2.42 * uncertainty_matrix['Fe'], 1.94 * uncertainty_matrix['Ti'] ], 
+                                                axis=0)
+        
+        elemental_C = concentration_matrix['EC']
+        uelemental_C = uncertainty_matrix['EC']
+        
+        salt = 1.8 * concentration_matrix['Cl']
+        usalt = 1.8 * uncertainty_matrix['Cl']
+        
+        others = 1.2 * (concentration_matrix['K'] - 0.6 * concentration_matrix['Fe'])
+        uothers = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        
+
+        trace_elements =concentration_matrix['Cl'] * 0
+        utrace_elements= uncertainty_matrix['Cl'] * 0
+        
+        
+        categories = {'inorganic_ions': inorganic_ions, 
+                      'organic_mass': organic_mass, 
+                      'elemental_C': elemental_C, 
+                      'geological_minerals': geological_minerals,
+                      'salt': salt, 
+                      'trace_elements': trace_elements,
+                      'others': others,
+                      'residual': residual}
+        
+        ucategories = {'uinorganic_ions': uinorganic_ions, 
+                       'uorganic_mass': uorganic_mass, 
+                       'uelemental_C': uelemental_C, 
+                       'ugeological_minerals': ugeological_minerals,
+                       'usalt':usalt, 
+                       'utrace_elements': utrace_elements, 
+                       'uothers': uothers}
+        
+        # Sumo directo uorganic_mass a uclosure porque es el unico termino de esa sumatoria en ambos casos, si agrego terminos 
+        # a la sumatoria hay que agregar cada termino por separado y agregar el if de si es alltogether o no. Se está trabajando con error en norma 2 
+        if type_reconstruction in ("original","alltogether"):
+            uclosure = np.linalg.norm( [uncertainty_matrix['(NH4)2SO4'], 
+                                        uncertainty_matrix['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        3.48 * uncertainty_matrix['Si'], 
+                                        1.63 * uncertainty_matrix['Ca'],
+                                        2.42 * uncertainty_matrix['Fe'], 
+                                        1.94 * uncertainty_matrix['Ti'],
+                                        1.8 * uncertainty_matrix['Cl'],
+                                        1.2 * uncertainty_matrix['K'], 
+                                        1.2 * 0.6 * uncertainty_matrix['Fe']], axis=0)
+        else:
+            uclosure = np.linalg.norm( [ uncertainty_matrix_event['(NH4)2SO4'] + 
+                                        uncertainty_matrix_noevent['(NH4)2SO4'], 
+                                        uncertainty_matrix_event['NH4NO3'] + 
+                                        uncertainty_matrix_noevent['NH4NO3'],
+                                        uorganic_mass,
+                                        uncertainty_matrix['EC'],
+                                        3.48 * (uncertainty_matrix_event['Si'] +uncertainty_matrix_noevent['Si']), 
+                                        1.63 * (uncertainty_matrix_event['Ca'] +uncertainty_matrix_noevent['Ca']),
+                                        2.42 * (uncertainty_matrix_event['Fe'] +uncertainty_matrix_noevent['Fe']),
+                                        1.94 * (uncertainty_matrix_event['Ti'] +uncertainty_matrix_noevent['Ti']),
+                                        1.8 * uncertainty_matrix_event['Cl'],
+                                        1.2 * uncertainty_matrix_event['K'], 
+                                        1.2 * 0.6 * uncertainty_matrix_event['Fe'] ], axis=0)
+    
+    
+    closure = sum(categories.values())
+    return closure, categories, uclosure, ucategories
+                                       
+    
+
 
 
 def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
@@ -1601,7 +2675,7 @@ def linear_estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False, d
         mask = ~np.isnan(x) & ~np.isnan(y)
         results = linregress(x[mask], y[mask])
         
-    if method=="Simon_2011":
+    if method in ('Simon_2011', 'Simon_2011_mod', 'Simon_2011_linmod'):
         concentration_matrix = concentration_matrix.dropna(subset=["(NH4)2SO4", "NH4NO3", "Si",
                                                                    "Ca", "Fe", "Ti", "EC", "Cl",
                                                                    "K", "Fe", "PM2.5", "OC"], axis=0)
