@@ -70,7 +70,7 @@ Blancos=ugtotales[which(ugtotales$Blanco==1),c(-32,-31)]
 
 
 # Calculo de Blancos #### 
-selecciondeblanco="promediosinmaxnimin" # promedio, promedioporlote, promediosinmaxnimin
+selecciondeblanco="promedio" # promedio, promedioporlote, promediosinmaxnimin
 Blanco_para_restar = calculo_de_blanco(Blancos, selecciondeblanco)
 
 # Resto el blanco y divido por el volumen
