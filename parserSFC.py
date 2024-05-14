@@ -8,27 +8,27 @@ def readSFC(path2SFC):
             "z0", "b0", "a0", "ws", "wd", "wind_h", "temp", "temp_h",
             "pp_code", "pp", "rh", "pres", "cloudCover", "es_adj",
             "subst"]
-    data = pd.read_csv(path2SFC, skiprows=1, delim_whitespace=True,
+    data = pd.read_csv(path2SFC, skiprows=1, sep=r"\s+",
                        names=names)
     data["year"] = data["year"] + 2000
     data["date"] = pd.to_datetime(data[["year", "month", "day", "hour"]])
     data = data.set_index(data["date"])
-    data["H"].replace(-999.0, np.nan, inplace=True)
-    data["Ustar"].replace(-9.0, np.nan, inplace=True)
-    data["Wstar"].replace(-9.0, np.nan, inplace=True)
-    data["dtheta_dz"].replace(-9.0, np.nan, inplace=True)
-    data["PBLHc"].replace(-999.0, np.nan, inplace=True)
-    data["PBLHm"].replace(-999.0, np.nan, inplace=True)
-    data["L"].replace(-99999.0, np.nan, inplace=True)
-    data["z0"].replace(-9.0, np.nan, inplace=True)
-    data["b0"].replace(-9.0, np.nan, inplace=True)
-    data["a0"].replace(-9.0, np.nan, inplace=True)
-    data["ws"].replace(999.0, np.nan, inplace=True)
-    data["wd"].replace(999.0, np.nan, inplace=True)
-    data["temp"].replace(-999.0, np.nan, inplace=True)
-    data["pp"].replace(-9.0, np.nan, inplace=True)
-    data["rh"].replace(999, np.nan, inplace=True)
-    data["pres"].replace(-999.0, np.nan, inplace=True)
+    data["H"] = data["H"].replace(-999.0, np.nan)
+    data["Ustar"] = data["Ustar"].replace(-9.0, np.nan)
+    data["Wstar"] = data["Wstar"].replace(-9.0, np.nan)
+    data["dtheta_dz"] = data["dtheta_dz"].replace(-9.0, np.nan)
+    data["PBLHc"] = data["PBLHc"].replace(-999.0, np.nan)
+    data["PBLHm"] = data["PBLHm"].replace(-999.0, np.nan)
+    data["L"] = data["L"].replace(-99999.0, np.nan)
+    data["z0"] = data["z0"].replace(-9.0, np.nan)
+    data["b0"] = data["b0"].replace(-9.0, np.nan)
+    data["a0"] = data["a0"].replace(-9.0, np.nan)
+    data["ws"] = data["ws"].replace(999.0, np.nan)
+    data["wd"] = data["wd"].replace(999.0, np.nan)
+    data["temp"] = data["temp"].replace(-999.0, np.nan)
+    data["pp"] = data["pp"].replace(-9.0, np.nan)
+    data["rh"] = data["rh"].replace(999, np.nan)
+    data["pres"] = data["pres"].replace(-999.0, np.nan)
 
     return data
 
@@ -45,6 +45,19 @@ def ventilation_coef(data):
     data2["ventCoef"] = data2["ventCoef"].where(data2["L"].notna())
     
     return data2["ventCoef"]
+
+def total_pblh(data):
+    """Calculate ventilation coefficient using
+    L"""
+    data2 = data.copy()
+    data2["maxPBLH"] = data2[["PBLHc", "PBLHm"]].max(axis=1)
+    data2["PBLHLneg"] = data2["maxPBLH"].where(data2["L"] <= 0)
+    data2["PBLHLpos"] = data2["PBLHm"].where(data2["L"] > 0)
+    data2["PBLH"] = data2[["PBLHLneg", "PBLHLpos"]].sum(axis=1)
+    data2["PBLH"] = data2["PBLH"].where(data2["L"].notna())
+    
+    return data2["PBLH"]
+
 
 def diurnal_cycle(data):
     """ Calculate the diurnal cycle of hourly data with H as hour

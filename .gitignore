@@ -2,7 +2,6 @@
 *.tex
 *.zip
 *.ods
-*.xlsx
 elsarticle*
 *.ipynb
 *.docx
@@ -22,7 +21,6 @@ manifest.txt
 matrices_viejas
 codigo_viejo
 tdumps
-S_BsAs.csv
 .Rhistory
 .RData
 .Rhistory

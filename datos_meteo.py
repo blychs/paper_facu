@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime as dt
-from parserSFC import readSFC, ventilation_coef
+from parserSFC import readSFC, ventilation_coef, total_pblh
 
 df = pd.read_csv('../paper_laura/ARCAL_ISH/obsbaires.csv', delimiter=';')
 df = df.rename({'date[yyyymmddHHMM]':'date', 'wspd[m/s]':'ws', 'wdir':'wd'}, axis=1)
@@ -35,7 +35,7 @@ df = (df.loc[(df['date'].dt.date.isin(df_filters['date'].dt.date) & (df['date'].
               (df['date'].dt.date.isin(df_filters['date'].dt.date + dt.timedelta(days=1)) & (df['date'].dt.hour < 12))])
 
 events = pd.read_excel('BA_events.xlsx', index_col='date')
-display(events)
+#display(events)
 
 #with pd.option_context('display.max_rows', None,):
 #    display(df)
@@ -77,7 +77,7 @@ daily_ws = average_windspeed(df)
 data_out = pd.DataFrame(daily_ws)
 
 data_out['num_calms'] = num_calms
-display(data_out)
+#display(data_out)
 data_out.to_excel('wind_data.xlsx')
 #data_out = data_out.set_index(daily_ws.index)
 
@@ -107,26 +107,27 @@ plt.show()
 
 # + tags=[]
 df_uaest = readSFC('OBSERVATORIO.SFC')
-display(df_uaest)
+#display(df_uaest)
 
 df_uaest = (df_uaest.loc[(df_uaest['date'].dt.date.isin(df_filters['date'].dt.date) & (df_uaest['date'].dt.hour.astype(int) >= 12 )) |
               (df_uaest['date'].dt.date.isin(df_filters['date'].dt.date + dt.timedelta(days=1)) & (df_uaest['date'].dt.hour.astype(int) < 12))])
 
-display(df_uaest[['PBLHc', 'PBLHm', 'L', 'ws']])
+#display(df_uaest[['PBLHc', 'PBLHm', 'L', 'ws']])
 #with pd.option_context('display.max_rows', None):#, 'display.max_columns', None,):
 #    display(df_uaest[['ws']])
 #display(df[['ws']])
 
 # +
 df_uaest['VentCoef'] = ventilation_coef(df_uaest)
+df_uaest['PBLH'] = total_pblh(df_uaest)
 #print(df_uaest.dtypes)
 #with pd.option_context('display.max_columns', None, 'display.max_rows', None):
 #display(df_uaest[['temp', 'pres', 'rh', 'ws', 'VentCoef']])
 
-df_uaest[['temp', 'pres', 'rh', 'ws', 'VentCoef']].to_csv('datos_meteo_obs_filtro.csv')
+df_uaest[['temp', 'pres', 'rh', 'ws', 'PBLH', 'VentCoef']].to_csv('datos_meteo_obs_filtro.csv')
 df_uaest_disp = df_uaest
 df_uaest_disp.index = df_uaest.index - dt.timedelta(hours=12)
 
 df_mean = df_uaest.groupby(df_uaest.index.date).mean(numeric_only=True)
-df_mean[['temp', 'pres', 'rh', 'ws', 'VentCoef']].to_csv('datos_meteo_obs_mean.csv')
+df_mean[['temp', 'pres', 'rh', 'ws', 'PBLH', 'VentCoef']].to_csv('datos_meteo_obs_mean.csv')
 

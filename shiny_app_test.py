@@ -20,8 +20,11 @@ matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.x
                                                'BA_events.xlsx')
 
 
+matrix["date"] = matrix.index
+
 choices = list(matrix.keys())
 
+matrix = matrix.drop(['2019-05-24', '2019-05-27', '2019-05-30', '2019-06-02'], axis=0)
 app_ui = ui.page_fluid(
     ui.input_selectize("x", "Select x (single)", choices),
     ui.input_selectize("y", "Select y (single)", choices),
@@ -54,7 +57,7 @@ def server(input, output, session):
         if input.linreg()==True:
             slope, intercept, r, p, se = linregress(x[mask], y[mask])
             ax.plot(x, intercept + slope * x,
-                    label=f'{slope:.2g} [{input.x()}] + {intercept:.2g} \nR$^2$ = {r**2:.2g}\np-val = {p:.2g}')
+                    label=f'{slope:.2g} [{input.x()}] + {intercept:.2g} \nR$^2$ = {r**2:.2g}\np-val = {p:.2g}\nr = {r:.2g}')
         ax.set_xlabel(input.x())
         ax.set_ylabel(input.y())
     #    ax.set_xlim(right=input.xmax())
@@ -80,3 +83,5 @@ def server(input, output, session):
 
 
 app = App(app_ui, server, debug=True)
+
+# %%
