@@ -101,23 +101,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         others = concentration_matrix['K'] * 0
         uothers =uncertainty_matrix['K'] * 0
         
-        # categories = {'inorganic_ions': inorganic_ions, 
-        #               'organic_mass': organic_mass, 
-        #               'elemental_C': elemental_C, 
-        #               'geological_minerals': geological_minerals,
-        #               'salt': salt, 
-        #               'trace_elements': trace_elements,
-        #               'others': others,
-        #               'residual': residual}
-        
-        # ucategories = {'uinorganic_ions': uinorganic_ions, 
-        #                'uorganic_mass': uorganic_mass, 
-        #                'uelemental_C': uelemental_C, 
-        #                'ugeological_minerals': ugeological_minerals,
-        #                'usalt':usalt, 
-        #                'utrace_elements': utrace_elements, 
-        #                'uothers': uothers}
-        
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['(NH4)2SO4'], uncertainty_matrix['NH4NO3'],
                                         uorganic_mass,
@@ -179,22 +162,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         others = concentration_matrix['K'] * 0
         uothers =uncertainty_matrix['K'] * 0
         
-        # categories = {'inorganic_ions': inorganic_ions, 
-        #               'organic_mass': organic_mass, 
-        #               'elemental_C': elemental_C, 
-        #               'geological_minerals': geological_minerals,
-        #               'salt': salt, 
-        #               'trace_elements': trace_elements,
-        #               'others': others,
-        #               'residual': residual}
-        
-        # ucategories = {'uinorganic_ions': uinorganic_ions, 
-        #                'uorganic_mass': uorganic_mass, 
-        #                'uelemental_C': uelemental_C, 
-        #                'ugeological_minerals': ugeological_minerals,
-        #                'usalt':usalt, 
-        #                'utrace_elements': utrace_elements, 
-        #                'uothers': uothers}
         
         
         uclosure = np.linalg.norm( [uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
@@ -261,22 +228,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         others = concentration_matrix['K'] * 0
         uothers =uncertainty_matrix['K'] * 0
         
-        # categories = {'inorganic_ions': inorganic_ions, 
-        #               'organic_mass': organic_mass, 
-        #               'elemental_C': elemental_C, 
-        #               'geological_minerals': geological_minerals,
-        #               'salt': salt, 
-        #               'trace_elements': trace_elements,
-        #               'others': others,
-        #               'residual': residual}
-        
-        # ucategories = {'uinorganic_ions': uinorganic_ions, 
-        #                'uorganic_mass': uorganic_mass, 
-        #                'uelemental_C': uelemental_C, 
-        #                'ugeological_minerals': ugeological_minerals,
-        #                'usalt':usalt, 
-        #                'utrace_elements': utrace_elements, 
-        #                'uothers': uothers}
         
         # Pablo, este uclosure era el único multiplicado por 1.4
         uclosure = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
@@ -332,22 +283,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         others = concentration_matrix['K'] * 0
         uothers =uncertainty_matrix['K'] * 0
         
-        # categories = {'inorganic_ions': inorganic_ions, 
-        #               'organic_mass': organic_mass, 
-        #               'elemental_C': elemental_C, 
-        #               'geological_minerals': geological_minerals,
-        #               'salt': salt, 
-        #               'trace_elements': trace_elements,
-        #               'others': others,
-        #               'residual': residual}
-        
-        # ucategories = {'uinorganic_ions': uinorganic_ions, 
-        #                'uorganic_mass': uorganic_mass, 
-        #                'uelemental_C': uelemental_C, 
-        #                'ugeological_minerals': ugeological_minerals,
-        #                'usalt':usalt, 
-        #                'utrace_elements': utrace_elements, 
-        #                'uothers': uothers}
         
         uclosure = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'],
                                     uorganic_mass,
@@ -480,22 +415,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         others = concentration_matrix['K'] * 0
         uothers =uncertainty_matrix['K'] * 0
         
-        # categories = {'inorganic_ions': inorganic_ions, 
-        #               'organic_mass': organic_mass, 
-        #               'elemental_C': elemental_C, 
-        #               'geological_minerals': geological_minerals,
-        #               'salt': salt, 
-        #               'trace_elements': trace_elements,
-        #               'others': others,
-        #               'residual': residual}
-        
-        # ucategories = {'uinorganic_ions': uinorganic_ions, 
-        #                'uorganic_mass': uorganic_mass, 
-        #                'uelemental_C': uelemental_C, 
-        #                'ugeological_minerals': ugeological_minerals,
-        #                'usalt':usalt, 
-        #                'utrace_elements': utrace_elements, 
-        #                'uothers': uothers}
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
                                      uorganic_mass,
@@ -551,22 +470,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         others = concentration_matrix['K'] * 0
         uothers =uncertainty_matrix['K'] * 0
         
-        # categories = {'inorganic_ions': inorganic_ions, 
-        #               'organic_mass': organic_mass, 
-        #               'elemental_C': elemental_C, 
-        #               'geological_minerals': geological_minerals,
-        #               'salt': salt, 
-        #               'trace_elements': trace_elements,
-        #               'others': others,
-        #               'residual': residual}
-        
-        # ucategories = {'uinorganic_ions': uinorganic_ions, 
-        #                'uorganic_mass': uorganic_mass, 
-        #                'uelemental_C': uelemental_C, 
-        #                'ugeological_minerals': ugeological_minerals,
-        #                'usalt':usalt, 
-        #                'utrace_elements': utrace_elements, 
-        #                'uothers': uothers}
         
         uclosure = np.linalg.norm( [ 4.125 * uncertainty_matrix['S'], 1.29 * uncertainty_matrix['NO3'],
                                     uorganic_mass,
@@ -3115,9 +3018,8 @@ def calculate_seasonal(conc_matrix):
     #matrix_seasonal = matrix_seasonal.append(count)
     matrix_seasonal = pd.concat([matrix_seasonal, count.to_frame().T], axis=0)
     matrix_seasonal = matrix_seasonal[[
-        "All_average", "All_std", "DJF", "DJF_std", "MAM", "MAM_std",
-        "JJA", "JJA_std", "SON", "SON_std",
-    ]]
+        "All_average", "All_std", "MAM", "MAM_std",
+        "JJA", "JJA_std", "SON", "SON_std", "DJF", "DJF_std" ]]
 
     return(matrix_seasonal)
 
