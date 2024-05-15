@@ -29,7 +29,7 @@ def load_data(data_matrix, unc_matrix, gases, meteo, events, clusters=None):
     
     meteo = pd.read_csv(meteo)
     meteo = meteo.rename(columns={'Unnamed: 0': 'date'})
-    meteo['date'] = pd.to_datetime(meteo['date'])
+    meteo['date'] = pd.to_datetime(meteo['date']).dt.date
     meteo.set_index(meteo['date'], inplace=True)
     meteo.drop('date', inplace=True, axis=1)
     

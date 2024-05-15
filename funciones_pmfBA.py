@@ -739,7 +739,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         
         salt = 1.8 * concentration_matrix['Cl']
         usalt = 1.8 * uncertainty_matrix['Cl']
-        
+        # others = 1.2 * (concentration_matrix['K'] - 0.6 * concentration_matrix['Fe'])
         others = 1.2 * (concentration_matrix['K'] - 0.6 * concentration_matrix['Fe'])
         uothers = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
         

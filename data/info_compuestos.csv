@@ -1,36 +1,36 @@
-nombre,columna,tipo,unidad_entrada,unidad_salida
-Ag,Ag,metal,microgram/meter**3,nanogram/meter**3
-Al,Al,metal,microgram/meter**3,nanogram/meter**3
-As,As,metal,microgram/meter**3,nanogram/meter**3
-Ba,Ba,metal,microgram/meter**3,nanogram/meter**3
-Ca,Ca,ions,microgram/meter**3,microgram/meter**3
-Cd,Cd,metal,microgram/meter**3,nanogram/meter**3
-Cl,Cl,ions,microgram/meter**3,microgram/meter**3
-Co,Co,metal,microgram/meter**3,nanogram/meter**3
-Cr,Cr,metal,microgram/meter**3,nanogram/meter**3
-Cu,Cu,metal,microgram/meter**3,nanogram/meter**3
-EC,EC,carbonaceous,microgram/meter**3,microgram/meter**3
-Fe,Fe,metal,microgram/meter**3,nanogram/meter**3
-K,K,ions,microgram/meter**3,microgram/meter**3
-Mg,Mg,ions,microgram/meter**3,microgram/meter**3
-Mn,Mn,metal,microgram/meter**3,nanogram/meter**3
-Mo,Mo,metal,microgram/meter**3,nanogram/meter**3
-NH4,NH4,ions,microgram/meter**3,microgram/meter**3
-NO3,NO3,ions,microgram/meter**3,microgram/meter**3
-Na sol,Na sol,ions,microgram/meter**3,microgram/meter**3
-Ni,Ni,metal,microgram/meter**3,nanogram/meter**3
-OC,OC,carbonaceous,microgram/meter**3,microgram/meter**3
-PM2.5,PM2.5,total,microgram/meter**3,microgram/meter**3
-Pb,Pb,metal,microgram/meter**3,nanogram/meter**3
-SO4,SO4,ions,microgram/meter**3,microgram/meter**3
-Sb,Sb,metal,microgram/meter**3,nanogram/meter**3
-Se,Se,metal,microgram/meter**3,nanogram/meter**3
-TC,TC,carbonaceous,microgram/meter**3,microgram/meter**3
-Ti,Ti,metal,microgram/meter**3,nanogram/meter**3
-V,V,metal,microgram/meter**3,nanogram/meter**3
-Zn,Zn,metal,microgram/meter**3,nanogram/meter**3
-temp,temp,meteo,C,C
-pres,pres,meteo,hPa,hPa
-rh,rh,meteo,%,%
-ws,ws,meteo,m/s,m/s
-PBLH,PBLH,meteo,m,m
+nombre,columna,tipo,unidad_entrada,unidad_salida,formato
+Ag,Ag [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Al,Al [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,integer
+As,As [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Ba,Ba [ng m\textsuperscript{-3}] ,metal,microgram/meter**3,nanogram/meter**3,float2
+Ca,Ca [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+Cd,Cd [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Cl,Cl [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+Co,Co [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Cr,Cr [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Cu,Cu [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+EC,EC [µg m\textsuperscript{-3}],carbonaceous,microgram/meter**3,microgram/meter**3,float2
+Fe,Fe [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+K,K [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+Mg,Mg [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+Mn,Mn [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Mo,Mo [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+NH4,NH\textsubscript{4} [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+NO3,NO\textsubscript{3} [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+Na sol,Na [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+Ni,Ni [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+OC,OC [µg m\textsuperscript{-3}],carbonaceous,microgram/meter**3,microgram/meter**3,float2
+PM2.5,PM\textsubscript{2.5} [µg m\textsuperscript{-3}],total,microgram/meter**3,microgram/meter**3,float2
+Pb,Pb [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+SO4,SO\textsubscript{4} [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2
+Sb,Sb [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Se,Se [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+TC,TC [ng m\textsuperscript{-3}],carbonaceous,microgram/meter**3,microgram/meter**3,float2
+Ti,Ti [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+V,V [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+Zn,Zn [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2
+temp,temp [°C],meteo,C,C,float1
+pres,pres [hPa],meteo,hPa,hPa,integer
+rh,rh [\%],meteo,%,%,float2
+ws,ws [m/s],meteo,m/s,m/s,float1
+PBLH,PBLH [m],meteo,m,m,integer
