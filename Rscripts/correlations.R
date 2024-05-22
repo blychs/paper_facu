@@ -88,8 +88,17 @@ ggplot(PMF_BA_full_so[PMF_BA_full_so$Ni!=0,])+geom_point(aes(x=Ni,y=V))+
 
 ggplot(PMF_BA_full_so[PMF_BA_full_so$Cd<0.005 & PMF_BA_full_so$Sb>0,])+geom_point(aes(x=Cd,y=Sb))+
   geom_abline(aes(slope=5, intercept=0, color="road brake pad wear "), linetype="dashed")+
-  geom_abline(aes(slope=8, intercept=0, color="prueba"), linetype="dashed")
+  geom_abline(aes(slope=6, intercept=0, color="prueba"), linetype="dashed")
 
 ggplot(PMF_BA_full_so[PMF_BA_full_so$Cd<0.005 & PMF_BA_full_so$Cd>0.00001,],aes(x=Cd,y=Sb))+geom_point()+
   stat_summary(fun.data= mean_cl_normal) + 
-  geom_smooth(method='lm')
+  geom_smooth(method='lm',se = F)+geom_abline(aes(slope=0.183260305, intercept=0.002618539))
+coefs <- coef(lm(Sb~Cd, data = PMF_BA_full_so[PMF_BA_full_so$Cd>0.00001,]))
+
+# cor plot geological minerals
+corPlot(PMF_BA_full_so[,c("Al","Ba", "Ca","Fe", "Mn", "Mg", "Ti","Sb")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+corPlot(PMF_BA_full_so[,c( "Ca","Ba",  "Mg", "Ti","Sb")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+corPlot(PMF_BA_full_so[,c( "Fe","Al",  "Mn", "Ti")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
