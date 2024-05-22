@@ -1011,8 +1011,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                     'uothers': uothers}
     closure = sum(categories.values())
     return closure, categories, uclosure, ucategories
-                                       
-    
 
 
 

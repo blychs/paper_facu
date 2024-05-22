@@ -34,7 +34,8 @@ def load_data(data_matrix, unc_matrix, gases, meteo, events, clusters=None):
     meteo.drop('date', inplace=True, axis=1)
     
     matrix = matrix.join(meteo)
-    matrix['temp'] = (matrix['temp']-273.15).round(2)
+    # matrix['temp'] = (matrix['temp']-273.15).round(2)
+    matrix['temp'] = (matrix['temp']).round(2)
     events = pd.read_excel(events, index_col='date')
     
     gases = pd.read_csv('gases_mean.csv')

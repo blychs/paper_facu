@@ -22,7 +22,7 @@ bbpdatafile="data/data_every_hour_obs_eventM.csv"
 # Load datasets ####
 bbpdata <- read.csv(bbpdatafile)
 bbpdata$date <- as.POSIXct(bbpdata$date, tz='UTC')
-bbpdata <- bbpdata[,-c(8,31:42)]
+bbpdata <- bbpdata[,-c(29:40)]
 bbpdata$Sb_ng=bbpdata$Sb*1000
 bbpdata$As_ng=bbpdata$As*1000
 bbpdata$OC_EC = bbpdata$`C.Orgánico`/bbpdata$`C.Elemental`
@@ -45,7 +45,7 @@ lonlatinc <- 0.5
 #72.8 DE TRAJ ES EL 75 DE LA MUESTRA <- chequear esto
 
 # PSCF loop ####
-keys = names(trajconchem)[c(14:44, 46,52)]
+keys = names(trajconchem)[c(14:43)]
 print(keys)
 for (title in keys) {
   print(title)

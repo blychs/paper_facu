@@ -12,7 +12,7 @@ source("Rscripts/module_metales.R")
 # extrafont::font_import()
 extrafont::loadfonts()
 # Cargar datos ####
-PMF_BA_full <- read_excel("PMF_BA_full.xlsx", 
+PMF_BA_full <- read_excel("data/PMF_BA_fullv3.xlsx", 
                           col_types = c("date", "numeric", "numeric", 
                                         "numeric", "numeric", "numeric", 
                                         "numeric", "numeric", "numeric", 
@@ -70,7 +70,7 @@ Blancos=ugtotales[which(ugtotales$Blanco==1),c(-32,-31)]
 
 
 # Calculo de Blancos #### 
-selecciondeblanco="promedio" # promedio, promedioporlote, promediosinmaxnimin
+selecciondeblanco="promediosinmaxnimin" # promedio, promedioporlote, promediosinmaxnimin
 Blanco_para_restar = calculo_de_blanco(Blancos, selecciondeblanco)
 
 # Resto el blanco y divido por el volumen
@@ -81,6 +81,7 @@ for (i in seq(dim(Filtros)[1])){
 # Acá está reemplazando por 0 y lo estamos reemplazando por un valor dentro del limite de detección en PMF_BA_full
 Filtros <- Filtros %>%  mutate_at(vars(5:28), ~ replace(., . < 0, 0))
 
+ggplot(Filtros)+geom_point(aes(x=date, y=Ni, color="Ni"))
 
 
 ggplot(Filtros)+geom_point(aes(x=date, y=Ca, color="Ca"))+geom_line(aes(x=date, y=Ca, color="Ca"))+

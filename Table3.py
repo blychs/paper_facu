@@ -22,8 +22,11 @@ matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 'data/P
 #%%
 # datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31','2019-08-04','2019-08-07','2019-08-10']
 # datesdrop=['2020-03-01','2020-01-31']
-# matrix=matrix.drop(datesdrop,axis=0)
-# events=events.drop(datesdrop,axis=0)
+datesdrop = ['2019-08-16']
+matrix=matrix.drop(datesdrop,axis=0)
+events=events.drop(datesdrop,axis=0)
+unc=unc.drop(datesdrop,axis=0)
+
 matrix.describe().to_csv('description_statistics_allM.csv')
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
@@ -58,7 +61,7 @@ d_methodQuality_moddisRMSE = {}
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]
-plot_graph=False
+plot_graph=True
 
 for method in methods:
     # print(method)
@@ -228,9 +231,9 @@ for method in methods:
     ).sum()
     
     
-    # print(method, 'alltogether', resultAll.intercept,resultAll.slope)
-    # print(method, 'event',resultEvent.intercept,resultEvent.slope)
-    # print(method, 'noevent',resultNormal.intercept, resultNormal.slope)
+    print(method, 'alltogether', resultAll.intercept,resultAll.slope)
+    print(method, 'event',resultEvent.intercept,resultEvent.slope)
+    print(method, 'noevent',resultNormal.intercept, resultNormal.slope)
     
     print(method)
     # Grafico un panel
@@ -395,6 +398,7 @@ method_absolute.columns = ["Original","Modified all", "Modified disaggregated"]
 
 method_quality = pd.concat([method_RMSE, method_quality], axis=1)
 
+latex_table = method_quality.to_latex(escape=False, index_names=False, float_format="%.2f")
 
 # Reemplazar \toprule, \middlerule y \bottomrule por \hline
 latex_table = latex_table.replace('\\toprule', '\\hline')
@@ -405,14 +409,6 @@ latex_table = latex_table.replace('\\bottomrule', '\\hline')
 print(latex_table)
 # print(method_quality)
 # print method method_quality y RMSE
-# %%
-# pd.set_option('display.float_format', '{:.1e}'.format)
-
-
-# print(matrix_seasonal.to_latex())
-
-
-#print(matrix_seasonal.All_average.sort_values())
 
 #%%
 class Compuesto:
@@ -517,9 +513,22 @@ latex_table = matrix_seasonal.to_latex(escape=False, index_names=False, float_fo
 
 # Reemplazar \toprule, \middlerule y \bottomrule por \hline
 latex_table = latex_table.replace('\\toprule', '\\hline')
-latex_table = latex_table.replace('\\middlerule', '\\hline')
+latex_table = latex_table.replace('\\midrule', '\\hline')
 latex_table = latex_table.replace('\\bottomrule', '\\hline')
 
 # Imprimir la tabla en formato LaTeX
 print(latex_table)
+# %%
+pm_neg = (matrix["PM2.5"] - mass[1]["inorganic_ions"]
+          - mass[1]["salt"] 
+          - mass[1]["geological_minerals"]
+          - mass[1]["elemental_C"]
+          - mass[1]["others"]) 
+fig, ax = plt.subplots()
+ax.plot(matrix["OC"], pm_neg, "ob")
+ax.plot(matrix["OC"].where(events[event_columnname].isin(event_labels)),
+        pm_neg.where(events[event_columnname].isin(event_labels)), "or")
+ax.set_xlabel("OC")
+ax.set_ylabel("PM2.5 - cat")
+plt.show()
 # %%

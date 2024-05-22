@@ -2,15 +2,14 @@ library(openair)
 library(ggplot2)
 library(lubridate)
 library(readxl)
-
-#setwd("/home/pablo/doctorado/paper_facu")
+setwd("~/Documents/paper_facu")
 pathgraphs="Figures"
 upper_windspeed=8.5
 colorset="plasma"
 # En data_every_hour_obs.csv solo estan actualizados los datos de meteo el resto del archivo es viejo
 data <- read.csv("data/data_every_hour_obs_eventM.csv")                           
 data$date <- as.POSIXct(data$date, tz='UTC')
-mergeddata <- data[,-c(8,31:42)]
+mergeddata <- data[,-c(29:40)]
 mergeddata$Sb_ng=mergeddata$Sb*1000
 mergeddata$As_ng=mergeddata$As*1000
 # data$day<-floor_date(data$date-3600*12,"day")
@@ -75,6 +74,11 @@ print(ppAs$plot,split=c(1, 1, 2, 1))
 print(ppSb$plot,split=c(2, 1, 2, 1), newpage=FALSE)
 dev.off()
 
+ppZn<-polarPlot(mergeddata, pollutant = "Zn", statistic = "mean",  min.bin = 2, 
+                upper =upper_windspeed, key.header="Zn",key.footer="[ug/m3]",
+                mis.col = "transparent", cols=colorset)
+
+
 ppAs<-polarPlot(mergeddata, pollutant = "As", statistic = "mean",  min.bin = 2, 
                 upper =upper_windspeed, key.header="As",key.footer="[ug/m3]",
                 mis.col = "transparent")
@@ -86,8 +90,9 @@ print(ppAs$plot,split=c(1, 1, 2, 1))
 print(ppSb$plot,split=c(2, 1, 2, 1), newpage=FALSE)
 dev.off()
 
-
-
+ppAs<-polarPlot(mergeddata, pollutant = "K", statistic = "mean",  min.bin = 2, 
+                upper =upper_windspeed, key.header="K",key.footer="[ug/m3]",
+                mis.col = "transparent", cols=colorset)
 ppAs<-polarPlot(mergeddata, pollutant = "As_ng", statistic = "mean",  min.bin = 2, 
                 upper =upper_windspeed, key.header="As",key.footer="[ng/m3]",
                 mis.col = "transparent", cols=colorset)
@@ -110,7 +115,7 @@ print(ppNi$plot,split=c(1, 1, 2, 1))
 print(ppV$plot,split=c(2, 1, 2, 1), newpage=FALSE)
 dev.off()
 
-scatterPlot(PMF_BA_full_so,x="NH4",y="nssSO4")
+# scatterPlot(PMF_BA_full_so,x="NH4",y="nssSO4")
 # ## codigo anterior Pablo
 # keys = names(data)[2:45]
 # print(keys)
