@@ -97,9 +97,11 @@ def main() -> None:
     dataEra5 = dataEra5[["date", "blh"]]
     data_out: pd.DataFrame = pd.merge(data_obs, dataEra5, on="date")
     data_out = data_out.set_index(data_out["date"])
-    data_out = data_out[["date", "ws", "temp", "rh", "pres", "blh"]]
+    data_out = data_out[["date", "ws", "wd", "temp", "rh", "pres", "blh"]]
 
-    data_out.to_csv("test.csv")
+    data_out[["ws", "wd", "temp", "rh", "pres", "blh"]].to_csv(
+        "datos_meteo_blhera5_hourly.csv"
+    )
     data_out_noon2noon = data_out.resample("24h", offset="12h").mean()
 
     target_data: pd.DataFrame = pd.read_excel("PMF_BA_fullv3.xlsx", sheet_name="CONC")
