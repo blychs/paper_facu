@@ -12,6 +12,11 @@ data$date <- as.POSIXct(data$date, tz='UTC')
 mergeddata <- data[,-c(29:40)]
 mergeddata$Sb_ng=mergeddata$Sb*1000
 mergeddata$As_ng=mergeddata$As*1000
+mergeddata$nssK=mergeddata$K-0.6*mergeddata$Fe-0.037*mergeddata$Na
+mergeddata$nssK_OC=mergeddata$nssK/mergeddata$C.Orgánico
+mergeddata$nssK_EC=mergeddata$nssK/mergeddata$C.Elemental
+mergeddata$OC_EC=mergeddata$C.Orgánico/mergeddata$C.Elemental
+mergeddata=dplyr::rename(mergeddata,Event= Event_M)
 # data$day<-floor_date(data$date-3600*12,"day")
 # meteodata <- data[,c(1,47,48,49)]
 # # de aca sacar Event_M
@@ -42,6 +47,10 @@ rm(data)
 
 mergeddata$OC_EC = mergeddata$`C.Orgánico`/mergeddata$`C.Elemental`
 mergeddata$OC_K=mergeddata$`C.Orgánico`/mergeddata$K
+
+PPPM25<-polarPlot(mergeddata, pollutant = "PM2.5", statistic = "mean",  min.bin = 2, 
+                  upper =upper_windspeed, key.footer="[ug/m3]",key.header = "PM2.5",mis.col = "transparent",
+                  cols="inferno")
 #polarPlot(mergeddata, pollutant = "OC_EC", statistic = "mean",  min.bin = 2, main='OC/EC')
 ppEC<-polarPlot(mergeddata, pollutant = "C.Elemental", statistic = "mean",  min.bin = 2, 
           upper =upper_windspeed, key.footer="[ug/m3]",key.header = "EC",mis.col = "transparent",
@@ -103,6 +112,7 @@ png(paste0(pathgraphs,"/polarplotAsSbenng_",colorset,".png"), width = 717 * 5, h
 print(ppAs$plot,split=c(1, 1, 2, 1))
 print(ppSb$plot,split=c(2, 1, 2, 1), newpage=FALSE)
 dev.off()
+
 
 ppNi<-polarPlot(mergeddata, pollutant = "Ni", statistic = "mean",  min.bin = 2, 
                 upper =upper_windspeed, key.header="Ni",key.footer="[ug/m3]",
@@ -206,3 +216,157 @@ dev.off()
 # }
 # 
 # print(data_period2$Ca[which(data_period2$Ca<=0.0250)])
+
+ggplot(mergeddata)+geom_point(aes(x=date, y=OC_EC, color=Event))
+
+ggplot(mergeddata)+geom_point(aes(x=`C.Orgánico`, y=`C.Elemental`, color=Event))
+
+ggplot(mergeddata)+geom_point(aes(x=`C.Orgánico`, y=nnsK, color=Event))+theme_bw()
+
+
+ggplot(mergeddata)+geom_line(aes(x=date, y=nssK_EC, color="nssK/EC" ))+
+  geom_line(aes(x=date, y=nssK_OC*5, color="nssK/OC"))+
+  geom_point(aes(x=date, y=OC_EC/5, color=Event))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=nssK, y=`C.Elemental`, color=Event ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=nssK, y=`C.Orgánico`, color="no Event"))+
+  geom_point(data=mergeddata[mergeddata$Event %in% c("S","SN","SP","SL","DS"),],
+             aes(x=nssK, y=`C.Orgánico`, color="Event"))
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=`C.Elemental`, y=`C.Orgánico`, color=Event ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+ggplot(mergeddata)+
+  # geom_point(aes(x=date, y=K, color=Event ))+
+  geom_line(aes(x=date, y=K, color="K"))+
+  geom_line(aes(x=date, y=nssK, color="nssK"))+
+  # geom_point(aes(x=date,y=nssK, color=Event))+
+  geom_point(aes(x=date, y=OC_EC/10, color=Event))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=nssK, y=`C.Elemental`, color="no Event" ))+
+  geom_point(data=mergeddata[mergeddata$Event %in% c("S","SN","SP","SL"),],
+             aes(x=nssK, y=`C.Elemental`, color="Event" ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=nssK, y=`C.Orgánico`, color="no Event" ))+
+  geom_point(data=mergeddata[mergeddata$Event %in% c("S","SN","SP","SL"),],
+             aes(x=nssK, y=`C.Orgánico`, color="Event" ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=`C.Elemental`, y=`C.Orgánico`, color="no Event" ))+
+  geom_point(data=mergeddata[mergeddata$Event %in% c("S","SN","SP","SL"),],
+             aes(x=`C.Elemental`, y=`C.Orgánico`, color="Event" ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+
+ggplot(mergeddata)+geom_point(aes(x=NO3, y=NH4, color="no Event" ))+
+  geom_point(data=mergeddata[mergeddata$Event %in% c("S","SN","SP","SL"),],
+             aes(x=NO3, y=NH4, color="Event" ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=SO4, y=NH4, color="no Event" ))+
+  geom_point(data=mergeddata[mergeddata$Event %in% c("S","SN","SP","SL"),],
+             aes(x=SO4, y=NH4, color="Event" ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+
+ggplot(mergeddata)+geom_point(aes(x=Na, y=Cl, color="no Event" ))+
+  geom_point(data=mergeddata[mergeddata$Event %in% c("S","SN","SP","SL"),],
+             aes(x=Na, y=Cl, color="Event" ))+
+  # geom_point(aes(x=date, y=nssK_OC, color="nssK/OC"))+
+  # geom_point(aes(x=date, y=OC_EC/10, color="OC/EC"))+
+  theme_bw()
+# crustal
+# "Ca","Al",  "Mg", "Fe", "Ti","Ba", "Mn"
+polarPlot(mergeddata, pollutant = "Ca", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = "Al", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed,
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("Ca","Al"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="[ng/m3]",
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c( "Fe"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c( "Mg"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c(  "Ti"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed,
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c(  "Ba"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c(  "Mn"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("V", "Mn","Fe", "Ni", "Cu", "Zn", "Pb", "Ca", "Mg"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, normalise = T, limits = c(0,2),
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("V", "Mn","Fe", "Ni", "Cu", "Zn", "Pb", "Ca", "Mg"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("V", "Mn","Fe", "Ni", "Cu", "Zn", "Pb", "Mg"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("K", "NO3","Cl", "SO4", "NH4","Na"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, normalise = T, limits = c(0,2),
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("K", "NO3","Cl", "SO4", "NH4","Na"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, 
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("K"), type="season", hemisphere="southern",statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed,  k=80, normalise=T,
+          mis.col = "transparent", cols=colorset)
+ppKJAS=polarPlot(selectByDate(mergeddata, start = "2019-07-01", end = "2019-09-30"), 
+          pollutant = c("K"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed,  k=100, 
+          mis.col = "transparent", cols=colorset)
+ppK=polarPlot(mergeddata, 
+                 pollutant = c("K"), statistic = "mean",  min.bin = 2, 
+                 upper =upper_windspeed,  k=100, 
+                 mis.col = "transparent", cols=colorset)
+png(paste0(pathgraphs,"/polarplotppK_",colorset,".png"), width = 717 * 5, height = 339* 5, res = 300)
+print(ppK$plot,split=c(1, 1, 2, 1))
+print(ppKJAS$plot,split=c(2, 1, 2, 1), newpage=FALSE)
+dev.off()
+
+polarPlot(mergeddata, 
+              pollutant = c("K","Na"), statistic = "mean",  min.bin = 2, 
+              upper =upper_windspeed, normalise = T,
+          k=100, limits = c(0,1.5),
+              mis.col = "transparent", cols=colorset)
+ggplot(selectByDate(mergeddata, start = "2019-07-25", end = "2019-09-25"))+geom_line(aes(x=date, y=K))
+corPlot(selectByDate(mergeddata, start = "2019-07-25", end = "2019-09-25"))
+
+polarPlot(mergeddata, pollutant = c("Ca", "Mg"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, normalise = T, limits = c(0,2),
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata, pollutant = c("Cu", "K"), statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, normalise = T, limits = c(0,2),
+          mis.col = "transparent", cols=colorset)
+polarPlot(mergeddata,pollutant="PM2.5")
+polarPlot(selectByDate(mergeddata, start = "2019-07-25", end = "2019-09-25"),
+          pollutant="PM2.5")

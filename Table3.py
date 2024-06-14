@@ -36,7 +36,7 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
 
 
 event_columnname="Event_M"
-event_labels= ["S", "SP", "SN","SL","SC"]
+event_labels= ["S", "SP", "SN","SC","SL"]
 # #%matplotlib widget
 
 # sin c
@@ -487,7 +487,8 @@ matrix_seasonal = matrix_seasonal.drop([
     "OCPk2 C", "OCPk3 C", "OCPk4 C", "OCPk5 C",
     "Pyrol C", "Na no sol"], axis=0)
 
-matrix_seasonal['Tipo'] = matrix_seasonal.index.map(lambda x: next((compuesto.tipo for compuesto in compuestos if compuesto.nombre == x), None))
+matrix_seasonal['Tipo'] = matrix_seasonal.index.map(lambda x: 
+        next((compuesto.tipo for compuesto in compuestos if compuesto.nombre == x), None))
 
 # Verificar los tipos mapeados en matrix_seasonal
 print("Tipos mapeados en matrix_seasonal:")
@@ -503,13 +504,17 @@ matrix_seasonal = matrix_seasonal_sorted
 matrix_seasonal = matrix_seasonal.drop(columns=['Tipo'])
 mapeo_nombre_a_columna = {compuesto.nombre: compuesto.columna for compuesto in compuestos}
 matrix_seasonal = matrix_seasonal.rename(index=mapeo_nombre_a_columna)
+
+# Pm2.5 round2
+# Al ng
+# Cu  
 #%%
 
 # for compuesto in compuestos:
 #     matrix_seasonal[compuesto.columna] = matrix_seasonal[compuesto.columna].map(lambda x: f"{x:.2f}")
 
 # latex_table = matrix_seasonal.to_latex(escape=False, index_names=False)
-latex_table = matrix_seasonal.to_latex(escape=False, index_names=False, float_format="%.2f")
+latex_table = matrix_seasonal.to_latex(escape=False, index_names=False, float_format="%.3g")
 
 # Reemplazar \toprule, \middlerule y \bottomrule por \hline
 latex_table = latex_table.replace('\\toprule', '\\hline')

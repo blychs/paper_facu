@@ -8,7 +8,7 @@ BA_events_testM$Event_M <- as.factor(BA_events_testM$Event_M)
 
 factor(BA_events_testM$Event_M)
 
-PMF_BA_full <- read_excel("data/PMF_BA_fullv3.xlsx",
+PMF_BA_full <- read_excel("../data/PMF_BA_fullv3.xlsx",
                           sheet = "CONC", col_types = c("date",
                                                         "numeric", "numeric", "numeric",
                                                         "numeric", "numeric", "numeric",
@@ -102,3 +102,50 @@ corPlot(PMF_BA_full_so[,c( "Ca","Ba",  "Mg", "Ti","Sb")],
         dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
 corPlot(PMF_BA_full_so[,c( "Fe","Al",  "Mn", "Ti")], 
         dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+
+corPlot(PMF_BA_full_so[,c( "Fe","Al",  "Mn", "Ti")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+
+corPlot(PMF_BA_full[,c( "Na sol","Cl",  "NH4", "NO3","SO4", "KNON")], 
+        dendrogram = TRUE,method = "spearman", main= "R spearman")
+PMF_BA_full$nssK=PMF_BA_full$K-0.6*PMF_BA_full$Fe-0.037*PMF_BA_full$`Na sol`
+PMF_BA_full$nssK_OC=PMF_BA_full$nssK/PMF_BA_full$OC
+PMF_BA_full$nssK_EC=PMF_BA_full$nssK/PMF_BA_full$EC
+PMF_BA_full$OC_EC=PMF_BA_full$OC/PMF_BA_full$EC
+
+PMF_BA_full_so=PMF_BA_full[PMF_BA_full$date<=as.POSIXct('2019-05-23') | PMF_BA_full$date>=as.POSIXct('2019-06-02'),]
+
+corPlot(PMF_BA_full_so[,c( "Na sol","Cl",  "NH4", "NO3","SO4", "nssK")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson")
+corPlot(PMF_BA_full_so[,c( "Ca","Al",  "Mg", "Fe", "Ti","Ba", "Mn")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+
+
+corPlot(PMF_BA_full[,c( "OC","EC",  "K")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+
+corPlot(selectByDate(PMF_BA_full, start = "2019-07-25", end = "2019-09-25"),
+        pollutants = c("NO3","NH4","K","C Elemental","C Orgánico","SO4"),dendrogram = TRUE)
+corPlot(PMF_BA_full,dendrogram = TRUE)
+
+PMF_BA_full$neutralization=PMF_BA_full$NH4/(PMF_BA_full$NO3+PMF_BA_full$SO4)
+ggplot(PMF_BA_full)+
+  geom_line(aes(x=date, y=neutralization))+
+  geom_line(aes(x=date, y=K,color="K"))+
+  geom_line(aes(x=date, y=SO4,color="Cu"))
+  
+meteoobsday=timeAverage(meteoobs,avg.time = "day",statistic = "sum")
+TVmeteo=timeVariation(meteoobs,pollutant = "PRECIP 6HS (mm)")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=`PM2,5`))+
+  geom_point(data=meteoobsday,aes(x=date,y=`PRECIP 6HS (mm)`*2, color="precip"))
+TVmeteoobs=timeVariation(meteoobsday, pollutant = "PRECIP 6HS (mm)", statistic = "median")
+print(TVmeteoobs$plot$month)
+
+TVmean=timeVariation(PMF_BA_full,pollutant = "PM2,5")
+print(TVmean$plot$month)
+
+timePlot(PMF_BA_full,pollutant = "PM2,5")
+timePlot(PMF_BA_full,pollutant = "PM2,5", avg.time = "month")
+timePlot(PMF_BA_full,pollutant = "PM2,5", avg.time = "month")
+
+timePlot(PMF_BA_full,pollutant = "OC_K")

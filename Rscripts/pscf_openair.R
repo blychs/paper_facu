@@ -7,7 +7,7 @@ library(openair)
 library(ggplot2)
 library(lubridate)
 library(readxl)
-source('Rscripts/opentrajutils.R')
+source('opentrajutils.R')
 
 # Seteo de parametros ####
 #setwd("/home/pablo/doctorado/paper_facu")
@@ -15,9 +15,9 @@ pathgraphs="Figures"
 upper_windspeed=8.5
 pscflims = c(0,1)
 colorset="plasma"
-pathtraj="tdumps"
+pathtraj="../tdumps"
 pattern ="tdump*"
-bbpdatafile="data/data_every_hour_obs_eventM.csv"
+bbpdatafile="../data/data_every_hour_obs_eventM.csv"
 
 # Load datasets ####
 bbpdata <- read.csv(bbpdatafile)
@@ -216,3 +216,85 @@ pscf<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minla
                 origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
                 lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
 dev.off()
+
+
+png(paste0(pathgraphs,"/PSCF500m_PM25eventos_",title,".png"), width = 590 * 3, height =592* 3, res = 300)
+pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                             start = "2019-08-01", end = "2019-08-31"),
+                pollutant = title , statistic = "pscf", limits = pscflims, percentile = 60,
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat", smooth = F,  border = NA, 
+                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+dev.off()
+
+pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                             start = "2019-08-01", end = "2019-08-31"),
+                pollutant = title , statistic = "cwt",
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat", smooth = F,  border = NA, 
+                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+pscf<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
+                pollutant = title , statistic = "pscf", limits = pscflims, percentile = 70,
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat", smooth = F,  border = NA, 
+                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+
+pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                             start = "2019-07-22", end = "2019-09-29"),
+                pollutant = title , statistic = "cwt",  
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat", smooth = F,  border = NA, 
+                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+pscf<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
+                pollutant = title , statistic = "cwt",  
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat", smooth = F,  border = NA, 
+                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+# 
+pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                            start = "2019-08-07", end = "2019-08-28"),
+               pollutant = "OC" , statistic = "pscf", limits = pscflims, percentile = 70,
+               projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+               cols = "heat", smooth = F,  border = NA, 
+               grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+               origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+               lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+
+pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                             start = "2019-09-06", end = "2019-09-27"),
+                pollutant = "OC" , statistic = "pscf", limits = pscflims, percentile = 70,
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat", smooth = F,  border = NA, 
+                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+
+pscf<-trajPlot(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                             start = "2019-11-08", end = "2019-11-20"),
+               origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+               projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL)
+
+
+pscf<-trajPlot(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                            start = "2019-08-01", end = "2019-09-27"),
+               origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+               projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL)
+
+pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                             start = "2020-01-01", end = "2020-01-23"),
+                pollutant = "OC" , statistic = "pscf", limits = pscflims, percentile = 60,
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat", smooth = F,  border = NA, 
+                grid.cols = "grey40", auto.text =FALSE, key.header ="", 
+                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
