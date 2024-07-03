@@ -31,40 +31,40 @@ CEILAP_BA2 = merge(CEILAP_BA, BA_events_testM, by="date")
 
 CEILAP_BA_hora2 = merge(CEILAP_BA_hora, BA_events_testM, by.x="Date(dd:mm:yyyy)", by.y="date")
 
-ggplot()+ geom_point(data = CEILAP_BA2, 
-                     aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`))+
-  geom_point(data = CEILAP_BA2[CEILAP_BA2$Event_M %in% c("S","SL","SN"),], 
-             aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Event_M))+
-  geom_hline(yintercept=1.13,color="grey50")+
-  geom_vline(xintercept=0.1613,color="grey50")+
-  theme_bw()
-
-# summary clima
-CEILAP_BA_hist <- read_csv("../data/DatosCEILAP/20100101_20201231_CEILAP-BA.lev20", 
-                           col_types = cols(`Date(dd:mm:yyyy)` = col_datetime(format = "%d:%m:%Y")), 
-                           skip = 6, na = c("-999","-999.000000"))
-summary(CEILAP_BA_hist$AOD_440nm)
-
-ggplot()+ geom_point(data = CEILAP_BA_hora2, 
-                     aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`))+
-  geom_point(data = CEILAP_BA_hora2[CEILAP_BA_hora2$Event_F %in% c("SI","SO","SN","SP"),], 
-             aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Event_F))+
-  geom_hline(yintercept=1.13,color="grey50")+
-  geom_vline(xintercept=0.1613,color="grey50")+
-  theme_bw()
-
-ggplot()+ geom_point(data = CEILAP_BA_hora2, 
-                     aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`))+
-  geom_point(data = CEILAP_BA_hora2[CEILAP_BA_hora2$Event_F %in% c("SI","SO","SN","SP"),], 
-             aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Local))+
-  geom_hline(yintercept=1.13,color="grey50")+
-  geom_vline(xintercept=0.1613,color="grey50")+
-  theme_bw()
+# ggplot()+ geom_point(data = CEILAP_BA2, 
+#                      aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`))+
+#   geom_point(data = CEILAP_BA2[CEILAP_BA2$Event_M %in% c("S","SL","SN"),], 
+#              aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Event_M))+
+#   geom_hline(yintercept=1.13,color="grey50")+
+#   geom_vline(xintercept=0.1613,color="grey50")+
+#   theme_bw()
+# 
+# # summary clima
+# CEILAP_BA_hist <- read_csv("../data/DatosCEILAP/20100101_20201231_CEILAP-BA.lev20", 
+#                            col_types = cols(`Date(dd:mm:yyyy)` = col_datetime(format = "%d:%m:%Y")), 
+#                            skip = 6, na = c("-999","-999.000000"))
+# summary(CEILAP_BA_hist$AOD_440nm)
+# 
+# ggplot()+ geom_point(data = CEILAP_BA_hora2, 
+#                      aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`))+
+#   geom_point(data = CEILAP_BA_hora2[CEILAP_BA_hora2$Event_F %in% c("SI","SO","SN","SP"),], 
+#              aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Event_F))+
+#   geom_hline(yintercept=1.13,color="grey50")+
+#   geom_vline(xintercept=0.1613,color="grey50")+
+#   theme_bw()
+# 
+# ggplot()+ geom_point(data = CEILAP_BA_hora2, 
+#                      aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`))+
+#   geom_point(data = CEILAP_BA_hora2[CEILAP_BA_hora2$Event_F %in% c("SI","SO","SN","SP"),], 
+#              aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Local))+
+#   geom_hline(yintercept=1.13,color="grey50")+
+#   geom_vline(xintercept=0.1613,color="grey50")+
+#   theme_bw()
 
 ggplot()+ geom_point(data = CEILAP_BA_hora2, 
                      aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`))+
   geom_point(data = CEILAP_BA_hora2[CEILAP_BA_hora2$Event_F %in% c("SI"),], 
-             aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Origen))+
+             aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=Tag))+
   geom_hline(yintercept=1.13,color="grey50")+
   geom_vline(xintercept=0.1613,color="grey50")+
   theme_bw()

@@ -20,7 +20,7 @@ from sklearn.metrics import mean_squared_error
 plt.style.use('seaborn-v0_8-paper')
 matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 'data/PMF_BA_fullv3.xlsx',
                                               'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
-                                              'BA_events_testM.xlsx')
+                                              'BA_events_testMnew.xlsx')
 # datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31','2019-08-04','2019-08-07','2019-08-10']
 # datesdrop=['2020-03-01','2020-01-31']
 # matrix=matrix.drop(datesdrop,axis=0)
@@ -33,8 +33,8 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Hand_2011','Simon_2011']
 
 
-event_columnname="Event_M"
-event_labels= ["S", "SP", "SN","SC"]
+event_columnname="Event_F"
+event_labels= ["SI" ,"SF","SO"] 
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]
@@ -251,8 +251,8 @@ print("Maenhaut:", d_methodQuality_Maenhaut,", Hand: ",d_methodQuality_Hand,
 
 # %% Simon mod con lineal estimation
 beta_omoc_noevent=1.8
-beta_omoc_event=2.3
-beta_omoc_all=2.1
+beta_omoc_event=2.5 # 2.3
+beta_omoc_all=2.2 #2.1
 
 total_reconst_mass, mass, utotal_reconst_mass, uncertainty = mass_reconstruction_mod(matrix, unc, events, 
                                                                                      equation="Simon_2011_linmod", 

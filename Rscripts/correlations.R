@@ -24,22 +24,22 @@ PMF_BA_full <- read_excel("../data/PMF_BA_fullv3.xlsx",
                                                         "skip", "skip", "skip", "skip", "skip",
                                                         "numeric", "numeric", "numeric"),
                           na ='-999')
-PMF_BA_full0 <- read_excel("PMF_BA_full.xlsx",
-                          sheet = "CONC", col_types = c("date",
-                                                        "numeric", "numeric", "numeric",
-                                                        "numeric", "numeric", "numeric",
-                                                        "skip", "skip", "numeric", "numeric",
-                                                        "numeric", "numeric", "numeric",
-                                                        "numeric", "numeric", "numeric",
-                                                        "numeric", "numeric", "numeric",
-                                                        "numeric", "numeric", "numeric",
-                                                        "numeric", "numeric", "numeric",
-                                                        "numeric", "numeric", "numeric",
-                                                        "numeric", "skip", "skip", "skip",
-                                                        "skip", "skip", "skip", "skip",
-                                                        "skip", "skip", "skip", "skip", "skip",
-                                                        "numeric", "numeric", "numeric"),
-                          na ='-999')
+# PMF_BA_full0 <- read_excel("PMF_BA_full.xlsx",
+#                           sheet = "CONC", col_types = c("date",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "skip", "skip", "numeric", "numeric",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "numeric", "numeric", "numeric",
+#                                                         "numeric", "skip", "skip", "skip",
+#                                                         "skip", "skip", "skip", "skip",
+#                                                         "skip", "skip", "skip", "skip", "skip",
+#                                                         "numeric", "numeric", "numeric"),
+#                           na ='-999')
 PMF_BA_full=dplyr::rename(PMF_BA_full, EC = 'C Elemental',TC = 'C Total',OC = 'C Orgánico')
 PMF_BA_full$KNON=(PMF_BA_full$K-0.6*PMF_BA_full$Fe)
 PMF_BA_full$OC_EC = PMF_BA_full$OC/PMF_BA_full$EC
@@ -149,3 +149,63 @@ timePlot(PMF_BA_full,pollutant = "PM2,5", avg.time = "month")
 timePlot(PMF_BA_full,pollutant = "PM2,5", avg.time = "month")
 
 timePlot(PMF_BA_full,pollutant = "OC_K")
+
+# IONES ####
+PMF_BA_full$NH4NO3 = (PMF_BA_full$NH4/18.04)/(PMF_BA_full$NO3/62)
+
+png("images/ratioNH4NO3.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4NO3))+geom_abline(slope=0,intercept=1, linetype=3)
+dev.off()
+PMF_BA_full$NH4SO4 = (PMF_BA_full$NH4/18.04)/(PMF_BA_full$SO4/96.06)
+png("images/ratioNH4SO4.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4SO4))+geom_abline(slope=0,intercept=1, linetype=3)
+dev.off()
+
+PMF_BA_full$NH4SO4NO3 = (PMF_BA_full$NH4/18.04)/((2*PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62))
+png("images/ratioNH4SO4NO3.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4SO4NO3))+geom_abline(slope=0,intercept=1, linetype=3)
+dev.off()
+
+PMF_BA_full$NH4SO4NO3 = (PMF_BA_full$NH4/18.04)/((PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62))
+png("images/ratioNH41SO4NO3.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4SO4NO3))+geom_abline(slope=0,intercept=1, linetype=3)
+dev.off()
+
+PMF_BA_full$KSO4 = (PMF_BA_full$K/39.1)/((PMF_BA_full$SO4/96.06))
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=KSO4))+geom_abline(slope=0,intercept=1, linetype=3)
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=K))+geom_abline(slope=0,intercept=1, linetype=3)
+
+PMF_BA_full$NO3SO4 = (PMF_BA_full$NO3/62)/((PMF_BA_full$SO4/96.06))
+png("images/ratioNO3SO4.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NO3SO4))+geom_abline(slope=0,intercept=1, linetype=3)
+
+dev.off()
+
+png("images/ratioSO4.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=SO4))
+
+dev.off()
+png("images/ratioNO3.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NO3))
+dev.off()
+png("images/ratioNH4.png")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4))+geom_abline(slope=0,intercept=1, linetype=3)
+
+dev.off()
+# ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=K))+geom_abline(slope=0,intercept=1, linetype=3)
+
+PMF_BA_full$bal = (2*(PMF_BA_full$Ca/40.08)+2*(PMF_BA_full$Mg/24.31)+(PMF_BA_full$`Na sol`/23)+(PMF_BA_full$K/39.1)+(PMF_BA_full$NH4/18.04))/((2*PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62)+(PMF_BA_full$Cl/35.45))
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=bal))+geom_abline(slope=0,intercept=1, linetype=3)
+
+colMeans(PMF_BA_full[,2:40],na.rm = T)
+
+PMF_BA_full$bal = ((PMF_BA_full$`Na sol`/23)+(PMF_BA_full$K/39.1)+(PMF_BA_full$NH4/18.04))/((2*PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62)+(PMF_BA_full$Cl/35.45))
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=bal))+geom_abline(slope=0,intercept=1, linetype=3)
+
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=SO4))+geom_abline(slope=0,intercept=1, linetype=3)
+
+# 
+gases20192020day=timeAverage(gases20192020, avg.time = "day")
+
+gases20192020$date=gases20192020$day+gases20192020$Hora
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=SO4))+geom_abline(slope=0,intercept=1, linetype=3)

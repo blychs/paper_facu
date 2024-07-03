@@ -370,3 +370,12 @@ polarPlot(mergeddata, pollutant = c("Cu", "K"), statistic = "mean",  min.bin = 2
 polarPlot(mergeddata,pollutant="PM2.5")
 polarPlot(selectByDate(mergeddata, start = "2019-07-25", end = "2019-09-25"),
           pollutant="PM2.5")
+
+polarPlot(selectByDate(mergeddata, start = "2019-07-25", end = "2019-09-25"),
+          pollutant="NH4")
+polarPlot(mergeddata, type="season",pollutant="NH4", hemisphere="southern",min.bin = 2, k=80)
+polarPlot(mergeddata, type="season",pollutant="NO3", hemisphere="southern",min.bin = 2, k=80)
+polarPlot(mergeddata, type="season",pollutant="SO4", hemisphere="southern",min.bin = 2, k=80)
+polarPlot(mergeddata, type="season",pollutant="K", hemisphere="southern",min.bin = 2, k=80)
+polarPlot(mergeddata, type="season",pollutant="C.Orgánico", hemisphere="southern",min.bin = 2, k=80)
+polarPlot(mergeddata, type="season",pollutant="C.Elemental", hemisphere="southern",min.bin = 2, k=80)

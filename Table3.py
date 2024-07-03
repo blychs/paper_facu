@@ -18,14 +18,14 @@ import pint
 plt.style.use('seaborn-v0_8-paper')
 matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 'data/PMF_BA_fullv3.xlsx',
                                               'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
-                                              'BA_events_testM.xlsx')
+                                              'BA_events_testMnew.xlsx')
 #%%
 # datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31','2019-08-04','2019-08-07','2019-08-10']
 # datesdrop=['2020-03-01','2020-01-31']
-datesdrop = ['2019-08-16']
-matrix=matrix.drop(datesdrop,axis=0)
-events=events.drop(datesdrop,axis=0)
-unc=unc.drop(datesdrop,axis=0)
+# datesdrop = ['2019-08-16'] # por que habiamos sacado este dia?
+# matrix=matrix.drop(datesdrop,axis=0)
+# events=events.drop(datesdrop,axis=0)
+# unc=unc.drop(datesdrop,axis=0)
 
 matrix.describe().to_csv('description_statistics_allM.csv')
 
@@ -33,17 +33,23 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
            'Hand_2011','Simon_2011']
+# methods = ['Simon_2011']
 
-
-event_columnname="Event_M"
-event_labels= ["S", "SP", "SN","SC","SL"]
+event_columnname="Event_F"
+event_labels= ["SI" ,"SF","SO"] # "SL", "S", "SC", "SO"
+# event_columnname="Event_M"
+# event_labels= ["S", "SL" ,"SP", "SN","SC"] 
 # #%matplotlib widget
 
-# sin c
-beta_omoc_noevent=1.8       
-beta_omoc_event=2.3
-beta_omoc_all=2.1
+# # sin c
+# beta_omoc_noevent=1.8       
+# beta_omoc_event=2.3
+# beta_omoc_all=2.1
 
+# # sin c
+# beta_omoc_noevent=1.8       
+# beta_omoc_event=2.5
+# beta_omoc_all=2.2
 # #con c
 # beta_omoc_noevent=1.6       
 # beta_omoc_event=2.4
@@ -61,7 +67,8 @@ d_methodQuality_moddisRMSE = {}
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]
-plot_graph=True
+plot_graph=False
+plot_graph1panel=False
 
 for method in methods:
     # print(method)
@@ -69,6 +76,8 @@ for method in methods:
     d_methodQuality[method] = 0
     d_methodQualityRMSE[method] = 0
     mass = mass_reconstruction_all(matrix, unc, events, equation=method, type_reconstruction="original")
+    df=pd.DataFrame.from_dict(mass[1])
+    df.to_csv(method+'_original_mass.csv')
     
     perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
     
@@ -90,6 +99,8 @@ for method in methods:
     mass = mass_reconstruction_all(matrix, unc, events, equation=method, 
                                    betas_all=[resultAll.intercept, resultAll.slope, 1,1,1], 
                                    type_reconstruction="alltogether")
+    df=pd.DataFrame.from_dict(mass[1])
+    df.to_csv(method+'_alltogether_mass.csv')
     pm25_for_rmse = matrix['PM2.5'].to_frame()
     pm25_for_rmse["reconstructed"] = mass[0] #total_reconst_mass, mass, utotal_reconst_mass, uncertainty
     pm25_for_rmse = pm25_for_rmse.dropna()
@@ -214,6 +225,8 @@ for method in methods:
                                    betas_event=[resultEvent.intercept,resultEvent.slope,1,1,1], 
                                    betas_noevent=[resultNormal.intercept, resultNormal.slope,1,1,1], 
                                    type_reconstruction="events")
+    df=pd.DataFrame.from_dict(mass[1])
+    df.to_csv(method+'_events_mass.csv')
 
     perc_reconst = percentage_with_err(mass[0], matrix["PM2.5"], mass[2], unc["PM2.5"])
 
@@ -242,7 +255,7 @@ for method in methods:
     # mass[1] = mass, 
     # mass[2] = utotal_reconst_mass, 
     # mass[3] = uncertainty
-    if (plot_graph == True):
+    if (plot_graph1panel == True):
         uncertainty = mass[3]
         total_reconst_mass = mass[0]
         utotal_reconst_mass = mass[2]
@@ -297,7 +310,7 @@ for method in methods:
         ax.legend()
         fig.tight_layout()
         fig.savefig(f'images/stacked_bar_absolute_{method}.png')
-        
+
         # grafico 3 paneles
         organic_mass_per = percentage_with_err(
             mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
@@ -317,7 +330,7 @@ for method in methods:
                                     totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
 
         width = 2.5
-
+    if (plot_graph == True):
         fig, ax = plt.subplots(nrows=3, figsize=(7, 7.5), sharex=True, dpi=200)
 
         ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
@@ -382,6 +395,8 @@ for method in methods:
         plt.subplots_adjust(hspace=.0)
         plt.subplots_adjust(wspace=.0)
         fig.savefig(f'images/stacked_bar_3panels_{method}.png')
+
+# plt.close('all')
 
 method_quality = pd.concat([pd.DataFrame([d]) for d in [d_methodQuality, d_methodQuality_modall, d_methodQuality_moddis]]).T
 method_quality.columns = ["Original","Modified all", "Modified disaggregated"]

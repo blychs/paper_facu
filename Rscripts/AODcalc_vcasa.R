@@ -19,7 +19,7 @@ CEILAP_BA=timeAverage(CEILAP_BA,avg.time = "day")
 subsetdia=timeAverage(subsets,avg.time = "day",na.rm=TRUE,statistic = "max")
 CEILAP_BA = CEILAP_BA[,c(1,4,5)]
 
-BA_events_testM <- read_excel("BA_events_testM.xlsx")
+BA_events_testM <- read_excel("BA_events_testMnew.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 BA_events_testM$Event_M <- as.factor(BA_events_testM$Event_M)
 CEILAP_BA = merge(CEILAP_BA, BA_events_testM, by="date")
