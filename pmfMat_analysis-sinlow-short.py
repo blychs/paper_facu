@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 from scipy.stats import linregress, spearmanr, zscore
 import statsmodels.api as sm
-from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, percentage_with_err
+from funciones_pmfBA import mass_reconstruction, mass_reconstruction_all, mass_reconstruction_mod, percentage_with_err
 from funciones_pmfBA import estimation_om_oc, calculate_seasonal, linear_estimation_om_oc
 from funciones_pmfBA import average_mass_reconstruction, axvlines
 from load_data import load_data
@@ -47,6 +47,15 @@ def select_events(df, events=events):
 def select_no_events(df, events=events):
     return df.where(~events[event_columnname].isin(event_labels))
 
+def print_results(label, result, method):
+    print(f"{label} &", method, '&', end=' ')
+    for i in range(4):
+        print(f'{result.params[i]:.4g}', '&',
+              f'{result.bse[i]:.2g}', '&',
+              f'{result.pvalues[i]:.3g}', end=' ')
+        if i < 3:
+            print('&', end=' ')
+    print('\\\\')
 
 #%% Estima parametros omoc 
 for method in methods:
@@ -60,22 +69,22 @@ for method in methods:
     resultAll = estimation_om_oc(matrix, method=method,
         ssa_as_Na=False, display_latex=False)
     omoc_all.append(resultAll.params[1])
-    # print("No Events & ", method, '&', f'{resultNormal.params[1]:.4g}', '&',
-    #      f'{resultNormal.bse[1]:.2g}', '&',
-    #      f'{resultNormal.pvalues[1]:.3g}', '\\\\')
+    print_results("No Events", resultNormal, method)
+    print_results("Events", resultEvent, method)
+    print_results("All together", resultAll, method)
     # print("Events & ",method, '&', f'{resultEvent.params[1]:.4g}', '&',
     #      f'{resultEvent.bse[1]:.2g}', '&',
     #      f'{resultEvent.pvalues[1]:.3g}', '\\\\')
     # print("All together & ",method, '&', f'{resultAll.params[1]:.4g}', '&',
     #      f'{resultAll.bse[1]:.2g}', '&',
     #      f'{resultAll.pvalues[1]:.3g}', '\\\\')
-    print(method, '&', f'{resultNormal.params[1]:.2g}', '&',
-         f'{resultNormal.bse[1]:.2g}', '&',
-         f'{resultNormal.pvalues[1]:.2g}', "& ", f'{resultEvent.params[1]:.2g}', '&',
-         f'{resultEvent.bse[1]:.2g}', '&',
-         f'{resultEvent.pvalues[1]:.2g}', "& ", f'{resultAll.params[1]:.2g}', '&',
-         f'{resultAll.bse[1]:.2g}', '&',
-         f'{resultAll.pvalues[1]:.2g}', '\\\\')
+    # print(method, '&', f'{resultNormal.params[1]:.2g}', '&',
+    #      f'{resultNormal.bse[1]:.2g}', '&',
+    #      f'{resultNormal.pvalues[1]:.2g}', "& ", f'{resultEvent.params[1]:.2g}', '&',
+    #      f'{resultEvent.bse[1]:.2g}', '&',
+    #      f'{resultEvent.pvalues[1]:.2g}', "& ", f'{resultAll.params[1]:.2g}', '&',
+    #      f'{resultAll.bse[1]:.2g}', '&',
+    #      f'{resultAll.pvalues[1]:.2g}', '\\\\')
 beta_omoc_noevent=np.round(np.mean(omoc_noevent),1)
 beta_omoc_event=np.round(np.mean(omoc_event),1)
 beta_omoc_all=np.round(np.mean(omoc_all),1)
@@ -251,18 +260,24 @@ print("Maenhaut:", d_methodQuality_Maenhaut,", Hand: ",d_methodQuality_Hand,
 
 # %% Simon mod con lineal estimation
 beta_omoc_noevent=1.8
-beta_omoc_event=2.5 # 2.3
-beta_omoc_all=2.2 #2.1
+beta_omoc_event=2.3 # 2.3
+beta_omoc_all=2.1 #2.1
 
-total_reconst_mass, mass, utotal_reconst_mass, uncertainty = mass_reconstruction_mod(matrix, unc, events, 
-                                                                                     equation="Simon_2011_linmod", 
-                                                                                     omoc_event=beta_omoc_event, 
-                                                                                     omoc_noevent=beta_omoc_noevent, 
-                                                                                     omoc_all=beta_omoc_all, 
-                                                                                     all_together=False,
-                                                                                     betas_all=[resultAll.slope, resultAll.intercept,1,1],
-                                                                                     betas_event=[resultEvent.slope, resultEvent.intercept,1,1],
-                                                                                     betas_noevent=[resultNormal.slope, resultNormal.intercept,1,1])
+# total_reconst_mass, mass, utotal_reconst_mass, uncertainty = mass_reconstruction_mod(matrix, unc, events, 
+#                                                                                      equation="Simon_2011_linmod", 
+#                                                                                      omoc_event=beta_omoc_event, 
+#                                                                                      omoc_noevent=beta_omoc_noevent, 
+#                                                                                      omoc_all=beta_omoc_all, 
+#                                                                                      all_together=False,
+#                                                                                      betas_all=[resultAll.slope, resultAll.intercept,1,1],
+#                                                                                      betas_event=[resultEvent.slope, resultEvent.intercept,1,1],
+#                                                                                      betas_noevent=[resultNormal.slope, resultNormal.intercept,1,1])
+total_reconst_mass, mass, utotal_reconst_mass, uncertainty  = mass_reconstruction_all(matrix, unc, events, equation=method, 
+                                                                                      betas_event=[resultEvent.intercept,resultEvent.slope,1,1,1], 
+                                                                                      betas_noevent=[resultNormal.intercept, resultNormal.slope,1,1,1], 
+                                                                                      type_reconstruction="events")
+
+
 organic_mass_per = percentage_with_err(
     mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
 inorganic_ions_per = percentage_with_err(
@@ -379,12 +394,20 @@ mass = mass.rename(columns={'organic_mass': 'Organic mass',
                             'others': 'Others'})
 keys = ['Organic mass', 'Geological minerals','Inorganic ions','Elemental carbon','Sea salt','Others']
 print('Category & Total ($\mu$g/m$^{3}$) & No event ($\mu$g/m$^{3}$) & Event ($\mu$g/m$^{3}$) \\\\ \\hline')
+# for key in keys:
+#     mass_events=mass[key].where(events[event_columnname].isin(event_labels))
+#     mass_noevents=mass[key].where(~events[event_columnname].isin(event_labels))
+#     print(f"{key} & {np.min(mass[key]):.2f} -- {np.max(mass[key]):.2f} ({np.mean(mass[key]):.2f}) & "
+#       f"{np.min(mass_noevents):.2f} -- {np.max(mass_noevents):.2f} ({np.mean(mass_noevents):.2f}) & "
+#       f"{np.min(mass_events):.2f} -- {np.max(mass_events):.2f} ({np.mean(mass_events):.2f}) \\\\")
+    
+    
 for key in keys:
     mass_events=mass[key].where(events[event_columnname].isin(event_labels))
     mass_noevents=mass[key].where(~events[event_columnname].isin(event_labels))
-    print(f"{key} & {np.min(mass[key]):.2f} -- {np.max(mass[key]):.2f} ({np.mean(mass[key]):.2f}) & "
-      f"{np.min(mass_noevents):.2f} -- {np.max(mass_noevents):.2f} ({np.mean(mass_noevents):.2f}) & "
-      f"{np.min(mass_events):.2f} -- {np.max(mass_events):.2f} ({np.mean(mass_events):.2f}) \\\\")
+    print(f"{key} & {np.min(mass[key]):.2f} & {np.max(mass[key]):.2f} & {np.mean(mass[key]):.2f} & "
+      f"{np.min(mass_noevents):.2f} & {np.max(mass_noevents):.2f} & {np.mean(mass_noevents):.2f} & "
+      f"{np.min(mass_events):.2f} & {np.max(mass_events):.2f} &{np.mean(mass_events):.2f} \\\\")
 
 #####################################################################################
 # %% Table 3
@@ -974,4 +997,10 @@ d_methodQuality_moddis[method] = np.logical_and(
 method_quality = pd.concat([pd.DataFrame([d]) for d in [d_methodQuality, d_methodQuality_modall, d_methodQuality_moddis]]).T
 method_quality.columns = ["Original","Modified all", "Modified disaggregated"]
 print(method_quality)
+# %%
+#over_gram = lambda x: x / (matrix["PM2.5"] / 1000000) #"µg/g"
+over_gram = lambda x: x / (matrix["PM2.5"] / 1000) #mg/g
+matrxigram=matrix.apply(over_gram)
+print(matrxigram[["Fe"]].describe())
+
 # %%

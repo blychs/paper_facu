@@ -1,4 +1,6 @@
 # %% Table 3
+import os
+os.chdir('/home/mdiaz/Documents/paper_facu/')
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -16,7 +18,8 @@ from sklearn.metrics import mean_squared_error
 import pint
 
 plt.style.use('seaborn-v0_8-paper')
-matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 'data/PMF_BA_fullv3.xlsx',
+matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 
+                                              'data/PMF_BA_fullv3.xlsx',
                                               'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
                                               'BA_events_testMnew.xlsx')
 #%%
@@ -29,11 +32,11 @@ matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 'data/P
 
 matrix.describe().to_csv('description_statistics_allM.csv')
 
-methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
-           'Malm_1994', 'Chow_1996', 'Andrews_2000',
-           'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
-           'Hand_2011','Simon_2011']
-# methods = ['Simon_2011']
+# methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
+#            'Malm_1994', 'Chow_1996', 'Andrews_2000',
+#            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
+#            'Hand_2011','Simon_2011']
+methods = ['Simon_2011','Lichtig_2024']
 
 event_columnname="Event_F"
 event_labels= ["SI" ,"SF","SO"] # "SL", "S", "SC", "SO"
@@ -67,9 +70,12 @@ d_methodQuality_moddisRMSE = {}
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]
-plot_graph=False
+plot_graph=True
 plot_graph1panel=False
-
+slope={}
+stderr={}
+intercept={}
+intercept_stderr={}
 for method in methods:
     # print(method)
     # hago la reconstruccion masica para el metodo original
@@ -94,6 +100,10 @@ for method in methods:
     # estimo beta para alltogether
     resultAll = linear_estimation_om_oc(matrix, method=method, ssa_as_Na=False, display_latex=False)
     omoc_all.append(resultAll.slope)
+    slope[method,"all"]=resultAll.slope
+    stderr[method,"all"]=resultAll.stderr
+    intercept[method,"all"]=resultAll.intercept
+    intercept_stderr[method,"all"]=resultAll.intercept_stderr
     d_methodQuality_modall[method] = 0
     d_methodQuality_modallRMSE[method] = 0
     mass = mass_reconstruction_all(matrix, unc, events, equation=method, 
@@ -130,7 +140,7 @@ for method in methods:
         ssa_per = percentage_with_err(
             mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
         # others_per = ((mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3)/ total_reconst_mass * 100
-        others_per = (mass['others'])/ total_reconst_mass * 100
+        others_per = (mass['others']+mass['residual']+mass['trace_elements'])/ total_reconst_mass * 100
 
         plt.style.use('seaborn-v0_8-paper')
 
@@ -160,19 +170,20 @@ for method in methods:
         axvlines(ax=ax[2], xs=matrix.index.values, color='silver',
                 lw=0.5, linestyle='dotted', zorder=0)
 
-        ax[1].bar(matrix.index.values, organic_mass_per['perc'].where(matrix['Na sol'].notna()).values, 
-                width,  label='OM')
+        ax[1].bar(matrix.index.values, organic_mass_per['perc'].where(matrix['Na sol'].notna()).values, width,  
+                  label='OM')
         ax[1].bar(matrix.index.values, inorganic_ions_per['perc'].values,
-                width,  bottom=organic_mass_per['perc'].values, label='II')
+                width,  bottom=organic_mass_per['perc'].values, 
+                label='II')
         ax[1].bar(matrix.index.values, geological_minerals_per['perc'].values, width,
-                bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']).values, label='GM')
+                bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']).values, 
+                label='GM')
         ax[1].bar(matrix.index.values, EC_per['perc'].values, width,
                 bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']).values, 
                 label='EC')
         ax[1].bar(matrix.index.values, ssa_per['perc'].values, width,
-                error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
-                            'ecolor': 'gray', 'marker': '.'},
-                bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']).values, label='SSA')
+                bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']).values, 
+                label='SSA')
         ax[1].bar(matrix.index.values, others_per.values, width, yerr=reconst['uperc'],
                 error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
                             'ecolor': 'gray', 'marker': '.'},
@@ -186,7 +197,7 @@ for method in methods:
         # ax[1].legend(ncol=3)
         # ax[1].set_xlabel('date')
         handles, labels = ax[1].get_legend_handles_labels()
-        ax[1].legend(reversed(handles), reversed(labels), loc=1,ncol=2)
+        ax[1].legend(reversed(handles), reversed(labels), loc=9,ncol=6)
 
         ax[2].axhline(0, color="gray")
         ax[2].errorbar(matrix.index, total_reconst_mass - matrix['PM2.5'],
@@ -216,7 +227,16 @@ for method in methods:
     resultEvent = linear_estimation_om_oc(matrix.where(events[event_columnname].isin(event_labels)), method=method,
         ssa_as_Na=False, display_latex=False)
     omoc_event.append(resultEvent.slope)
-    
+
+    stderr[method, "event"]=resultEvent.stderr
+    slope[method,"no event"]=resultNormal.slope
+    stderr[method,"no event"]=resultNormal.stderr
+    intercept[method,"no event"]=resultNormal.intercept
+    intercept_stderr[method,"no event"]=resultNormal.intercept_stderr
+    slope[method,"event"]=resultEvent.slope
+    stderr[method,"event"]=resultEvent.stderr
+    intercept[method,"event"]=resultEvent.intercept
+    intercept_stderr[method,"event"]=resultEvent.intercept_stderr    
     # print(method, f'{rms:.02f}')
 
     d_methodQuality_moddis[method] = 0
@@ -233,14 +253,21 @@ for method in methods:
     d_methodQuality_moddis[method] = np.logical_and(
     ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)
     ).sum()
-    
+    prueba=np.logical_and(
+    ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)
+    )
+    prueba2=perc_reconst["perc"] + perc_reconst["uperc"]
+    prueba3=perc_reconst["perc"] - perc_reconst["uperc"]
+#     print(prueba)
+#     print(prueba2)
+#     print(prueba3)
     pm25_for_rmse = matrix['PM2.5'].to_frame()
     pm25_for_rmse["reconstructed"] = mass[0] #total_reconst_mass, mass, utotal_reconst_mass, uncertainty
     pm25_for_rmse = pm25_for_rmse.dropna()
     d_methodQuality_moddisRMSE[method] = mean_squared_error(pm25_for_rmse['PM2.5'],pm25_for_rmse['reconstructed'], squared=False)
     # print(method, f'{rms:.02f}')
     d_methodQuality_moddis_absolute[method] = np.logical_and(
-    ((mass[0]-mass[2])< (matrix["PM2.5"]+unc["PM2.5"])),((mass[0] + mass[2]) > (matrix["PM2.5"]- unc["PM2.5"]))
+    ((mass[0]-mass[2])< (matrix["PM2.5"]+unc["PM2.5"])),((mass[0] + mass[2]) > (matrix["PM2.5"]-unc["PM2.5"]))
     ).sum()
     
     
@@ -255,30 +282,28 @@ for method in methods:
     # mass[1] = mass, 
     # mass[2] = utotal_reconst_mass, 
     # mass[3] = uncertainty
-    if (plot_graph1panel == True):
-        uncertainty = mass[3]
-        total_reconst_mass = mass[0]
-        utotal_reconst_mass = mass[2]
-        mass = mass[1]
-        organic_mass_per = percentage_with_err(
+    uncertainty = mass[3]
+    total_reconst_mass = mass[0]
+    utotal_reconst_mass = mass[2]
+    mass = mass[1]
+    organic_mass_per = percentage_with_err(
             mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
-        inorganic_ions_per = percentage_with_err(
+    inorganic_ions_per = percentage_with_err(
             mass['inorganic_ions'], matrix['PM2.5'], uncertainty['uinorganic_ions'], unc['PM2.5'])
-        geological_minerals_per = percentage_with_err(
+    geological_minerals_per = percentage_with_err(
             mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
-        EC_per = percentage_with_err(
-            mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
-        ssa_per = percentage_with_err(
-            mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
-        others_per = percentage_with_err(
-            mass['others'], matrix['PM2.5'], uncertainty['uothers'], unc['PM2.5']) 
-        plt.style.use('seaborn-v0_8-paper')
+    EC_per = percentage_with_err(
+             mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
+    ssa_per = percentage_with_err(
+             mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
+    others_per = percentage_with_err(
+             mass['others'], matrix['PM2.5'], uncertainty['uothers'], unc['PM2.5']) 
+    plt.style.use('seaborn-v0_8-paper')
+    reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
+                                totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
 
-        reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
-                                    totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
-
-        width = 2.5
-
+    width = 2.5
+    if (plot_graph1panel == True):
         fig, ax = plt.subplots(nrows=1, figsize=(7, 4), sharex=True, dpi=200)
         fig.suptitle(method)
         ax.errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
@@ -311,37 +336,40 @@ for method in methods:
         fig.tight_layout()
         fig.savefig(f'images/stacked_bar_absolute_{method}.png')
 
-        # grafico 3 paneles
-        organic_mass_per = percentage_with_err(
-            mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
-        inorganic_ions_per = percentage_with_err(
-            mass['inorganic_ions'], matrix['PM2.5'], uncertainty['uinorganic_ions'], unc['PM2.5'])
-        geological_minerals_per = percentage_with_err(
-            mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
-        EC_per = percentage_with_err(
-            mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
-        ssa_per = percentage_with_err(
-            mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
-        others_per = (mass['others'])/ total_reconst_mass * 100
+    # grafico 3 paneles
+    organic_mass_per = percentage_with_err(
+        mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
+    inorganic_ions_per = percentage_with_err(
+        mass['inorganic_ions'], matrix['PM2.5'], uncertainty['uinorganic_ions'], unc['PM2.5'])
+    geological_minerals_per = percentage_with_err(
+        mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
+    EC_per = percentage_with_err(
+        mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
+    ssa_per = percentage_with_err(
+        mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
+#     others_per = (mass['others']+mass['residual']+mass['trace_elements'])/ total_reconst_mass * 100
+    others_per = (mass['others']+mass['residual']+mass['trace_elements'])/ matrix['PM2.5'] * 100
 
-        plt.style.use('seaborn-v0_8-paper')
+    plt.style.use('seaborn-v0_8-paper')
 
-        reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
-                                    totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
+    reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
+                                totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
 
-        width = 2.5
+    width = 2.5
     if (plot_graph == True):
         fig, ax = plt.subplots(nrows=3, figsize=(7, 7.5), sharex=True, dpi=200)
 
         ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
-                    color='k', capsize=2, capthick=1, lw=1, marker='.', label='Gravimetric mass', zorder=1)
+                    color='k', capsize=2, capthick=1, lw=1, marker='.', label='gravimetric mass', zorder=1)
         ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, color='red',
-                    capsize=2, capthick=1, lw=1, marker='.', label='Reconstructed mass', zorder=0)
+                    capsize=2, capthick=1, lw=1, marker='.', label='reconstructed mass', zorder=0)
         ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
-        ax[0].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)) * 0, 'd',
+        ax[0].set_ylim(bottom=0, top=62)
+        ax[0].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)) * 0+2, 'd',
 
-                color='gray', label='Smoke events', zorder=3)
-        ax[0].legend()
+                color='gray', label='smoke event', zorder=5)
+        handles, labels = ax[0].get_legend_handles_labels()
+        ax[0].legend(reversed(handles), reversed(labels),loc=9,ncol=3)
 
         axvlines(ax=ax[0], xs=matrix.index.values, color='silver',
                 lw=0.5, linestyle='dotted', zorder=0)
@@ -360,21 +388,22 @@ for method in methods:
                 bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']).values, 
                 label='EC')
         ax[1].bar(matrix.index.values, ssa_per['perc'].values, width,
-                error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
-                            'ecolor': 'gray', 'marker': '.'},
-                bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']).values, label='SSA')
+                  bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + 
+                          geological_minerals_per['perc'] + EC_per['perc']).values, 
+                  label='SSA')
         ax[1].bar(matrix.index.values, others_per.values, width, yerr=reconst['uperc'],
                 error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
                             'ecolor': 'gray', 'marker': '.'},
                 bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] +
                         geological_minerals_per['perc'] + EC_per['perc'] + ssa_per['perc']).values,
-                label='Others')
+                label='others')
         ax[1].axhline(100, linestyle=':', color='k')
         ax[1].axhline(100, linestyle=':', color='k')
         ax[1].axhspan(80, 120, alpha=0.3, color='y')
         ax[1].set_ylabel('reconstructed mass (%)')
+        ax[1].set_ylim(bottom=0, top=340)
         handles, labels = ax[1].get_legend_handles_labels()
-        ax[1].legend(reversed(handles), reversed(labels), loc=1,ncol=2)
+        ax[1].legend(loc=9,ncol=6)
 
         ax[2].axhline(0, color="gray")
         ax[2].errorbar(matrix.index, total_reconst_mass - matrix['PM2.5'],
@@ -387,10 +416,14 @@ for method in methods:
                     yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
                     color='tab:red', capsize=2, capthick=1, elinewidth=1,
                     marker='o', label='smoke event', zorder=3)
-        ax[2].set_ylim(bottom=-20, top=20)
+        ax[2].set_ylim(bottom=-15, top=17)
         ax[2].set_xlabel("date")
-        ax[2].set_ylabel("reconstructed - gravimetric ($\mu$g/m$^3$)")
-        ax[2].legend()
+        ax[2].set_ylabel("residuals ($\mu$g/m$^3$)")
+        ax[2].legend(loc=9,ncol=2)
+        ax[0].text(0.01, 0.95, '(a)', transform=ax[0].transAxes, fontsize=12, verticalalignment='top')
+        ax[1].text(0.01, 0.95, '(b)', transform=ax[1].transAxes, fontsize=12, verticalalignment='top')
+        ax[2].text(0.01, 0.95, '(c)', transform=ax[2].transAxes, fontsize=12, verticalalignment='top')
+
         fig.tight_layout()
         plt.subplots_adjust(hspace=.0)
         plt.subplots_adjust(wspace=.0)
@@ -425,15 +458,44 @@ print(latex_table)
 # print(method_quality)
 # print method method_quality y RMSE
 
+table1 = pd.concat([pd.DataFrame([d]) for d in [slope, stderr, intercept, 
+                                                intercept_stderr]]).T
+table1.columns = ["slope","stderr", "intercept", "intercept_stderr"]
+# index = pd.MultiIndex.from_tuples(data.keys(), names=['source', 'type'])
+# table1 = pd.DataFrame(list(data.values()), index=index, columns=["slope", "stderr", "intercept", "intercept_stderr"])
+table1.index.names = ['source', 'type']
+table1 = table1.unstack(level='type')
+
+# Reorganizar las columnas
+ordered_columns = [
+    ('slope', 'no event'), ('stderr', 'no event'), ('intercept', 'no event'), ('intercept_stderr', 'no event'),
+    ('slope', 'event'), ('stderr', 'event'), ('intercept', 'event'), ('intercept_stderr', 'event'),
+    ('slope', 'all'), ('stderr', 'all'), ('intercept', 'all'), ('intercept_stderr', 'all')
+]
+table1 = table1[ordered_columns]
+
+# Aplanar el MultiIndex en las columnas
+table1.columns = ['_'.join(col) for col in table1.columns]
+
+# Exportar a LaTeX
+latex_table = table1.to_latex(escape=False, index=True, float_format="%.2f")
+
+print(latex_table)
+latex_table2 = table1.to_latex(escape=False, index_names=False, float_format="%.2f")
+
+
+
 #%%
 class Compuesto:
-    def __init__(self, nombre, columna, tipo, unidad_entrada, unidad_salida,formato):
+    def __init__(self, nombre, columna, tipo, unidad_entrada, unidad_salida,formato, category, decimals):
         self.nombre = nombre
         self.columna = columna
         self.tipo = tipo
         self.unidad_entrada = unidad_entrada
         self.unidad_salida = unidad_salida
         self.formato = formato
+        self.category = category
+        self.decimals = decimals
 class DataFrameToLatex:
     def __init__(self, data, compuestos):
         """
@@ -449,17 +511,37 @@ class DataFrameToLatex:
         """
         Aplica diferentes formatos a diferentes columnas según la configuración de los compuestos.
         """
-        for compuesto in self.compuestos:
-            # Aplica el formato especificado en la configuración del compuesto
-            if compuesto.formato == "float2":
-                self.df[compuesto.columna] = self.df[compuesto.columna].map(lambda x: f"{x:.2f}")
-            elif compuesto.formato == "float3":
-                self.df[compuesto.columna] = self.df[compuesto.columna].map(lambda x: f"{x:.3f}")
-            elif compuesto.formato == "float1":
-                self.df[compuesto.columna] = self.df[compuesto.columna].map(lambda x: f"{x:.1f}")
-            elif compuesto.formato == "integer":
-                self.df[compuesto.columna] = self.df[compuesto.columna].map(lambda x: f"{x:d}")
+        # for compuesto in self.compuestos:
+        #     # Aplica el formato especificado en la configuración del compuesto
+        #     if compuesto.formato == "float2":
+        #         self.df[compuesto.nombre] = self.df[compuesto.nombre].map(lambda x: f"{x:.2f}")
+        #     elif compuesto.formato == "float3":
+        #         self.df[compuesto.nombre] = self.df[compuesto.nombre].map(lambda x: f"{x:.3f}")
+        #     elif compuesto.formato == "float1":
+        #         self.df[compuesto.nombre] = self.df[compuesto.nombre].map(lambda x: f"{x:.1f}")
+        #     elif compuesto.formato == "integer":
+        #         self.df[compuesto.nombre] = self.df[compuesto.nombre].map(lambda x: f"{x:d}")
 
+    def format_columns(self):
+        """
+        Aplica diferentes formatos a diferentes columnas según la configuración de los compuestos.
+        """
+        for compuesto in self.compuestos:
+            col_name = compuesto.nombre
+            if col_name in self.df.columns:
+                # Asegurarse de que la columna sea numérica antes de aplicar el formato
+                if pd.api.types.is_numeric_dtype(self.df[col_name]):
+                    # Aplica el formato especificado en la configuración del compuesto
+                    if compuesto.formato == "float2":
+                        self.df[col_name] = self.df[col_name].map(lambda x: f"{x:.2f}")
+                    elif compuesto.formato == "float3":
+                        self.df[col_name] = self.df[col_name].map(lambda x: f"{x:.3f}")
+                    elif compuesto.formato == "float1":
+                        self.df[col_name] = self.df[col_name].map(lambda x: f"{x:.1f}")
+                    elif compuesto.formato == "integer":
+                        self.df[col_name] = self.df[col_name].map(lambda x: f"{x:.0f}")
+                else:
+                    print(f"Warning: Column {col_name} is not numeric and will not be formatted.")
 
     def to_latex(self, escape=False, index_names=False):
         """
@@ -475,7 +557,7 @@ class DataFrameToLatex:
 info_compuestos_df = pd.read_csv('data/info_compuestos.csv')
 compuestos = []
 for _, row in info_compuestos_df.iterrows():
-    compuesto = Compuesto(row['nombre'], row['columna'], row['tipo'], row['unidad_entrada'], row['unidad_salida'], row['formato'])
+    compuesto = Compuesto(row['nombre'], row['columna'], row['tipo'], row['unidad_entrada'], row['unidad_salida'], row['formato'], row['category'], row['decimals'])
     compuestos.append(compuesto)
 # Crear un registro de unidades
 ureg = pint.UnitRegistry()
@@ -505,9 +587,9 @@ matrix_seasonal = matrix_seasonal.drop([
 matrix_seasonal['Tipo'] = matrix_seasonal.index.map(lambda x: 
         next((compuesto.tipo for compuesto in compuestos if compuesto.nombre == x), None))
 
-# Verificar los tipos mapeados en matrix_seasonal
-print("Tipos mapeados en matrix_seasonal:")
-print(matrix_seasonal['Tipo'])
+# # Verificar los tipos mapeados en matrix_seasonal
+# print("Tipos mapeados en matrix_seasonal:")
+# print(matrix_seasonal['Tipo'])
 
 
 # Ordenar el DataFrame por el tipo
@@ -524,11 +606,20 @@ matrix_seasonal = matrix_seasonal.rename(index=mapeo_nombre_a_columna)
 # Al ng
 # Cu  
 #%%
+# Crear una instancia de DataFrameToLatex y formatear las columnas
+df_to_latex = DataFrameToLatex(matrix_seasonal, compuestos)
+df_to_latex.format_columns()
 
+# Convertir el DataFrame a una tabla LaTeX
+latex_table = df_to_latex.to_latex(escape=False, index_names=False)
+
+print(latex_table)
+#%%
 # for compuesto in compuestos:
 #     matrix_seasonal[compuesto.columna] = matrix_seasonal[compuesto.columna].map(lambda x: f"{x:.2f}")
 
 # latex_table = matrix_seasonal.to_latex(escape=False, index_names=False)
+
 latex_table = matrix_seasonal.to_latex(escape=False, index_names=False, float_format="%.3g")
 
 # Reemplazar \toprule, \middlerule y \bottomrule por \hline

@@ -7,10 +7,11 @@ library(openair)
 library(ggplot2)
 library(lubridate)
 library(readxl)
+setwd("~/Documents/paper_facu/Rscripts")
 source('opentrajutils.R')
 
 # Seteo de parametros ####
-#setwd("/home/pablo/doctorado/paper_facu")
+# setwd("~/Documents/paper_facu/Rscripts/")
 pathgraphs="Figures"
 upper_windspeed=8.5
 pscflims = c(0,1)
@@ -42,20 +43,29 @@ maxlon <- -25
 graphlimits_cwt  <-c(0, 60)
 lonlatinc <- 0.5
 
+# define PCSF domain (Long range) #### 
+minlat <- -60
+maxlat <- 20
+minlon <- -90
+maxlon <- 0 
+graphlimits_cwt  <-c(0, 60)
+lonlatinc <-.5
+
+
 #72.8 DE TRAJ ES EL 75 DE LA MUESTRA <- chequear esto
 
 # PSCF loop ####
-keys = names(trajconchem)[c(14:43)]
+keys = names(trajconchem)[c(14:43,53)]
 print(keys)
 for (title in keys) {
   print(title)
-  png(paste0(pathgraphs,"/PSCF500m_75p_",title,".png"), width = 590 * 3, height =592* 3, res = 300)
+  png(paste0("../",pathgraphs,"/PSCF500m_75p_",title,"_smooth.png"), width = 590 * 3, height =592* 3, res = 300)
   pscf<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
                   pollutant = title , statistic = "pscf", limits = pscflims, percentile = 75,
                   projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
-                  cols = "heat", smooth = F,  border = NA, 
-                  grid.cols = "grey40", auto.text =FALSE, key.header ="", 
-                  origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                  cols = "heat", smooth = T,  border = NA, 
+                  grid.cols = "grey20", auto.text =FALSE, key.header ="", 
+                  origin = TRUE,
                   lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
   dev.off()
   }
@@ -298,3 +308,17 @@ pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon &
                 grid.cols = "grey40", auto.text =FALSE, key.header ="", 
                 origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
                 lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+# cluster ####
+clust <- trajCluster(traj500, method = "Euclid", n.cluster= 6, col = "Set2", origin = FALSE,
+                     projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                     map.cols = openColours("Paired", 10))
+
+clust <- trajCluster(traj500, method = "Angle", n.cluster= 6, col = "Set2", origin = FALSE,
+                     projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                     map.cols = openColours("Paired", 10), 
+                     type = "season",hemisphere="southern")
+clustdata=subset(clust$data, hour.inc == 0)
+
+datamergeclust=merge(PMF_BA_full,, by = "date")
+trendLevel(datamergeclust, pollutant = "v2.5", type = "cluster", layout = c(6, 1),
+           cols = "increment")

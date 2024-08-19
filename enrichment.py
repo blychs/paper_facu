@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -6,10 +7,13 @@ import pandas as pd
 import seaborn as sns
 from load_data import load_data
 
-matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
-                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
-                                               'BA_events.xlsx')
+matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 'data/PMF_BA_fullv3.xlsx',
+                                              'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
+                                              'BA_events_testMnew.xlsx')
 
+
+event_columnname="Event_F"
+event_labels= ["SI" ,"SF","SO"] # "SL", "S", "SC", "SO"
 paper_year='1995'
 
 if paper_year=='1964':
@@ -43,7 +47,11 @@ matrix_enriched.describe().to_csv('enrichment_factos_1964_statistics.csv')
 for key in matrix_enriched.keys():
     fig, ax = plt.subplots()
     matrix_enriched[key].plot(ax=ax, style='.-', label=key)
-    ax.axhline(1, linestyle='dashed', color='k')
+    ax.axhline(10, linestyle='dashed', color='k')
+    ax.axhline(20, linestyle='dashed', color='m')
+    ax.plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)) * 0+2, 'd',
+
+                color='gray', label='smoke event', zorder=5)
     ax.set_yscale('log')
     ax.set_ylabel('EF')
     ax.legend()
@@ -52,7 +60,7 @@ for key in matrix_enriched.keys():
     plt.close()
 
 enrich_fact_desc = matrix_enriched.describe()
-print(enrich_fact_desc)
+display(enrich_fact_desc)
 
 fig, ax = plt.subplots()
 ax.bar(enrich_fact_desc.keys(), height=enrich_fact_desc.loc['mean'], yerr=enrich_fact_desc.loc['std'])
@@ -71,3 +79,5 @@ plt.close()
 
 
 
+
+# %%

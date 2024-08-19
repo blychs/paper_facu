@@ -1,36 +1,36 @@
-nombre,columna,tipo,unidad_entrada,unidad_salida,formato,class
-Ag,Ag [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-Al,Al [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,integer,geological minerals
-As,As [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-Ba,Ba [ng m\textsuperscript{-3}] ,metal,microgram/meter**3,nanogram/meter**3,float2,geological minerals
-Ca,Ca [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,geological minerals
-Cd,Cd [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-Cl,Cl [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,sea salt
-Co,Co [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-Cr,Cr [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-Cu,Cu [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-EC,EC [µg m\textsuperscript{-3}],carbonaceous,microgram/meter**3,microgram/meter**3,float2,carbonaceous
-Fe,Fe [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,geological minerals
-K,K [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,geological minerals
-Mg,Mg [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,geological minerals
-Mn,Mn [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,geological minerals
-Mo,Mo [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-NH4,NH\textsubscript{4} [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,inorganic ions
-NO3,NO\textsubscript{3} [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,inorganic ions
-Na sol,Na [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,sea salt
-Ni,Ni [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-OC,OC [µg m\textsuperscript{-3}],carbonaceous,microgram/meter**3,microgram/meter**3,float2,carbonaceous
-PM2.5,PM\textsubscript{2.5} [µg m\textsuperscript{-3}],total,microgram/meter**3,microgram/meter**3,float2,total
-Pb,Pb [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-SO4,SO\textsubscript{4} [µg m\textsuperscript{-3}],ions,microgram/meter**3,microgram/meter**3,float2,inorganic ions
-Sb,Sb [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-Se,Se [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-TC,TC [ng m\textsuperscript{-3}],carbonaceous,microgram/meter**3,microgram/meter**3,float2,carbonaceous
-Ti,Ti [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,geological minerals
-V,V [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-Zn,Zn [ng m\textsuperscript{-3}],metal,microgram/meter**3,nanogram/meter**3,float2,trace elements
-temp,temp [°C],meteo,C,C,float1,meteo
-pres,pres [hPa],meteo,hPa,hPa,integer,meteo
-rh,rh [\%],meteo,%,%,float2,meteo
-ws,ws [m/s],meteo,m/s,m/s,float1,meteo
-blh,PBLH [m],meteo,m,m,integer,meteo
+nombre,columna,tipo,unidad_entrada,unidad_salida,formato,category,decimals
+Ag,$\mathrm{Ag\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+Al,$\mathrm{Al\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,integer,geological minerals,0
+As,$\mathrm{As\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+Ba,$\mathrm{Ba\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,geological minerals,2
+Ca,$\mathrm{Ca\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,integer,geological minerals,0
+Cd,$\mathrm{Cd\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+Cl,$\mathrm{Cl^-\;[\mu g\;m^{-3}]}$,ions,microgram/meter**3,microgram/meter**3,float2,sea salt,2
+Co,$\mathrm{Co\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+Cr,$\mathrm{Cr\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+Cu,$\mathrm{Cu\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float1,trace elements,1
+EC,$\mathrm{EC\;[\mu g\;m^{-3}]}$,carbonaceous,microgram/meter**3,microgram/meter**3,float2,carbonaceous,2
+Fe,$\mathrm{Fe\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float1,geological minerals,1
+K,$\mathrm{K\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,integer,geological minerals,0
+Mg,$\mathrm{Mg\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float1,geological minerals,1
+Mn,$\mathrm{Mn\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,geological minerals,2
+Mo,$\mathrm{Mo\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+NH4,$\mathrm{NH_4^+\;[\mu g\;m^{-3}]}$,ions,microgram/meter**3,microgram/meter**3,float2,inorganic ions,2
+NO3,$\mathrm{NO_3^-\;[\mu g\;m^{-3}]}$,ions,microgram/meter**3,microgram/meter**3,float2,inorganic ions,2
+Na sol,$\mathrm{Na^+\;[\mu g\;m^{-3}]}$,ions,microgram/meter**3,microgram/meter**3,float2,sea salt,2
+Ni,$\mathrm{Ni\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float1,trace elements,1
+OC,$\mathrm{OC\;[\mu g\;m^{-3}]}$,carbonaceous,microgram/meter**3,microgram/meter**3,float2,carbonaceous,2
+PM2.5,$\mathrm{PM_{2.5}\;[\mu g\;m^{-3}]}$,total,microgram/meter**3,microgram/meter**3,float1,total,1
+Pb,$\mathrm{Pb\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float1,trace elements,1
+SO4,$\mathrm{SO_4^{2-}\;[\mu g\;m^{-3}]}$,ions,microgram/meter**3,microgram/meter**3,float2,inorganic ions,2
+Sb,$\mathrm{Sb\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+Se,$\mathrm{Se\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+TC,$\mathrm{TC;[\mu g\;m^{-3}]}$,carbonaceous,microgram/meter**3,microgram/meter**3,float2,carbonaceous,2
+Ti,$\mathrm{Ti\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,geological minerals,2
+V,$\mathrm{V\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float2,trace elements,2
+Zn,$\mathrm{Zn\;[ng\;m^{-3}]}$,metal,microgram/meter**3,nanogram/meter**3,float1,trace elements,1
+temp,temp [°C],meteo,C,C,float1,meteo,1
+pres,pres [hPa],meteo,hPa,hPa,integer,meteo,0
+rh,rh [\%],meteo,%,%,float1,meteo,1
+ws,ws [m/s],meteo,m/s,m/s,float1,meteo,1
+blh,PBLH [m],meteo,m,m,integer,meteo,0

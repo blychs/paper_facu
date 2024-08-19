@@ -6,13 +6,13 @@ library(plyr)
 library(dplyr)
 library(ggplot2)
 library(Dict)
-source("Rscripts/module_metales.R")
+source("module_metales.R")
 # library(doParallel)
 # registerDoParallel(cores=6)
 # extrafont::font_import()
 extrafont::loadfonts()
 # Cargar datos ####
-PMF_BA_full <- read_excel("data/PMF_BA_fullv3.xlsx", 
+PMF_BA_full <- read_excel("../data/PMF_BA_fullv3.xlsx", 
                           col_types = c("date", "numeric", "numeric", 
                                         "numeric", "numeric", "numeric", 
                                         "numeric", "numeric", "numeric", 
@@ -28,7 +28,7 @@ PMF_BA_full <- read_excel("data/PMF_BA_fullv3.xlsx",
                                         "numeric", "numeric", "numeric", 
                                         "numeric", "numeric", "numeric", 
                                         "numeric", "numeric", "numeric"),na ='-999')
-BA_events_testM <- read_excel("BA_events_testM.xlsx",
+BA_events_testM <- read_excel("../BA_events_testM.xlsx",
                               col_types = c("date", "skip","numeric", "numeric", "numeric",
                                             "skip", "text","numeric"))
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
@@ -39,7 +39,7 @@ BA_events_testM <- BA_events_testM[,c(-6)]#tiro el lote porque ya lo tengo
 volumen_tish <- read_excel("data/volumen_tish_corregido2_espero_corregido3.xlsx")
 LD <- read_excel("data/Limites de detección.xlsx")
 
-Planilla_conjunta_Metales <- read_excel("data/Planilla conjunta Metales.xlsx", sheet = "Sheet1")
+Planilla_conjunta_Metales <- read_excel("../data/Planilla conjunta Metales.xlsx", sheet = "Sheet1")
 
 nd="n.d"
 Planilla_conjunta_Metales <- Planilla_conjunta_Metales %>% mutate(across(.cols = 5:28, .fns = ~ {
