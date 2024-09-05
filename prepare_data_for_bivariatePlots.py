@@ -20,16 +20,16 @@ import numpy as np
 import datetime as dt
 from parserSFC import readSFC
 
-data = pd.read_excel('PMF_BA_full.xlsx')
+data = pd.read_excel('data/PMF_BA_fullv4.xlsx')
 data['date'] = pd.to_datetime(data['date'])+ dt.timedelta(hours=12)
 data.set_index(data['date'], inplace=True)
 data.drop('date', axis=1, inplace=True)
 
-events = pd.read_excel('BA_events.xlsx')
+events = pd.read_excel('BA_events_testMnew.xlsx')
 events['date'] = pd.to_datetime(events['date'] + dt.timedelta(hours=12))
 events.set_index(events['date'], inplace=True)
 events.drop('date', axis=1, inplace=True)
-data = pd.concat([data, events[['Event']]], axis=1)
+data = pd.concat([data, events[['Event_F']]], axis=1)
 
 
 meteo = readSFC('OBSERVATORIO.SFC')
@@ -45,9 +45,9 @@ meteo = meteo.loc[list(data.index)]
 
 data = pd.concat([data, meteo[['ws', 'wd']]], axis=1)
 print(data)
-data[data.loc[:, data.columns!='Event'] < 0] = np.nan
+data[data.loc[:, data.columns!='Event_F'] < 0] = np.nan
 
-data.to_csv('data_every_hour_obs.csv')
+data.to_csv('data_every_hour_obsv4.csv')
 
 
 

@@ -25,20 +25,20 @@ import statsmodels.api as sm
 from scipy import stats
 
 plt.style.use('seaborn-v0_8-paper')
-matrix, unc, meteo, gases, events = load_data('PMF_BA_full.xlsx', 'PMF_BA_full.xlsx',
+matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv4.xlsx', 'data/PMF_BA_fullv4.xlsx',
                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
-                                              'BA_events_testM.xlsx')
-datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31']
-matrix=matrix.drop(datesdrop,axis=0)
-events=events.drop(datesdrop,axis=0)
+                                              'BA_events_testMnew.xlsx')
+# datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31']
+# matrix=matrix.drop(datesdrop,axis=0)
+# events=events.drop(datesdrop,axis=0)
 
 methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
            'Hand_2011','Simon_2011']
 
-event_columnname="Event_M"
-event_labels= ["S", "SP", "SN","SL","SC"]
+event_columnname="Event_F"
+event_labels= ["SI", "SF", "SO"]
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]

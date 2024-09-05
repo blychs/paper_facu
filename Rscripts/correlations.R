@@ -1,15 +1,29 @@
+# 00 Load libraries ####
 library(openair)
 library(ggplot2)
 library(lubridate)
 library(readxl)
+library(ggplot2)
+library(RColorBrewer)
+
+pathgraphs="Figures"
+MWNH4=18.04
+MWNO3=62.0049
+MWSO4=96.06
+MWK=39.0898
+MWCa=40.08
+MWMg=24.31
+MWNa=23
+MWCl=35.45
+
 setwd("~/Documents/paper_facu/Rscripts")
 BA_events_testM <- read_excel("../BA_events_testMnew.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
-BA_events_testM$Event_M <- as.factor(BA_events_testM$Event_M)
+BA_events_testM$Event_F <- as.factor(BA_events_testM$Event_F)
 
-factor(BA_events_testM$Event_M)
+factor(BA_events_testM$Event_F)
 
-PMF_BA_full <- read_excel("../data/PMF_BA_fullv3.xlsx",
+PMF_BA_full <- read_excel("../data/PMF_BA_fullv4.xlsx",
                           sheet = "CONC", col_types = c("date",
                                                         "numeric", "numeric", "numeric",
                                                         "numeric", "numeric", "numeric",
@@ -25,238 +39,63 @@ PMF_BA_full <- read_excel("../data/PMF_BA_fullv3.xlsx",
                                                         "skip", "skip", "skip", "skip", "skip",
                                                         "numeric", "numeric", "numeric"),
                           na ='-999')
-# PMF_BA_full0 <- read_excel("PMF_BA_full.xlsx",
-#                           sheet = "CONC", col_types = c("date",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "skip", "skip", "numeric", "numeric",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "numeric", "numeric", "numeric",
-#                                                         "numeric", "skip", "skip", "skip",
-#                                                         "skip", "skip", "skip", "skip",
-#                                                         "skip", "skip", "skip", "skip", "skip",
-#                                                         "numeric", "numeric", "numeric"),
-#                           na ='-999')
+
 PMF_BA_full=dplyr::rename(PMF_BA_full, EC = 'C Elemental',TC = 'C Total',OC = 'C Orgánico')
-PMF_BA_full$KNON=(PMF_BA_full$K-0.6*PMF_BA_full$Fe)
+# PMF_BA_full_so=PMF_BA_full[PMF_BA_full$date<=as.POSIXct('2019-05-23') | PMF_BA_full$date>=as.POSIXct('2019-06-02'),]
 PMF_BA_full$OC_EC = PMF_BA_full$OC/PMF_BA_full$EC
 PMF_BA_full$OC_K=PMF_BA_full$OC/PMF_BA_full$K
+PMF_BA_full$KOC=PMF_BA_full$K/PMF_BA_full$OC
 
-MWNH4=18.04
-MWNO3=62.0049
-MWSO4=96.06
-MWK=39.0898
+# 01 Matriz de correlaciones ####
+png("../images/corrcoefmaps.png", res = 300, height = 3000, width = 3000)
+corPlot(PMF_BA_full, dendrogram = TRUE,method = "pearson", main= "R pearson")
+dev.off()
+png("../images/corrcoefmaps_S.png", res = 300, height = 3000, width = 3000)
+corPlot(PMF_BA_full, dendrogram = TRUE,method = "spearman", main ="R spearman, matriz completa")
+dev.off()
 
+colMeans(PMF_BA_full[,sapply(PMF_BA_full, is.numeric)], na.rm = TRUE)
+
+# 03 Mergeo con eventos ####
+PMF_BA_full=merge(PMF_BA_full,BA_events_testM, by="date")
 PMF_BA_full$NH4molar=PMF_BA_full$NH4/MWNH4
 PMF_BA_full$NO3molar=PMF_BA_full$NO3/MWNO3
 PMF_BA_full$SO4molar=PMF_BA_full$SO4/MWSO4
+PMF_BA_full$Namolar=PMF_BA_full$`Na sol`/MWNa
 PMF_BA_full$Kmolar=PMF_BA_full$K/MWK
+PMF_BA_full$NH4Simon=PMF_BA_full$NH4molar
+PMF_BA_full$NO3SO4Simon=PMF_BA_full$NO3molar+2*PMF_BA_full$SO4molar
+PMF_BA_full$NeutralizedSimon=PMF_BA_full$NH4molar-(PMF_BA_full$NO3molar+2*PMF_BA_full$SO4molar)
+PMF_BA_full$NH4NO3 = (PMF_BA_full$NH4molar)/(PMF_BA_full$NO3molar)
+PMF_BA_full$NH4SO4 = (PMF_BA_full$NH4molar)/(PMF_BA_full$SO4molar)
+PMF_BA_full$NH42SO4NO3 = (PMF_BA_full$NH4molar)/((2*PMF_BA_full$SO4molar)+(PMF_BA_full$NO3molar))
+PMF_BA_full$NH4SO4NO3 = (PMF_BA_full$NH4molar)/((PMF_BA_full$SO4molar)+(PMF_BA_full$NO3molar))
+PMF_BA_full$KSO4 = (PMF_BA_full$Kmolar)/((PMF_BA_full$SO4molar))
+PMF_BA_full$NO3SO4 = (PMF_BA_full$NO3molar)/((PMF_BA_full$SO4molar))
+PMF_BA_full$ClNa = (PMF_BA_full$Cl)/((PMF_BA_full$`Na sol`))
+PMF_BA_full$ClNamolar = (PMF_BA_full$Cl/MWCl)/((PMF_BA_full$`Na sol`/MWNa))
+PMF_BA_full$Na_perc=PMF_BA_full$`Na sol`/PMF_BA_full$`PM2,5`
+# conteo con eventos ####
+event_levels <- c("SI", "SF")
+summary(PMF_BA_full[PMF_BA_full$Event_F %in% event_levels,])
+summary(PMF_BA_full[PMF_BA_full$Event_F %in% c("no"),])
+
+PMFBAsorted<-PMF_BA_full[order(PMF_BA_full$`PM2,5`),]
+PMFBAsorted<-PMFBAsorted[,c("date", "PM2,5", "Event_F")]
+# Count the number of events 
+event_levels <- c("SI", "SF")
+event_MAM <- sum(table(BA_events_testM$Event_F[month(BA_events_testM$date)>=3&month(BA_events_testM$date)<=5])[event_levels])
+event_JJA <- sum(table(BA_events_testM$Event_F[month(BA_events_testM$date)>=6&month(BA_events_testM$date)<=8])[event_levels])
+event_SON <- sum(table(BA_events_testM$Event_F[month(BA_events_testM$date)>=9&month(BA_events_testM$date)<=11])[event_levels])
+event_DJF <- sum(table(BA_events_testM$Event_F[month(BA_events_testM$date)==12|month(BA_events_testM$date)<=2])[event_levels])
+print(paste("Cant. de eventos: MAM", event_MAM, ", JJA:", event_JJA, ", SON:", event_SON, ", DJF:", event_DJF))
+
+event_JAS <- sum(table(BA_events_testM$Event_F[month(BA_events_testM$date)>=7&month(BA_events_testM$date)<=9])[event_levels])
+print(event_JAS)
 
 
-
-PMF_BA_full_so=PMF_BA_full[PMF_BA_full$date<=as.POSIXct('2019-05-23') | PMF_BA_full$date>=as.POSIXct('2019-06-02'),]
-pruebacut3_so=selectByDate(PMF_BA_full_so, end="2019-10-01")
-PMF_BA_full=merge(PMF_BA_full,BA_events_testM, by="date")
-
-corPlot(PMF_BA_full_so, dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
-corPlot(pruebacut[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-# Iones ####
-#Octubre en adelante
-pruebacut=selectByDate(PMF_BA_full, start="2019-10-01")
-corPlot(pruebacut[,c("SO4","NH4","NO3","K","Na sol","Mg")], dendrogram = TRUE,method = "pearson", main ="desde octubre")
-#Hasta Mayo
-# 
-pruebacut=selectByDate(PMF_BA_full, end="2019-05-20")
-corPlot(pruebacut[,c("SO4","NH4","NO3","K","Na sol","Mg")], dendrogram = TRUE, 
-        method = "pearson", main ="Hasta Mayo")
-ggplot(pruebacut) + geom_point(aes(x=K,y=NO3))
-
-# mayo a octubre
-pruebacut=selectByDate(PMF_BA_full, start="2019-05-20",end="2019-10-01")
-corPlot(pruebacut[,c("SO4","NH4","NO3","K","Na sol","Mg")], dendrogram = TRUE, 
-        method = "pearson", main ="Hasta Mayo")
-ggplot(pruebacut) + geom_point(aes(x=`Na sol` ,y=SO4))
-
-pruebacut2=selectByDate(PMF_BA_full, end="2019-10-01")
-pruebacut3=selectByDate(PMF_BA_full,  start="2019-05-15", end="2019-10-01")
-corPlot(pruebacut3[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="mayo a octubre")
-pruebacut5=selectByDate(PMF_BA_full,  end="2019-05-15")
-corPlot(pruebacut5[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="hasta mayo")
-
-pruebacut6=selectByDate(PMF_BA_full,  start="2019-10-01")
-corPlot(pruebacut6[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="desde octubre")
-
-
-
-
-corPlot(pruebacut2[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-corPlot(PMF_BA_full_so[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-corPlot(pruebacut3_so[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-corPlot(PMF_BA_full[,c("SO4","NH4","NO3","K")], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-quantile(mydata$`PM2,5`, na.rm = T, 0.9)
-quantile(mydata$`PM2,5`, na.rm = T, 0.95)
-quantile(mydata$`PM2,5`, na.rm = T, 0.99)
-corPlot(PMF_BA_full, dendrogram = TRUE,method = "spearman", main ="R spearman, matriz completa")
-corPlot(PMF_BA_full_so, dendrogram = TRUE,method = "spearman", main ="R spearman, sin outliers")
-
-corPlot(PMF_BA_full[,c(2:5,7,10:30,43:46)], dendrogram = TRUE,method = "spearman", main ="R spearman, matriz completa")
-corPlot(PMF_BA_full[,c(2:5,7,10:30,43:46)], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-
-scatterPlot(PMF_BA_full, x="Ni", y="V")
-ggplot(PMF_BA_full)+ geom_point(aes(x=Ni, y=V))+geom_abline(slope = 0.7)+geom_abline(slope = 0.15)+geom_abline(slope =2.8)
-# Define event levels
-event_levels <- c("SN", "SL", "S", "SC")
-
-# Count the number of events
-event_count <- sum(table(BA_events_testM$Event_M[month(BA_events_testM$date)>=3&month(BA_events_testM$date)<=5])[event_levels])
-print(event_count)
-event_count <- sum(table(BA_events_testM$Event_M[month(BA_events_testM$date)>=6&month(BA_events_testM$date)<=8])[event_levels])
-print(event_count)
-event_count <- sum(table(BA_events_testM$Event_M[month(BA_events_testM$date)>=9&month(BA_events_testM$date)<=11])[event_levels])
-print(event_count)
-event_count <- sum(table(BA_events_testM$Event_M[month(BA_events_testM$date)==12|month(BA_events_testM$date)<=2])[event_levels])
-print(event_count)
-
-# Traffic related species
-corPlot(PMF_BA_full[,c(2,9,16,20,21,26,27,28,29,30,31)], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
-# sacar Mo y Ag
-
-
-# PMF_BA_full$Lote=as.factor(PMF_BA_full$Lote)
-# relaciones ####
-ggplot(PMF_BA_full_so[PMF_BA_full_so$Ni!=0,])+geom_point(aes(x=Ni,y=V))+
-  geom_abline(aes(slope=2.4, intercept=0), linetype="dashed")+
-  geom_abline(aes(slope=3, intercept=0, color="oil combustion from ship engines"), linetype="dashed")+
-  geom_abline(aes(slope=1.49, intercept=0, color="road traffic"), linetype="dashed")+
-  geom_abline(aes(slope=0.01, intercept=0, color="prueba"), linetype="dashed")
-
-ggplot(PMF_BA_full_so[PMF_BA_full_so$Cd<0.005 & PMF_BA_full_so$Sb>0,])+geom_point(aes(x=Cd,y=Sb))+
-  geom_abline(aes(slope=5, intercept=0, color="road brake pad wear "), linetype="dashed")+
-  geom_abline(aes(slope=6, intercept=0, color="prueba"), linetype="dashed")
-
-ggplot(PMF_BA_full_so[PMF_BA_full_so$Cd<0.005 & PMF_BA_full_so$Cd>0.00001,],aes(x=Cd,y=Sb))+geom_point()+
-  stat_summary(fun.data= mean_cl_normal) + 
-  geom_smooth(method='lm',se = F)+geom_abline(aes(slope=0.183260305, intercept=0.002618539))
-coefs <- coef(lm(Sb~Cd, data = PMF_BA_full_so[PMF_BA_full_so$Cd>0.00001,]))
-
-# cor plot geological minerals
-corPlot(PMF_BA_full_so[,c("Al","Ba", "Ca","Fe", "Mn", "Mg", "Ti","Sb")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
-corPlot(PMF_BA_full_so[,c( "Ca","Ba",  "Mg", "Ti","Sb")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
-corPlot(PMF_BA_full_so[,c( "Fe","Al",  "Mn", "Ti")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
-
-corPlot(PMF_BA_full_so[,c( "Fe","Al",  "Mn", "Ti")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
-corPlot(PMF_BA_full_so[,c( "Fe","Al","Ba","Cu","Pb","Sb","Zn", "As")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson, traffic related")
-corPlot(PMF_BA_full_so[,c("Zn", "Cu","Pb")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson, traffic related")
-
-
-# Fe, Ba, Cu, Pb, Sb, Zn, Al
-corPlot(PMF_BA_full[,c( "Na sol","Cl",  "NH4", "NO3","SO4", "KNON")], 
-        dendrogram = TRUE,method = "spearman", main= "R spearman")
-PMF_BA_full$nssK=PMF_BA_full$K-0.6*PMF_BA_full$Fe-0.037*PMF_BA_full$`Na sol`
-PMF_BA_full$nssK_OC=PMF_BA_full$nssK/PMF_BA_full$OC
-PMF_BA_full$nssK_EC=PMF_BA_full$nssK/PMF_BA_full$EC
-PMF_BA_full$OC_EC=PMF_BA_full$OC/PMF_BA_full$EC
-
-PMF_BA_full_so=PMF_BA_full[PMF_BA_full$date<=as.POSIXct('2019-05-23') | PMF_BA_full$date>=as.POSIXct('2019-06-02'),]
-
-corPlot(PMF_BA_full_so[,c( "Na sol","Cl",  "NH4", "NO3","SO4", "nssK")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson")
-corPlot(PMF_BA_full_so[,c( "Ca","Al",  "Mg", "Fe", "Ti","Ba", "Mn")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
-
-
-corPlot(PMF_BA_full[,c( "OC","EC","K","NO3","NH4","SO4")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson")
-corPlot(PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SN"),c( "OC","EC","K","NO3","NH4","SO4")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson")
-corPlot(PMF_BA_full[PMF_BA_full$Event_F %in% c("no"),c( "OC","EC","K","NO3","NH4","SO4")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson")
-
-corPlot(PMF_BA_full_so[,c( "OC","EC","K","NO3","NH4","SO4")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson")
-corPlot(PMF_BA_full_so[PMF_BA_full$Event_F %in% c("SI","SF","SN"),c( "OC","EC","K","NO3","NH4","SO4")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson")
-corPlot(PMF_BA_full_so[PMF_BA_full$Event_F %in% c("no"),c( "OC","EC","K","NO3","NH4","SO4")], 
-        dendrogram = TRUE,method = "pearson", main= "R pearson")
-
-
-corPlot(selectByDate(PMF_BA_full, start = "2019-07-25", end = "2019-09-25"),
-        pollutants = c("NO3","NH4","K","C Elemental","C Orgánico","SO4"),dendrogram = TRUE)
-corPlot(PMF_BA_full,dendrogram = TRUE)
-
-PMF_BA_full$neutralization=PMF_BA_full$NH4/(PMF_BA_full$NO3+PMF_BA_full$SO4)
-ggplot(PMF_BA_full)+
-  geom_line(aes(x=date, y=neutralization))+
-  geom_line(aes(x=date, y=K,color="K"))+
-  geom_line(aes(x=date, y=SO4,color="Cu"))
-  
-meteoobsday=timeAverage(meteoobs,avg.time = "day",statistic = "sum")
-TVmeteo=timeVariation(meteoobs,pollutant = "PRECIP 6HS (mm)")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=`PM2,5`))+
-  geom_point(data=meteoobsday,aes(x=date,y=`PRECIP 6HS (mm)`*2, color="precip"))
-TVmeteoobs=timeVariation(meteoobsday, pollutant = "PRECIP 6HS (mm)", statistic = "median")
-print(TVmeteoobs$plot$month)
-
-TVmean=timeVariation(PMF_BA_full,pollutant = "PM2,5")
-print(TVmean$plot$month)
-
-timePlot(PMF_BA_full,pollutant = "PM2,5")
-timePlot(PMF_BA_full,pollutant = "PM2,5", avg.time = "month")
-timePlot(PMF_BA_full,pollutant = "PM2,5", avg.time = "month")
-
-timePlot(PMF_BA_full,pollutant = "OC_K")
-
-# IONES ####
-PMF_BA_full$NH4NO3 = (PMF_BA_full$NH4/18.04)/(PMF_BA_full$NO3/62)
-
-png("../images/ratioNH4NO3.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4NO3))+geom_abline(slope=0,intercept=1, linetype=3)
-dev.off()
-PMF_BA_full$NH4SO4 = (PMF_BA_full$NH4/18.04)/(PMF_BA_full$SO4/96.06)
-png("../images/ratioNH4SO4.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4SO4))+geom_abline(slope=0,intercept=1, linetype=3)
-dev.off()
-
-PMF_BA_full$NH4SO4NO3 = (PMF_BA_full$NH4/18.04)/((2*PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62))
-png("../images/ratioNH4SO4NO3.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4SO4NO3))+geom_abline(slope=0,intercept=1, linetype=3)
-dev.off()
-
-PMF_BA_full$NH4SO4NO3 = (PMF_BA_full$NH4/18.04)/((PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62))
-png("../images/ratioNH41SO4NO3.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4SO4NO3))+geom_abline(slope=0,intercept=1, linetype=3)
-dev.off()
-
-PMF_BA_full$KSO4 = (PMF_BA_full$K/39.1)/((PMF_BA_full$SO4/96.06))
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=KSO4))+geom_abline(slope=0,intercept=1, linetype=3)
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=K))+geom_abline(slope=0,intercept=1, linetype=3)
-
-PMF_BA_full$NO3SO4 = (PMF_BA_full$NO3/62)/((PMF_BA_full$SO4/96.06))
-png("../images/ratioNO3SO4.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NO3SO4))+geom_abline(slope=0,intercept=1, linetype=3)
-dev.off()
-
-png("../images/ratioSO4.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=SO4))
-dev.off()
-png("images/ratioNO3.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NO3))
-dev.off()
-png("images/ratioNH4.png")
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=NH4))+geom_abline(slope=0,intercept=1, linetype=3)
-
-dev.off()
-
+ggplot(PMF_BA_full)+geom_line(aes(x=date,y=ClNamolar))+geom_abline(slope=0, intercept = 1.16,linetype="dashed")
+#  04 Iones ####
 ggplot(PMF_BA_full)+
   geom_line(aes(x=date, y=Kmolar,color="K"))+
   geom_line(aes(x=date, y=NH4molar,color="NH4"))+
@@ -264,29 +103,368 @@ ggplot(PMF_BA_full)+
   geom_line(aes(x=date, y=SO4molar,color="SO4"))+
   geom_point(data=PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF"),],aes(x=date, y=NH4molar),color="black",show.legend = FALSE)
 
-PMF_BA_full$NH4SO4=PMF_BA_full$NH4molar/PMF_BA_full$SO4molar
-PMF_BA_full$NH4NO3=PMF_BA_full$NH4molar/PMF_BA_full$NO3molar
-PMF_BA_full$NO3SO4=PMF_BA_full$NO3molar/PMF_BA_full$SO4molar
-summary(selectByDate(PMF_BA_full,end = "2019-05-15"))
-summary(selectByDate(PMF_BA_full,start = "2019-05-15",end = "2019-10-01"))
-summary(selectByDate(PMF_BA_full,start = "2019-10-01"))
-
 ggplot(PMF_BA_full)+
   geom_point(aes(x=NO3molar, y=(NH4molar/SO4molar-2)*SO4molar,color="EXCEDENCIA"))
-# hasta aca####
-# ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=K))+geom_abline(slope=0,intercept=1, linetype=3)
+i1=1
+i2=2
+library(ggpubr)
+ratios <- ggplot(PMF_BA_full) + 
+  geom_line(aes(x=date, y=NH4SO4, color="NH4/SO4[molar]"))+
+  geom_line(aes(x=date, y=NH42SO4NO3, color="NH4/(2SO4+NO3)[molar]"))+
+  geom_abline(aes(slope=0,intercept=i1), linetype="dashed")+
+  geom_abline(aes(slope=0,intercept=i2), color='gray20' ,linetype="dashed")+
+  labs(y="molar ratio",x="")+  
+  geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI"),], 
+             aes(x=date,y=NH4SO4, fill=OrigenTag), shape=21, size=2)+
+  scale_color_discrete(name = "Molar Ratios", na.translate = F)+
+  scale_fill_discrete(name = "Origin", na.translate = F)+
+  guides(color = guide_legend(nrow = 2),fill = guide_legend(nrow = 3)) + 
+  scale_y_continuous(
+    breaks = function(x) unique(c(i1,i2, scales::pretty_breaks()(x))),
+    labels = function(x) format(x, nsmall = 0, digits = 2)
+  )+theme_bw()+theme(legend.position="top")
 
-PMF_BA_full$bal = (2*(PMF_BA_full$Ca/40.08)+2*(PMF_BA_full$Mg/24.31)+(PMF_BA_full$`Na sol`/23)+(PMF_BA_full$K/39.1)+(PMF_BA_full$NH4/18.04))/((2*PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62)+(PMF_BA_full$Cl/35.45))
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=bal))+geom_abline(slope=0,intercept=1, linetype=3)
+#NH4 NO3 SO4 y eventos
+ions <- ggplot(PMF_BA_full) + 
+    geom_line(aes(x=date, y=NH4, color="NH4"))+
+    geom_line(aes(x=date, y=NO3, color="NO3"))+
+    geom_line(aes(x=date, y=SO4, color="SO4"))+
+    labs(y=expression(paste("concentrations [", mu, "g/m"^3, "]")),x="")+  
+    geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI"),], 
+               aes(x=date,y=NO3, fill=OrigenTag), shape=21, size=2)+
+    scale_color_discrete(name = "Ions", na.translate = F)+
+    scale_fill_discrete(name = "Origin", na.translate = F)+
+    guides(color = guide_legend(nrow = 2),fill = guide_legend(nrow = 3)) + 
+    scale_y_continuous(
+      breaks = function(x) unique(c(i1,i2, scales::pretty_breaks()(x))),
+      labels = function(x) format(x, nsmall = 0, digits = 2)
+    )+theme_bw()+theme(legend.position="top")
 
-colMeans(PMF_BA_full[,2:40],na.rm = T)
+combined_plot <- ggarrange(ratios, ions, ncol = 1, nrow = 2, common.legend = TRUE, legend = "top")
 
-PMF_BA_full$bal = ((PMF_BA_full$`Na sol`/23)+(PMF_BA_full$K/39.1)+(PMF_BA_full$NH4/18.04))/((2*PMF_BA_full$SO4/96.06)+(PMF_BA_full$NO3/62)+(PMF_BA_full$Cl/35.45))
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=bal))+geom_abline(slope=0,intercept=1, linetype=3)
+# Mostrar el gráfico combinado
+print(combined_plot)
 
-ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=SO4))+geom_abline(slope=0,intercept=1, linetype=3)
+# grafico 8 ####
+# Crear los gráficos por separado
+library(patchwork)
+plot1 <- ggplot(PMF_BA_full) + 
+  geom_line(aes(x = date, y = NH4SO4, color = "NH4/SO4"), linewidth = 1.1 ) +
+  geom_line(aes(x = date, y = NH42SO4NO3, color = "NH4/(2SO4+NO3)"), linewidth = 1.1 ) +
+  geom_abline(aes(slope = 0, intercept = i1), linetype = "dashed") +
+  geom_abline(aes(slope = 0, intercept = i2), color = 'gray20', linetype = "dashed") +
+  labs(y = "molar ratio", x = "") +  
+  # geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SO"), ], 
+  #            aes(x = date, y = NH4SO4, fill = OrigenTag), shape = 21, size = 2) +
+  geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SO"), ], 
+             aes(x = date, y = NH4SO4), fill = "black", shape = 21, size = 2) +
+  scale_color_discrete(name = "molar ratios", na.translate = FALSE) +
+  # scale_fill_discrete(name = "SE-origin", na.translate = FALSE) +
+  guides(color = guide_legend(nrow = 1), fill = guide_legend(nrow = 1)) + 
+  scale_y_continuous(
+    breaks = function(x) unique(c(i1, i2, scales::pretty_breaks()(x))),
+    labels = function(x) format(x, nsmall = 0, digits = 2)
+  ) + 
+  theme_bw() + 
+  theme(
+    legend.position = "top",
+    axis.title = element_text(size = 14),  # Tamaño del título del eje
+    axis.text = element_text(size = 14),   # Tamaño del texto de los ticks del eje
+    legend.text = element_text(size = 14), # Tamaño del texto de la leyenda
+    legend.title = element_text(size = 14), # Tamaño del título de la leyenda
+    plot.margin=unit(c(0,0,0,0), "pt")
+  ) +
+  annotate("text", x = min(PMF_BA_full$date), y = Inf, label = "(a)", 
+           vjust = 1.5, hjust = 1.4, size = 5, fontface = "bold")+
+  scale_x_datetime(expand = c(0, 0),
+                   date_labels ="%m-%Y")
 
+plot2 <- ggplot(PMF_BA_full) + 
+  geom_line(aes(x = date, y = NH4, color = "NH4"), linewidth = 1.1 ) +
+  geom_line(aes(x = date, y = NO3, color = "NO3"), linewidth = 1.1 ) +
+  geom_line(aes(x = date, y = SO4, color = "SO4"), linewidth = 1.1 ) +
+  labs(y = expression(paste("concentration [", mu, "g/m"^3, "]")), x = "") +  
+  # geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SO"), ], 
+  #            aes(x = date, y = NO3, fill = OrigenTag), shape = 21, size = 2) +
+  geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SO"), ], 
+             aes(x = date, y = NO3),fill="black", shape = 21, size = 2) +
+  scale_color_discrete(name = "ions concentration", na.translate = FALSE) +
+  # scale_fill_discrete(name = "SE-origin", na.translate = FALSE) +
+  guides(color = guide_legend(nrow = 1), fill = guide_legend(nrow = 2)) + 
+  scale_y_continuous(
+    breaks = function(x) unique(c(i1, i2, scales::pretty_breaks()(x))),
+    labels = function(x) format(x, nsmall = 0, digits = 2)
+  ) + 
+  theme_bw() + 
+  theme(
+    legend.position = "top",
+    axis.title = element_text(size = 14),  # Tamaño del título del eje
+    axis.text = element_text(size = 14),   # Tamaño del texto de los ticks del eje
+    legend.text = element_text(size = 14), # Tamaño del texto de la leyenda
+    legend.title = element_text(size = 14), # Tamaño del título de la leyenda
+    plot.margin=unit(c(0,0,0,0), "pt")
+  ) +
+  annotate("text", x = min(PMF_BA_full$date), y = Inf, label = "(b)", 
+           vjust = 1.5, hjust = 1.4, size = 5, fontface = "bold")+
+  scale_x_datetime(expand = c(0, 0),
+                   date_labels ="%m-%Y")
+
+# Usar patchwork para combinar los gráficos y conservar las tres leyendas
+combined_plot <- plot1 / plot2 + 
+  plot_layout(guides = 'collect') & 
+  theme(legend.position = "top",  legend.box.just = "top",legend.box = "vertical") &
+  guides(color = guide_legend(nrow = 1), fill = guide_legend(nrow = 2))
+
+# Mostrar el gráfico combinado
+print(combined_plot)
+# hasta aca ####
+
+png(paste0("../",pathgraphs,"/ionesratiosblack.png"), width = 550 * 5, height = 700* 5, res = 300)
+print(combined_plot)
+dev.off()
+
+
+
+png("../images/neutralizedSimon.png", res = 300, height = 3000, width = 3000)
+ggplot(PMF_BA_full)+geom_line(aes(x=date,y=NeutralizedSimon),color="magenta")+geom_abline(aes(slope=0,intercept=0),linetype="dashed")
+dev.off()
+
+keys = names(PMF_BA_full)[!names(PMF_BA_full) %in% c("Event", "date", "date mal", "ID" , "Event_M","Razon","Event_F","Local","Tag","Origen" ,"OrigenTag",  "Observaciones" , "Lote")]
+print(keys)
+colors = setNames(colorRampPalette(brewer.pal(12, "Set3"))(length(keys)), keys)
+pathgraphs = "Figures"
+while (!is.null(dev.list())) dev.off()
+
+for (title in keys) {
+  tryCatch({
+    safe_title = make.names(title)
+    output_path = file.path(getwd(), "../Figures", paste0("serietemporal_", safe_title, ".png"))
+    p <- ggplot(PMF_BA_full) +
+      geom_line(aes(x = date, y = !!sym(title)), color = colors[title]) +
+      ggtitle(paste("Plot for", title))  # Añadir título a la gráfica para depuración
+    png(output_path, width = 590 * 3, height = 592 * 3, res = 300)
+    print(p)
+    dev.off()
+  }, error = function(e) {
+    error_message <- paste("Error en el gráfico de", title, ": ", e$message)
+    message(error_message)
+  })
+}
+
+# 04 b Periodos Iones ####
+
+summary(selectByDate(PMF_BA_full,end = "2019-05-25"))
+summary(selectByDate(PMF_BA_full,start = "2019-05-25",end = "2019-10-01"))
+summary(selectByDate(PMF_BA_full,start = "2019-10-01"))
+
+#Hasta Mayo
 # 
+pruebacut=selectByDate(PMF_BA_full, end="2019-05-25")
+ggplot(pruebacut)+
+  geom_point(aes(x=NH4molar, y=NO3molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")
+ggplot(pruebacut)+
+  geom_point(aes(x=NH4molar, y=SO4molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")
+ggplot(pruebacut)+
+  geom_point(aes(x=NH4molar, y=NO3molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")
+
+corPlot(PMF_BA_full[,c("Cl","SO4","NH4","NO3","K","Na sol","Mg")], dendrogram = TRUE, 
+        method = "pearson")
+png("../images/corplothastaMayo.png", res = 300, height = 3000, width = 3000)
+corPlot(pruebacut[,c("SO4","NH4","NO3","K","Na sol","Mg")], dendrogram = TRUE, 
+        method = "pearson", main ="Hasta Mayo")
+dev.off()
+
+ggplot(pruebacut) + geom_point(aes(x=Kmolar,y=NO3molar))+geom_point(data=pruebacut[pruebacut$Event_F %in% c("SI","SF"),],aes(x=Kmolar, y=NO3molar),color="red",show.legend = FALSE)
+#Octubre en adelante
+pruebacut=selectByDate(PMF_BA_full, start="2019-10-01")
+
+ggplot(PMF_BA_full,aes(x=NO3molar,y=NH4molar))+geom_point()+xlim(0,0.18)+ylim(0,0.18)+
+  stat_summary(fun.data= mean_cl_normal) + 
+  geom_smooth(method='lm',se = F)
+  coefs <- coef(lm(NH4molar~NO3molar, data = PMF_BA_full))
+coefs
+
+ggplot(PMF_BA_full,aes(x=2*SO4molar,y=NH4molar))+geom_point()+
+  stat_summary(fun.data= mean_cl_normal) + 
+  geom_smooth(method='lm',se = F)
+PMF_BA_full$SO4molar_doble <- 2 * PMF_BA_full$SO4molar
+
+# Ajustar el modelo de regresión
+modelo <- lm(NH4molar ~ SO4molar_doble, data = PMF_BA_full, na.action = na.omit)
+coefs <- coef(lm(NH4molar~SO4molar_doble, data = PMF_BA_full, na.action = na.omit))
+coefs
+
+ggplot(pruebacut) + geom_point(aes(x=Kmolar,y=NO3molar))+geom_point(data=pruebacut[pruebacut$Event_F %in% c("SI","SF"),],aes(x=Kmolar, y=NO3molar),color="red",show.legend = FALSE)
+
+ggplot(pruebacut)+
+  geom_point(aes(x=NH4molar, y=NO3molar))+xlim(0,0.03)+ylim(0,0.03)+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")
+
+ggplot(pruebacut)+
+  geom_point(aes(y=Namolar, x=SO4molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")+xlim(0,0.03)+ylim(0,0.03)
+
+ggplot(pruebacut)+
+  geom_point(aes(x=NH4molar, y=SO4molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")+xlim(0,0.03)+ylim(0,0.03)
+
+ggplot(pruebacut)+
+  geom_point(aes(x=Kmolar, y=NO3molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")+xlim(0,0.03)+ylim(0,0.03)
+
+png("../images/corplotdesdeOctubre.png", res = 300, height = 3000, width = 3000)
+corPlot(pruebacut[,c("SO4","NH4","NO3","K","Na sol","Mg")], dendrogram = TRUE, 
+        method = "pearson", main ="desdeoctubre")
+dev.off()
+png("../images/NaSO4desdeOctubre.png", res = 300, height = 3000, width = 3000)
+ggplot(pruebacut) + geom_point(aes(x=`Na sol` ,y=SO4))
+dev.off()
+
+# mayo a octubre
+pruebacut=selectByDate(PMF_BA_full, start="2019-05-25",end="2019-10-01")
+ggplot(pruebacut)+
+  geom_point(aes(x=NH4molar, y=NO3molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")
+ggplot(pruebacut)+
+  geom_point(aes(x=NH4molar, y=SO4molar))+
+  geom_abline(aes(slope=0.5, intercept=0),linetype="dashed")
+
+png("../images/corplotMayoaOctubre.png", res = 300, height = 3000, width = 3000)
+corPlot(pruebacut[,c("SO4","NH4","NO3","K","Na sol","Mg")], dendrogram = TRUE, 
+        method = "pearson", main ="Mayo a octubre")
+dev.off()
+ggplot(pruebacut) + geom_point(aes(x=`Na sol` ,y=SO4))
+ggplot(pruebacut) + geom_point(aes(x=Kmolar,y=NO3molar))+geom_point(data=pruebacut[pruebacut$Event_F %in% c("SI","SF"),],aes(x=Kmolar, y=NO3molar),color="red",show.legend = FALSE)
+
+# 04 c Ratios IONES ####
+
+
+keys =  c("NH4NO3", "NH4SO4", "NH4SO4NO3", "NH42SO4NO3" , "KSO4","NO3SO4")
+print(keys)
+colors = setNames(colorRampPalette(brewer.pal(12, "Set3"))(length(keys)), keys)
+pathgraphs = "Figures"
+while (!is.null(dev.list())) dev.off()
+
+for (title in keys) {
+  tryCatch({
+    safe_title = make.names(title)
+    output_path = file.path(getwd(), "../Figures", paste0("serietemporal_ratio_", safe_title, ".png"))
+    p <- ggplot()+geom_line(data=PMF_BA_full, aes(x=date,y=!!sym(title)))+
+      geom_abline(slope=0,intercept=1, linetype=3, color="black")+
+      geom_abline(slope=0,intercept=1.5, linetype=3, color="magenta")+
+      geom_abline(slope=0,intercept=2, linetype=3, color="blue")+
+      geom_point(data=PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF"),],aes(x=date, y=!!sym(title)),color="red",show.legend = FALSE)
+      ggtitle(paste("Plot for ratio", title))  # Añadir título a la gráfica para depuración
+    png(output_path, width = 590 * 3, height = 592 * 3, res = 300)
+    print(p)
+    dev.off()
+  }, error = function(e) {
+    error_message <- paste("Error en el gráfico de", title, ": ", e$message)
+    message(error_message)
+  })
+}
+
+
+ggplot(PMF_BA_full)+
+  geom_point(aes(x=NH4molar, y=NO3molar))+
+  geom_abline(aes(slope=1, intercept=0),linetype="dashed")
+
+# 05 Metales ####
+corPlot(PMF_BA_full[,c("Cu","Mo","Sb","Zn","Ni","Pb")], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
+ggplot(PMF_BA_full) + geom_point(aes(x=Pb ,y=Sb))
+ggplot(PMF_BA_full) + geom_point(aes(x=Cu ,y=Sb))
+ggplot(PMF_BA_full) + geom_point(aes(x=Mo ,y=Sb))
+ggplot(PMF_BA_full) + geom_point(aes(x=Zn ,y=Sb))
+ggplot(PMF_BA_full) + geom_point(aes(x=Cu ,y=Mo)) + ylim(0,0.003)
+
+
+scatterPlot(PMF_BA_full, x="Ni", y="V")
+ggplot(PMF_BA_full)+ geom_point(aes(x=Ni, y=V))+geom_abline(slope = 0.7)+geom_abline(slope = 0.15)+geom_abline(slope =2.8)
+
+# 06 geological minerals ####
+corPlot(PMF_BA_full[,c("Al","Ba", "Ca","Fe", "Mn", "Mg", "Ti","Sb")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+corPlot(PMF_BA_full[,c( "Ca","Ba",  "Mg", "Ti","Sb")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+corPlot(PMF_BA_full[,c( "Fe","Al",  "Mn", "Ti")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+
+corPlot(PMF_BA_full[,c( "Fe","Al",  "Mn", "Ti")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, sin outliers")
+corPlot(PMF_BA_full[,c( "Fe","Al","Ba","Cu","Pb","Sb","Zn", "As")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, traffic related")
+corPlot(PMF_BA_full[,c("Zn", "Cu","Pb")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson, traffic related")
+
+
+# 07 nss ####
+
+PMF_BA_full$nssK=PMF_BA_full$K-0.6*PMF_BA_full$Fe-0.037*PMF_BA_full$`Na sol`
+PMF_BA_full$nssK_OC=PMF_BA_full$nssK/PMF_BA_full$OC
+PMF_BA_full$nssK_EC=PMF_BA_full$nssK/PMF_BA_full$EC
+PMF_BA_full$OC_EC=PMF_BA_full$OC/PMF_BA_full$EC
+corPlot(PMF_BA_full[,c( "Na sol","Cl",  "nssK", "OC","EC")], 
+        dendrogram = TRUE, main= "R salt")
+
+
+
+corPlot(PMF_BA_full[,c( "Na sol","Cl",  "NH4", "NO3","SO4")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson")
+
+
+# 08 biomass burning ####
+corPlot(PMF_BA_full[,c( "OC","EC","K","NO3","NH4","SO4")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson")
+corPlot(PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SN"),c( "OC","EC","K","NO3","NH4","SO4")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson")
+corPlot(PMF_BA_full[PMF_BA_full$Event_F %in% c("no"),c( "OC","EC","K","NO3","NH4","SO4")], 
+        dendrogram = TRUE,method = "pearson", main= "R pearson")
+
+
+corPlot(selectByDate(PMF_BA_full, start = "2019-07-25", end = "2019-09-25"),
+        pollutants = c("NO3","NH4","K","EC","OC","SO4"),dendrogram = TRUE)
+corPlot(PMF_BA_full,dendrogram = TRUE)
+
+PMF_BA_full$neutralization=PMF_BA_full$NH4/(PMF_BA_full$NO3+PMF_BA_full$SO4)
+ggplot(PMF_BA_full)+
+  geom_line(aes(x=date, y=neutralization))+
+  geom_line(aes(x=date, y=K,color="K"))+
+  geom_line(aes(x=date, y=SO4,color="Cu"))
+
+
+
+# 09 Time Variations ####
+TVmean=timeVariation(PMF_BA_full,pollutant = "PM2,5")
+print(TVmean$plot$month)
+
+timePlot(PMF_BA_full,pollutant = "PM2,5")
+timePlot(PMF_BA_full,pollutant = "PM2,5", avg.time = "month")
+
+timePlot(PMF_BA_full,pollutant = "KOC")
+ggplot(PMF_BA_full)+
+  geom_line(aes(x=date, y=KOC,color="K/OC"))+
+  geom_point(data=PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF"),],aes(x=date, y=KOC),color="black",show.legend = FALSE)
+
+ggplot(PMF_BA_full)+
+  geom_line(aes(x=date, y=KOC,color="K/OC"))+
+  geom_point(data=PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SN","SP"),],aes(x=date, y=KOC,color=OrigenTag),show.legend = FALSE)+
+  geom_point(data=PMF_BA_full[PMF_BA_full$Event_F %in% c("no"),],aes(x=date, y=KOC,color=Event_F),show.legend = FALSE)
+
+X2C5f_base <- read_excel("~/Documents/paper_facu/data/2C5f_base.xlsx", sheet = "Contributions", range = "B108:H208")
+
+ggplot(PMF_BA_full)+
+  geom_line(aes(x=date, y=KOC,color="K/OC")) + 
+  geom_line(aes(x=date, y=`PM2,5`/50,color="PM2.5")) +
+  geom_line(data=X2C5f_base, aes(x=PMF_BA_full$date,y=`Factor 5`/10))+
+  geom_point(data=PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SN","SP"),],aes(x=date, y=`PM2,5`/50,color=OrigenTag),show.legend = FALSE)
+  # geom_point(data=PMF_BA_full[PMF_BA_full$Event_F %in% c("no"),],aes(x=date, y=KOC,color=Event_F),show.legend = FALSE)
+
+print(PMF_BA_full$date[PMF_BA_full$KOC>0.2])
+
+# gases ####
 gases20192020day=timeAverage(gases20192020, avg.time = "day")
 
 gases20192020$date=gases20192020$day+gases20192020$Hora
@@ -300,3 +478,35 @@ ggplot(selectByDate(PMF_BA_full,start = "2019-05-15",end = "2019-06-15"))+
 ggplot(PMF_BA_full)+geom_line(aes(x=date,y=SO4,color="SO4"))+geom_point(aes(x=date,y=SO4,color=OrigenTag))
 ggplot(PMF_BA_full)+geom_line(aes(x=date,y=NO3,color="NO3"))+geom_point(aes(x=date,y=NO3,color=OrigenTag))
 ggplot(PMF_BA_full)+geom_line(aes(x=date,y=EC,color="EC"))+geom_point(aes(x=date,y=EC,color=OrigenTag))
+
+# meteo ####
+meteoobsday=timeAverage(meteoobs,avg.time = "day",statistic = "sum")
+TVmeteo=timeVariation(meteoobs,pollutant = "PRECIP 6HS (mm)")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=`PM2,5`))+
+  geom_point(data=meteoobsday,aes(x=date,y=`PRECIP 6HS (mm)`*2, color="precip"))
+TVmeteoobs=timeVariation(meteoobsday, pollutant = "PRECIP 6HS (mm)", statistic = "median")
+print(TVmeteoobs$plot$month)
+
+# otros relaciones ####
+
+ggplot(PMF_BA_full[PMF_BA_full$Ni!=0,])+geom_point(aes(x=Ni,y=V))+
+  geom_abline(aes(slope=2.4, intercept=0), linetype="dashed")+
+  geom_abline(aes(slope=3, intercept=0, color="oil combustion from ship engines"), linetype="dashed")+
+  geom_abline(aes(slope=1.49, intercept=0, color="road traffic"), linetype="dashed")+
+  geom_abline(aes(slope=0.01, intercept=0, color="prueba"), linetype="dashed")
+
+ggplot(PMF_BA_full[PMF_BA_full$Cd>0.00005 & PMF_BA_full$Sb>0,])+geom_point(aes(x=Cd,y=Sb))+
+  geom_abline(aes(slope=5, intercept=0, color="road brake pad wear "), linetype="dashed")+
+  geom_abline(aes(slope=8, intercept=0, color="prueba"), linetype="dashed")
+
+ggplot(PMF_BA_full[PMF_BA_full$Cd<0.005 & PMF_BA_full$Cd>0.00001,],aes(x=Cd,y=Sb))+geom_point()+
+  stat_summary(fun.data= mean_cl_normal) + 
+  geom_smooth(method='lm',se = F)+
+  coefs <- coef(lm(Sb~Cd, data = PMF_BA_full_so[PMF_BA_full_so$Cd>0.00001,]))
+
+
+# PMF
+X2C5f_base <- read_excel("~/Documents/paper_facu/data/2C5f_base.xlsx", 
+                         sheet = "Contributions", range = "B108:H208")
+X2C5f_base <- dplyr::rename(X2C5f_base, date = '...1')
+TV=timeVariation(X2C5f_base,pollutant = "Factor 2")

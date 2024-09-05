@@ -13,12 +13,8 @@ from funciones_pmfBA import average_mass_reconstruction, axvlines
 from load_data import load_data
 from sklearn.metrics import mean_squared_error
 
-# plt.style.use('seaborn-v0_8-paper')
-# matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv2.xlsx', 'data/PMF_BA_fullv2.xlsx',
-#                                               'gases_mean.csv', 'datos_meteo_obs_mean.csv',
-#                                               'BA_events_testM.xlsx')
 plt.style.use('seaborn-v0_8-paper')
-matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 'data/PMF_BA_fullv3.xlsx',
+matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv4.xlsx', 'data/PMF_BA_fullv4.xlsx',
                                               'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
                                               'BA_events_testMnew.xlsx')
 # datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31','2019-08-04','2019-08-07','2019-08-10']
@@ -31,7 +27,7 @@ methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
            'Malm_1994', 'Chow_1996', 'Andrews_2000',
            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
            'Hand_2011','Simon_2011']
-
+# methods = ['Simon_2011']
 
 event_columnname="Event_F"
 event_labels= ["SI" ,"SF","SO"] 
@@ -49,11 +45,12 @@ def select_no_events(df, events=events):
 
 def print_results(label, result, method):
     print(f"{label} &", method, '&', end=' ')
-    for i in range(4):
+    numrange=len(result.params)
+    for i in range(numrange):
         print(f'{result.params[i]:.4g}', '&',
               f'{result.bse[i]:.2g}', '&',
               f'{result.pvalues[i]:.3g}', end=' ')
-        if i < 3:
+        if i < (numrange-1):
             print('&', end=' ')
     print('\\\\')
 
@@ -88,7 +85,7 @@ for method in methods:
 beta_omoc_noevent=np.round(np.mean(omoc_noevent),1)
 beta_omoc_event=np.round(np.mean(omoc_event),1)
 beta_omoc_all=np.round(np.mean(omoc_all),1)
-print(beta_omoc_noevent,beta_omoc_event,beta_omoc_all)
+# print(beta_omoc_noevent,beta_omoc_event,beta_omoc_all)
 
 #%% Estima parametros omoc (lineal)
 for method in methods:
@@ -259,9 +256,9 @@ print("Maenhaut:", d_methodQuality_Maenhaut,", Hand: ",d_methodQuality_Hand,
 #plt.show()
 
 # %% Simon mod con lineal estimation
-beta_omoc_noevent=1.8
-beta_omoc_event=2.3 # 2.3
-beta_omoc_all=2.1 #2.1
+beta_omoc_noevent=1.9
+beta_omoc_event=2.5 # 2.3
+beta_omoc_all=2.2 #2.1
 
 # total_reconst_mass, mass, utotal_reconst_mass, uncertainty = mass_reconstruction_mod(matrix, unc, events, 
 #                                                                                      equation="Simon_2011_linmod", 
@@ -384,7 +381,134 @@ rms = mean_squared_error(pm25_for_rmse['PM2.5'],pm25_for_rmse['reconstructed'], 
 print(rms)
 #plt.show()
 
+#%% estimacion om oc con todos los betas
+beta_omoc_noevent=1.9
+beta_omoc_event=2.5 # 2.3
+beta_omoc_all=2.2 #2.1
+method = 'Simon_2011_mod'
+
+total_reconst_mass, mass, utotal_reconst_mass, uncertainty  = mass_reconstruction_all(matrix, unc, events, equation=method, 
+                                                                                      betas_event=resultEvent.params, 
+                                                                                      betas_noevent=resultNormal.params,
+                                                                                      betas_all=resultAll.params, 
+                                                                                      type_reconstruction="events")
+from funciones_pmfBA import plot3panels
+plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_reconst_mass, events,
+                event_columnname="Event_F", event_labels=["SI" ,"SF","SO"], method = 'Simon_2011')
+
+
+
+#%%
+organic_mass_per = percentage_with_err(
+    mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
+inorganic_ions_per = percentage_with_err(
+    mass['inorganic_ions'], matrix['PM2.5'], uncertainty['uinorganic_ions'], unc['PM2.5'])
+geological_minerals_per = percentage_with_err(
+    mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
+EC_per = percentage_with_err(
+    mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
+ssa_per = percentage_with_err(
+    mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
+# others_per = ((mass_Simon[1]['others'] + (mass_Maenhaut[1]['others'] + mass_Maenhaut[1]['trace_elements']))/3)/ total_reconst_mass * 100
+others_per = (mass['others'])/ total_reconst_mass * 100
+
+plt.style.use('seaborn-v0_8-paper')
+
+reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
+                              totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
+
+width = 2.5
+
+fig, ax = plt.subplots(nrows=3, figsize=(7, 7.5), sharex=True, dpi=200)
+
+ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
+               color='k', capsize=2, capthick=1, lw=1, marker='.', label='Gravimetric mass', zorder=1)
+ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, color='red',
+               capsize=2, capthick=1, lw=1, marker='.', label='Reconstructed mass', zorder=0)
+ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
+ax[0].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)) * 0, 'd',
+
+           color='gray', label='Smoke events', zorder=3)
+# ax[0].plot(matrix.index, matrix['PM2.5'] - total_reconst_mass, '.-')
+# ax[0].plot(matrix.index, events[event_columnname].isin(event_labels), 'X')
+ax[0].legend()
+
+axvlines(ax=ax[0], xs=matrix.index.values, color='silver',
+         lw=0.5, linestyle='dotted', zorder=0)
+axvlines(ax=ax[1], xs=matrix.index.values, color='silver',
+         lw=0.5, linestyle='dotted', zorder=0)
+axvlines(ax=ax[2], xs=matrix.index.values, color='silver',
+         lw=0.5, linestyle='dotted', zorder=0)
+
+ax[1].bar(matrix.index.values, organic_mass_per['perc'].where(matrix['Na sol'].notna()).values, 
+          width,  label='OM')
+ax[1].bar(matrix.index.values, inorganic_ions_per['perc'].values,
+          width,  bottom=organic_mass_per['perc'].values, label='II')
+ax[1].bar(matrix.index.values, geological_minerals_per['perc'].values, width,
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']).values, label='GM')
+ax[1].bar(matrix.index.values, EC_per['perc'].values, width,
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']).values, 
+          label='EC')
+ax[1].bar(matrix.index.values, ssa_per['perc'].values, width,
+          error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
+                    'ecolor': 'gray', 'marker': '.'},
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc'] + EC_per['perc']).values, label='SSA')
+ax[1].bar(matrix.index.values, others_per.values, width, yerr=reconst['uperc'],
+          error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
+                    'ecolor': 'gray', 'marker': '.'},
+          bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] +
+                  geological_minerals_per['perc'] + EC_per['perc'] + ssa_per['perc']).values,
+          label='Others')
+ax[1].axhline(100, linestyle=':', color='k')
+ax[1].axhline(100, linestyle=':', color='k')
+ax[1].axhspan(80, 120, alpha=0.3, color='y')
+ax[1].set_ylabel('reconstructed mass (%)')
+# ax[1].legend(ncol=3)
+# ax[1].set_xlabel('date')
+handles, labels = ax[1].get_legend_handles_labels()
+ax[1].legend(reversed(handles), reversed(labels), loc=1,ncol=2)
+
+ax[2].axhline(0, color="gray")
+ax[2].errorbar(matrix.index, total_reconst_mass - matrix['PM2.5'],
+               yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
+               color='tab:blue', capsize=2, capthick=1, elinewidth=1,
+               marker='o', label='no event', zorder=3)
+ax[2].errorbar(matrix.index,
+               (total_reconst_mass - matrix['PM2.5']).where(
+                   events[event_columnname].isin(event_labels)),
+               yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
+               color='tab:red', capsize=2, capthick=1, elinewidth=1,
+               marker='o', label='smoke event', zorder=3)
+ax[2].set_ylim(bottom=-20, top=20)
+ax[2].set_xlabel("date")
+ax[2].set_ylabel("reconstructed - gravimetric ($\mu$g/m$^3$)")
+ax[2].legend()
+fig.tight_layout()
+plt.subplots_adjust(hspace=.0)
+plt.subplots_adjust(wspace=.0)
+fig.savefig('images/stacked_bar_daily_percentage_testM_resid.png')
+
+perc_reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
+                              totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
+d_methodQuality_average = np.logical_and(
+   ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)
+).sum()
+perc_reconst = percentage_with_err(total_reconst_mass, matrix["PM2.5"], utotal_reconst_mass, unc["PM2.5"])
+d_methodQuality_Simon = np.logical_and(
+   ((perc_reconst["perc"] + perc_reconst["uperc"]) > 80),((perc_reconst["perc"] - perc_reconst["uperc"]) < 120)
+).sum()
+
+pm25_for_rmse = matrix['PM2.5'].to_frame()
+pm25_for_rmse["reconstructed"] = total_reconst_mass
+pm25_for_rmse = pm25_for_rmse.dropna()
+rms = mean_squared_error(pm25_for_rmse['PM2.5'],pm25_for_rmse['reconstructed'], squared=False)
+print(rms)
+#plt.show()
 # %% Calculo de Tabla 4
+# mass = mass_reconstruction_all(matrix, unc, events, equation=method, 
+#                                betas_event=[resultEvent.intercept,resultEvent.slope,1,1,1], 
+#                                betas_noevent=[resultNormal.intercept, resultNormal.slope,1,1,1], 
+#                                type_reconstruction="events")
 mass=pd.DataFrame.from_dict(mass)
 mass = mass.rename(columns={'organic_mass': 'Organic mass', 
                             'geological_minerals': 'Geological minerals',

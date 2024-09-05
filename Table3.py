@@ -13,17 +13,59 @@ from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, mass_r
 from funciones_pmfBA import percentage_with_err
 from funciones_pmfBA import estimation_om_oc, calculate_seasonal, linear_estimation_om_oc
 from funciones_pmfBA import average_mass_reconstruction, axvlines
+from funciones_pmfBA import plot3panels
 from load_data import load_data
 from sklearn.metrics import mean_squared_error
 import pint
 
 plt.style.use('seaborn-v0_8-paper')
-matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx', 
-                                              'data/PMF_BA_fullv3.xlsx',
+matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv4.xlsx', 
+                                              'data/PMF_BA_fullv4.xlsx',
                                               'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
                                               'BA_events_testMnew.xlsx')
+
+
+# methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
+#            'Malm_1994', 'Chow_1996', 'Andrews_2000',
+#            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
+#            'Hand_2011','Simon_2011']
+methods = ['Simon_2011']
+
+event_columnname="Event_F"
+event_labels= ["SI" ,"SF","SO"] #,"SP", "SN" "SL", "S", "SC", "SO"
+#%% funciones extra
+
+# Vectores de nombres y eventos
+columns = ['slope', 'stderr', 'intercept', 'intercept_stderr']
+events = ['no event', 'event', 'all']
+
+# Función para generar ordered_columns basado en un criterio de ordenación
+def generate_ordered_columns(order):
+    if order == 'no_event_first':
+        # Orden: no event -> event -> all
+        return [(col, event) for event in events for col in columns if event == 'no event'] + \
+               [(col, event) for event in events for col in columns if event == 'event'] + \
+               [(col, event) for event in events for col in columns if event == 'all']
+    
+    elif order == 'event_first':
+        # Orden: event -> no event -> all
+        return [(col, event) for event in events for col in columns if event == 'event'] + \
+               [(col, event) for event in events for col in columns if event == 'no event'] + \
+               [(col, event) for event in events for col in columns if event == 'all']
+    
+    elif order == 'all_first':
+        # Orden: all -> no event -> event
+        return [(col, event) for event in events for col in columns if event == 'all'] + \
+               [(col, event) for event in events for col in columns if event == 'no event'] + \
+               [(col, event) for event in events for col in columns if event == 'event']
+    
+    else:
+        raise ValueError("Unknown order criteria")
 #%%
+
 # datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31','2019-08-04','2019-08-07','2019-08-10']
+# datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02']
+
 # datesdrop=['2020-03-01','2020-01-31']
 # datesdrop = ['2019-08-16'] # por que habiamos sacado este dia?
 # matrix=matrix.drop(datesdrop,axis=0)
@@ -32,14 +74,6 @@ matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv3.xlsx',
 
 matrix.describe().to_csv('description_statistics_allM.csv')
 
-# methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
-#            'Malm_1994', 'Chow_1996', 'Andrews_2000',
-#            'Malm_2000', 'Maenhaut_2002', 'DeBell_2006',
-#            'Hand_2011','Simon_2011']
-methods = ['Simon_2011','Lichtig_2024']
-
-event_columnname="Event_F"
-event_labels= ["SI" ,"SF","SO"] # "SL", "S", "SC", "SO"
 # event_columnname="Event_M"
 # event_labels= ["S", "SL" ,"SP", "SN","SC"] 
 # #%matplotlib widget
@@ -70,8 +104,12 @@ d_methodQuality_moddisRMSE = {}
 omoc_noevent=[]
 omoc_event=[]
 omoc_all=[]
-plot_graph=True
-plot_graph1panel=False
+# plot_graph=True
+# plot_graphmodall = True
+# plot_graph1panel = True
+plot_graph=False 
+plot_graphmodall = False
+plot_graph1panel = False
 slope={}
 stderr={}
 intercept={}
@@ -122,7 +160,7 @@ for method in methods:
     ((mass[0]-mass[2])< (matrix["PM2.5"]+unc["PM2.5"])),((mass[0] + mass[2]) > (matrix["PM2.5"]- unc["PM2.5"]))
     ).sum()
 
-    if (plot_graph==True):
+    if (plot_graphmodall==True):
         # grafico 3 paneles
         uncertainty = mass[3]
         total_reconst_mass = mass[0]
@@ -399,7 +437,7 @@ for method in methods:
                 label='others')
         ax[1].axhline(100, linestyle=':', color='k')
         ax[1].axhline(100, linestyle=':', color='k')
-        ax[1].axhspan(80, 120, alpha=0.3, color='y')
+        ax[1].axhspan(80, 120, alpha=0.3, color='y',zorder=0)
         ax[1].set_ylabel('reconstructed mass (%)')
         ax[1].set_ylim(bottom=0, top=340)
         handles, labels = ax[1].get_legend_handles_labels()
@@ -429,7 +467,7 @@ for method in methods:
         plt.subplots_adjust(wspace=.0)
         fig.savefig(f'images/stacked_bar_3panels_{method}.png')
 
-# plt.close('all')
+
 
 method_quality = pd.concat([pd.DataFrame([d]) for d in [d_methodQuality, d_methodQuality_modall, d_methodQuality_moddis]]).T
 method_quality.columns = ["Original","Modified all", "Modified disaggregated"]
@@ -457,25 +495,22 @@ latex_table = latex_table.replace('\\bottomrule', '\\hline')
 print(latex_table)
 # print(method_quality)
 # print method method_quality y RMSE
-
+#%%
 table1 = pd.concat([pd.DataFrame([d]) for d in [slope, stderr, intercept, 
                                                 intercept_stderr]]).T
 table1.columns = ["slope","stderr", "intercept", "intercept_stderr"]
-# index = pd.MultiIndex.from_tuples(data.keys(), names=['source', 'type'])
-# table1 = pd.DataFrame(list(data.values()), index=index, columns=["slope", "stderr", "intercept", "intercept_stderr"])
 table1.index.names = ['source', 'type']
+original_order = table1.index.get_level_values('source').unique()
 table1 = table1.unstack(level='type')
 
 # Reorganizar las columnas
-ordered_columns = [
-    ('slope', 'no event'), ('stderr', 'no event'), ('intercept', 'no event'), ('intercept_stderr', 'no event'),
-    ('slope', 'event'), ('stderr', 'event'), ('intercept', 'event'), ('intercept_stderr', 'event'),
-    ('slope', 'all'), ('stderr', 'all'), ('intercept', 'all'), ('intercept_stderr', 'all')
-]
+selected_order = 'all_first'
+ordered_columns = generate_ordered_columns(selected_order)
 table1 = table1[ordered_columns]
 
 # Aplanar el MultiIndex en las columnas
 table1.columns = ['_'.join(col) for col in table1.columns]
+table1 = table1.reindex(original_order, level='source')
 
 # Exportar a LaTeX
 latex_table = table1.to_latex(escape=False, index=True, float_format="%.2f")
@@ -485,6 +520,8 @@ latex_table2 = table1.to_latex(escape=False, index_names=False, float_format="%.
 
 
 
+#%%
+plt.close('all')
 #%%
 class Compuesto:
     def __init__(self, nombre, columna, tipo, unidad_entrada, unidad_salida,formato, category, decimals):
@@ -620,7 +657,7 @@ print(latex_table)
 
 # latex_table = matrix_seasonal.to_latex(escape=False, index_names=False)
 
-latex_table = matrix_seasonal.to_latex(escape=False, index_names=False, float_format="%.3g")
+latex_table = matrix_seasonal.to_latex(escape=False, index_names=False, float_format="%.1f")
 
 # Reemplazar \toprule, \middlerule y \bottomrule por \hline
 latex_table = latex_table.replace('\\toprule', '\\hline')

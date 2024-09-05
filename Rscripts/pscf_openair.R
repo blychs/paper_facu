@@ -18,12 +18,12 @@ pscflims = c(0,1)
 colorset="plasma"
 pathtraj="../tdumps"
 pattern ="tdump*"
-bbpdatafile="../data/data_every_hour_obs_eventM.csv"
+bbpdatafile="../data/data_every_hour_obsv4.csv"
 
 # Load datasets ####
 bbpdata <- read.csv(bbpdatafile)
 bbpdata$date <- as.POSIXct(bbpdata$date, tz='UTC')
-bbpdata <- bbpdata[,-c(29:40)]
+bbpdata <- bbpdata[,-c(8:9,30:42)]
 bbpdata$Sb_ng=bbpdata$Sb*1000
 bbpdata$As_ng=bbpdata$As*1000
 bbpdata$OC_EC = bbpdata$`C.Orgánico`/bbpdata$`C.Elemental`
@@ -34,6 +34,7 @@ trajconchem <- add.chem(bbpdata,traj500)
 trajconchem = dplyr::rename(trajconchem, EC=C.Elemental)
 trajconchem = dplyr::rename(trajconchem, OC=C.Orgánico)
 trajconchem = dplyr::rename(trajconchem, TC=C.Total)
+trajconchem = dplyr::rename(trajconchem, Na=Na.sol)
 
 # define PCSF domain (Long range) #### 
 minlat <- -60
@@ -55,22 +56,89 @@ lonlatinc <-.5
 #72.8 DE TRAJ ES EL 75 DE LA MUESTRA <- chequear esto
 
 # PSCF loop ####
-keys = names(trajconchem)[c(14:43,53)]
+
+keys = names(trajconchem)[c(14:42)]
 print(keys)
+
 for (title in keys) {
   print(title)
-  png(paste0("../",pathgraphs,"/PSCF500m_75p_",title,"_smooth.png"), width = 590 * 3, height =592* 3, res = 300)
+  png(paste0("../",pathgraphs,"/PSCF500m_75p_",title,".png"), width = 590 * 3, height =592* 3, res = 300)
   pscf<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
                   pollutant = title , statistic = "pscf", limits = pscflims, percentile = 75,
                   projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
-                  cols = "heat", smooth = T,  border = NA, 
-                  grid.cols = "grey20", auto.text =FALSE, key.header ="", 
+                  cols = "heat",  border = NA, 
+                  grid.cols = "grey20", auto.text =FALSE,  key.header=title,
                   origin = TRUE,
                   lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
   dev.off()
   }
 
+title="EC"
+pscfEC<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
+                pollutant = title , statistic = "pscf", limits = pscflims, percentile = 75,
+                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                cols = "heat",  border = NA, 
+                grid.cols = "grey20", auto.text =FALSE, key.header =title, 
+                origin = TRUE,
+                lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+title="Fe"
+pscfFe<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
+                  pollutant = title , statistic = "pscf", limits = pscflims, percentile = 75,
+                  projection = "stereographic",  orientation=c(0,-65,0), parameters = NULL,
+                  cols = "heat",  border = NA, 
+                  grid.cols = "grey20", auto.text =FALSE, key.header =title, 
+                  origin = TRUE,
+                  lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
+title="Na"
+pscfNa<-trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
+                  pollutant = title , statistic = "pscf", limits = pscflims, percentile = 75,
+                  projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL,
+                  cols = "heat",  border = NA, 
+                  grid.cols = "grey20", auto.text =FALSE, key.header =title, 
+                  origin = TRUE,
+                  lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
 
+png(paste0("../",pathgraphs,"/pscfconjunto_",colorset,".png"), width = 717 * 5, height = 339* 5, res = 300)
+print(pscfEC,split=c(1, 1, 3, 1))
+print(pscfFe,split=c(2, 1, 3, 1), newpage=FALSE)
+print(pscfNa,split=c(3, 1, 3, 1), newpage=FALSE)
+dev.off()
+dev.off()
+
+library(patchwork)
+selected_keys <- c("OC", "Fe", "Na") 
+plots <- list()
+
+for (i in seq_along(selected_keys)) {
+  title <- selected_keys[i]
+  
+  # Aquí generas el gráfico de PSCF para cada key
+  pscf <- trajLevel(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat),
+                    pollutant = title, statistic = "pscf", limits = pscflims, percentile = 75,
+                    projection = "stereographic", orientation = c(0, -65, 0), parameters = NULL,
+                    cols = "heat", border = NA, 
+                    grid.cols = "grey20", auto.text = FALSE, key.header = "", 
+                    origin = TRUE,
+                    lon.inc = lonlatinc, lat.inc = lonlatinc, min.bin = 2)
+  
+  # Convertir el gráfico a un objeto ggplot si es necesario
+  # Aquí deberías ajustar según cómo se genere el gráfico (dependiendo de tu implementación)
+  
+  # Agregar anotaciones
+  pscf <- pscf +
+    annotate("text", x = Inf, y = Inf, label = letters[i], vjust = 1.5, hjust = 1.5, size = 5, fontface = "bold") +
+    annotate("text", x = Inf, y = -Inf, label = title, vjust = -0.5, hjust = 1.5, size = 5, fontface = "italic")
+  
+  # Guardar el gráfico en la lista
+  plots[[i]] <- pscf
+}
+
+# Combinar los gráficos en un solo panel usando patchwork
+combined_plot <- wrap_plots(plots, ncol = 3)
+
+# Guardar el gráfico combinado
+png(paste0("../", pathgraphs, "/combined_pscf_plots.png"), width = 590 * 3, height = 592 * 3, res = 300)
+print(combined_plot)
 dev.off()
 
 # PSCF EC ####
@@ -290,7 +358,7 @@ pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon &
                 lon.inc = lonlatinc , lat.inc = lonlatinc , min.bin = 2)
 
 pscf<-trajPlot(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
-                             start = "2019-11-08", end = "2019-11-20"),
+                             start = "2019-04-02", end = "2019-04-10"),
                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL)
 

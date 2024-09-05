@@ -22,8 +22,8 @@ def corr_matrix(df, minimum=-1, maximum=1, method='pearson'):
     return correlation.where(correlation >= minimum).where(correlation <= maximum)
 
 
-def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_2011', event_labels=['SP', 'S', 'SN','SL','SC'], 
-                            event_column="Event_M", betas_event=[0,2.6,1,1,1], betas_noevent=[0,2,1,1,1], betas_all =[0,1.5,1,1,1],
+def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_2011', event_labels=['SF', 'SI', 'SO'], 
+                            event_column="Event_F", betas_event=[0,2.6,1,1,1], betas_noevent=[0,2,1,1,1], betas_all =[0,1.5,1,1,1],
                             type_reconstruction="original"):
     ''' type: original = Ecuación sin modificar
               alltogether = Ecuación con ajuste de betaomoc para todos juntos
@@ -144,14 +144,14 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                1.4 * uncertainty_matrix['Ca'] + 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
         # Pide que sean por XRF salvo Na+ y Mg++, que deberían ser por AAS. No es el caso en ninguno
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] +
                           concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + 
                                            uncertainty_matrix['K'] +
                           uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
                           uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
@@ -172,7 +172,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                     uncertainty_matrix['EC'],
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+                                    uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + 
                                     uncertainty_matrix['K'] +
                                     uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
                                     uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
@@ -208,14 +208,14 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         ugeological_minerals = np.linalg.norm( [1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                 1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] +
                           concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['Na no sol'],
+        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], 
                                             uncertainty_matrix['K'],
                                             uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                             uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
@@ -238,15 +238,14 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                     uncertainty_matrix['EC'],
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'],
+                                    uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],
                                     uncertainty_matrix['K'],
                                     uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                     uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
                                     uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
                                     uncertainty_matrix['Sb'] ], axis=0)
-                                    
-        
+                                     
     if equation == 'Malm_1994':
         inorganic_ions = 4.125 * concentration_matrix['S']
         uinorganic_ions = 4.125 * uncertainty_matrix['S']
@@ -293,8 +292,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                     2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                     1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                     2.42 * uncertainty_matrix['Fe'] ], axis=0)
-        
-        
+         
     if equation == 'Chow_1996':
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'],
@@ -325,8 +323,8 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         ugeological_minerals = np.linalg.norm( [ 1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                                  1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
-        salt = concentration_matrix['Na sol'] + concentration_matrix['Na no sol']  + concentration_matrix['Cl']
-        usalt = np.linalg.norm( [ uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'] ], axis=0)
+        salt = concentration_matrix['Na sol'] + concentration_matrix['Cl']
+        usalt = np.linalg.norm( [ uncertainty_matrix['Na sol'], uncertainty_matrix['Cl'] ], axis=0)
         
         trace_elements = (concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
@@ -363,13 +361,13 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                     uorganic_mass,
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'],
+                                    uncertainty_matrix['Na sol'], uncertainty_matrix['Cl'],
                                     uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                     uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
                                     uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
                                     uncertainty_matrix['Sb'] ], axis=0)
-        
+
     if equation == 'Andrews_2000':
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
@@ -400,13 +398,13 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                                 1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
                                                 1.67 * uncertainty_matrix['Ti'] ], axis=0)
         
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['K'],
                                            uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
                                            uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                            uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -425,13 +423,12 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                      1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                      1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
                                      1.67 * uncertainty_matrix['Ti'],
-                                     uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+                                     uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['K'],
                                      uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
                                      uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                      uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
                                      uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Sb'] ], axis=0)
-        
-        
+      
     if (equation == 'Malm_2000') or (equation == 'DeBell_2006'):
         if (type_reconstruction =="original") and (equation == 'DeBell_2006'):
             betas_all = [0,1.8,1,1,1]
@@ -480,8 +477,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                     2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                     1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                     2.42 * uncertainty_matrix['Fe'] ], axis=0)
-        
-        
+           
     if (equation == 'Maenhaut_2002' or equation=='Maenhaut_2002_mod'):
         inorganic_ions = concentration_matrix['SO4'] + concentration_matrix['NO3'] + concentration_matrix['NH4']
         uinorganic_ions = np.linalg.norm( [uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'] ], axis=0)
@@ -579,21 +575,21 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         uothers = np.linalg.norm( [1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
         
         
-        # trace_elements =concentration_matrix['Cl'] * 0
-        # utrace_elements= uncertainty_matrix['Cl'] * 0
+        trace_elements =concentration_matrix['Cl'] * 0
+        utrace_elements= uncertainty_matrix['Cl'] * 0
         
-        trace_elements = (concentration_matrix['V'] + concentration_matrix['Cr'] +
-                          concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
-                          concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
-                          concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
-                          concentration_matrix['Sb'])  # CHEQUEAR
-        utrace_elements = np.linalg.norm( [uncertainty_matrix['V'], uncertainty_matrix['Cr'],
-                                           uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
-                                           uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
-                                           uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
-                                           uncertainty_matrix['Sb'] ], axis=0)  # CHEQUEAR
-        others = concentration_matrix['K'] - 0.6 * concentration_matrix['Fe']
-        uothers = np.linalg.norm( [ uncertainty_matrix['K'], 0.6 * uncertainty_matrix['Fe'] ], axis=0)
+        # trace_elements = (concentration_matrix['V'] + concentration_matrix['Cr'] +
+        #                   concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
+        #                   concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
+        #                   concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
+        #                   concentration_matrix['Sb'])  # CHEQUEAR
+        # utrace_elements = np.linalg.norm( [uncertainty_matrix['V'], uncertainty_matrix['Cr'],
+        #                                    uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
+        #                                    uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
+        #                                    uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
+        #                                    uncertainty_matrix['Sb'] ], axis=0)  # CHEQUEAR
+        # others = concentration_matrix['K'] - 0.6 * concentration_matrix['Fe']
+        # uothers = np.linalg.norm( [ uncertainty_matrix['K'], 0.6 * uncertainty_matrix['Fe'] ], axis=0)
 
         
         uclosure = np.linalg.norm( [ uncertainty_matrix['SO4'], uncertainty_matrix['NO3'], uncertainty_matrix['NH4'],
@@ -603,11 +599,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                     1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                     2.42 * uncertainty_matrix['Fe'],
                                     1.8 * uncertainty_matrix['Cl'],
-                                    uncertainty_matrix['K'],  uncertainty_matrix['V'], uncertainty_matrix['Cr'],
-                                    uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
-                                    uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
-                                    uncertainty_matrix['Sr'], uncertainty_matrix['Pb'], uncertainty_matrix['Hg'],
-                                    uncertainty_matrix['Sb'] ], axis=0)
+                                    1.2 * uncertainty_matrix['K'], 1.2 * 0.6 * uncertainty_matrix['Fe'] ], axis=0)
         
  
         
@@ -690,7 +682,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
                                2.42 * concentration_matrix['Fe'])
         if equation == "Hand_2011_mod":
-            geological_minerals = geological_minerals + concentration_matrix['Na no sol']
+            geological_minerals = geological_minerals 
         if equation =="Hand_2011":    
             ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                 1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
@@ -698,7 +690,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         else:
             ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                 1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
-                                2.42 * uncertainty_matrix['Fe'] , uncertainty_matrix['Na no sol']], axis=0)
+                                2.42 * uncertainty_matrix['Fe'] ], axis=0)
         salt = 1.8 * concentration_matrix['Cl']
         usalt = 1.8 * uncertainty_matrix['Cl'] # Un solo elemento
 
@@ -726,7 +718,7 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
                                        2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                        1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                        2.42 * uncertainty_matrix['Fe'],
-                                       1.8 * uncertainty_matrix['Cl'], uncertainty_matrix['Na no sol'] ], 
+                                       1.8 * uncertainty_matrix['Cl'] ], 
                                       axis=0)
        
     if equation == 'Simon_2011':
@@ -771,23 +763,6 @@ def mass_reconstruction_all(conc_matrix, unc_matrix, events, equation='Simon_201
         trace_elements =concentration_matrix['Cl'] * 0
         utrace_elements= uncertainty_matrix['Cl'] * 0
         
-        
-        # categories = {'inorganic_ions': inorganic_ions, 
-        #               'organic_mass': organic_mass, 
-        #               'elemental_C': elemental_C, 
-        #               'geological_minerals': geological_minerals,
-        #               'salt': salt, 
-        #               'trace_elements': trace_elements,
-        #               'others': others,
-        #               'residual': residual}
-        
-        # ucategories = {'uinorganic_ions': uinorganic_ions, 
-        #                'uorganic_mass': uorganic_mass, 
-        #                'uelemental_C': uelemental_C, 
-        #                'ugeological_minerals': ugeological_minerals,
-        #                'usalt':usalt, 
-        #                'utrace_elements': utrace_elements, 
-        #                'uothers': uothers}
         
         # Sumo directo uorganic_mass a uclosure porque es el unico termino de esa sumatoria en ambos casos, si agrego terminos 
         # a la sumatoria hay que agregar cada termino por separado y agregar el if de si es alltogether o no. Se está trabajando con error en norma 2 
@@ -1127,14 +1102,14 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                1.4 * uncertainty_matrix['Ca'] + 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
         # Pide que sean por XRF salvo Na+ y Mg++, que deberían ser por AAS. No es el caso en ninguno
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] +
                           concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + 
                                            uncertainty_matrix['K'] +
                           uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
                           uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
@@ -1155,7 +1130,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                     uncertainty_matrix['EC'],
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+                                    uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + 
                                     uncertainty_matrix['K'] +
                                     uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
                                     uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
@@ -1179,14 +1154,14 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
         ugeological_minerals = np.linalg.norm( [1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                 1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] +
                           concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['Na no sol'],
+        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  
                                             uncertainty_matrix['K'],
                                             uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                             uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
@@ -1208,7 +1183,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                     uncertainty_matrix['EC'],
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'],
+                                    uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], 
                                     uncertainty_matrix['K'],
                                     uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
@@ -1265,8 +1240,8 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
         ugeological_minerals = np.linalg.norm( [ 1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                                  1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
-        salt = concentration_matrix['Na sol'] + concentration_matrix['Na no sol']  + concentration_matrix['Cl']
-        usalt = np.linalg.norm( [ uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'] ], axis=0)
+        salt = concentration_matrix['Na sol'] +  concentration_matrix['Cl']
+        usalt = np.linalg.norm( [ uncertainty_matrix['Na sol'],  uncertainty_matrix['Cl'] ], axis=0)
         
         trace_elements = (concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
@@ -1291,7 +1266,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                     1.4 * uncertainty_matrix['OC'],
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'],
+                                    uncertainty_matrix['Na sol'],  uncertainty_matrix['Cl'],
                                     uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                     uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -1315,13 +1290,13 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                                 1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
                                                 1.67 * uncertainty_matrix['Ti'] ], axis=0)
         
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['K'],
                                            uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
                                            uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                            uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -1341,7 +1316,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                      1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                      1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
                                      1.67 * uncertainty_matrix['Ti'],
-                                     uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+                                     uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['K'],
                                      uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
                                      uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                      uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -1426,7 +1401,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                     2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                     1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                     2.42 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'], 1.4486 * (uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol']),
+                                    uncertainty_matrix['Cl'], 1.4486 * (uncertainty_matrix['Na sol'] ),
                                     uncertainty_matrix['K'],  uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                     uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -1506,10 +1481,10 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
         uelemental_C = uncertainty_matrix['EC']
         geological_minerals = (2.2 * concentration_matrix['Al'] + 2.49 * concentration_matrix['Si'] +
                                1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
-                               2.42 * concentration_matrix['Fe'] + 1.35 * concentration_matrix['Na no sol'])
+                               2.42 * concentration_matrix['Fe'] )
         ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
-                               2.42 * uncertainty_matrix['Fe'], 1.35 * uncertainty_matrix['Na no sol'] ], axis=0)
+                               2.42 * uncertainty_matrix['Fe'] ], axis=0)
         salt = 1.8 * concentration_matrix['Cl']
         usalt = 1.8 * uncertainty_matrix['Cl'] # Un solo elemento
         
@@ -1528,8 +1503,7 @@ def mass_reconstruction(conc_matrix, unc_matrix, equation='Hand_2011'):
                                        2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                        1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                        2.42 * uncertainty_matrix['Fe'],
-                                       1.8 * uncertainty_matrix['Cl'] , 
-                                       1.35 * uncertainty_matrix['Na no sol']], axis=0)
+                                       1.8 * uncertainty_matrix['Cl'] ], axis=0)
                
     if equation == 'Simon_2011':
         # Consider all SO4 and NO3 with ammonium as counterion
@@ -1690,14 +1664,14 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                1.4 * uncertainty_matrix['Ca'] + 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
         # Pide que sean por XRF salvo Na+ y Mg++, que deberían ser por AAS. No es el caso en ninguno
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] +
                           concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol']  +
                                            uncertainty_matrix['K'] +
                           uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
                           uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
@@ -1718,7 +1692,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                     uncertainty_matrix['EC'],
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + uncertainty_matrix['Na no sol'] +
+                                    uncertainty_matrix['Cl'] + uncertainty_matrix['Na sol'] + 
                                     uncertainty_matrix['K'] +
                                     uncertainty_matrix['Ti'] + uncertainty_matrix['V'] + uncertainty_matrix['Cr'] +
                                     uncertainty_matrix['Mn'] + uncertainty_matrix['Ni'] + uncertainty_matrix['Cu'] +
@@ -1748,14 +1722,14 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
         ugeological_minerals = np.linalg.norm( [1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                 1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] +
                           concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['Na no sol'],
+        utrace_elements = np.linalg.norm( [ uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], 
                                             uncertainty_matrix['K'],
                                             uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                             uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
@@ -1777,7 +1751,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                     uncertainty_matrix['EC'],
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'],
+                                    uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], 
                                     uncertainty_matrix['K'],
                                     uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
@@ -1846,8 +1820,8 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
         ugeological_minerals = np.linalg.norm( [ 1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                                  1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'] ], axis=0)
         
-        salt = concentration_matrix['Na sol'] + concentration_matrix['Na no sol']  + concentration_matrix['Cl']
-        usalt = np.linalg.norm( [ uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'] ], axis=0)
+        salt = concentration_matrix['Na sol'] +  concentration_matrix['Cl']
+        usalt = np.linalg.norm( [ uncertainty_matrix['Na sol'],  uncertainty_matrix['Cl'] ], axis=0)
         
         trace_elements = (concentration_matrix['Ti'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
@@ -1872,7 +1846,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                     uorganic_mass,
                                     1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                     1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
-                                    uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['Cl'],
+                                    uncertainty_matrix['Na sol'], uncertainty_matrix['Cl'],
                                     uncertainty_matrix['Ti'], uncertainty_matrix['V'], uncertainty_matrix['Cr'],
                                     uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                     uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -1902,13 +1876,13 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                                 1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
                                                 1.67 * uncertainty_matrix['Ti'] ], axis=0)
         
-        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + concentration_matrix['Na no sol'] +
+        trace_elements = (concentration_matrix['Cl'] + concentration_matrix['Na sol'] + 
                           concentration_matrix['K'] + concentration_matrix['V'] + concentration_matrix['Cr'] +
                           concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
                           concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
                           concentration_matrix['Sr'] + concentration_matrix['Pb'] + concentration_matrix['Hg'] +
                           concentration_matrix['Sb'])
-        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+        utrace_elements = np.linalg.norm( [uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['K'],
                                            uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
                                            uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                            uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -1928,7 +1902,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                      1.89 * uncertainty_matrix['Al'], 2.14 * uncertainty_matrix['Si'],
                                      1.4 * uncertainty_matrix['Ca'], 1.43 * uncertainty_matrix['Fe'],
                                      1.67 * uncertainty_matrix['Ti'],
-                                     uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'], uncertainty_matrix['Na no sol'], uncertainty_matrix['K'],
+                                     uncertainty_matrix['Cl'], uncertainty_matrix['Na sol'],  uncertainty_matrix['K'],
                                      uncertainty_matrix['V'], uncertainty_matrix['Cr'], uncertainty_matrix['Hg'], 
                                      uncertainty_matrix['Mn'], uncertainty_matrix['Ni'], uncertainty_matrix['Cu'],
                                      uncertainty_matrix['Zn'], uncertainty_matrix['As'], uncertainty_matrix['Se'],
@@ -2088,7 +2062,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                1.63 * concentration_matrix['Ca'] + 1.94 * concentration_matrix['Ti'] +
                                2.42 * concentration_matrix['Fe'])
         if equation == "Hand_2011_mod":
-            geological_minerals = geological_minerals + concentration_matrix['Na no sol']
+            geological_minerals = geological_minerals 
         if equation =="Hand_2011":    
             ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                 1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
@@ -2096,7 +2070,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
         else:
             ugeological_minerals = np.linalg.norm( [2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                 1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
-                                2.42 * uncertainty_matrix['Fe'] , uncertainty_matrix['Na no sol']], axis=0)
+                                2.42 * uncertainty_matrix['Fe'] ], axis=0)
         salt = 1.8 * concentration_matrix['Cl']
         usalt = 1.8 * uncertainty_matrix['Cl'] # Un solo elemento
         
@@ -2124,7 +2098,7 @@ def mass_reconstruction_mod(conc_matrix, unc_matrix, events, equation='Simon_201
                                        2.2 * uncertainty_matrix['Al'], 2.49 * uncertainty_matrix['Si'],
                                        1.63 * uncertainty_matrix['Ca'], 1.94 * uncertainty_matrix['Ti'],
                                        2.42 * uncertainty_matrix['Fe'],
-                                       1.8 * uncertainty_matrix['Cl'], uncertainty_matrix['Na no sol'] ], 
+                                       1.8 * uncertainty_matrix['Cl']], 
                                       axis=0)
        
     if equation == 'Simon_2011':
@@ -2576,11 +2550,9 @@ def linear_estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False, d
         results = linregress(x[mask], y[mask])
         
     if (method=="Lichtig_2024"): # Por algún motivo tuve que sacar Sr y Hg
-        concentration_matrix = concentration_matrix.dropna(subset=["SO4", "NO3", "NH4", "Si", "Al",
-                                                                   "Ca", "Ti", "Fe", "Cl", "Na sol",
-                                                                   "V", "Cr", "Mn", "Ni", 
-                                                                   "Cu", "Zn", "As", "Se", 
-                                                                   "Pb", "Sb", "K", "PM2.5"], axis=0)
+        concentration_matrix = concentration_matrix.dropna(subset=["SO4", "NO3", "NH4", "Si",
+                                                                   "Ca", "Fe", "Ti", "EC", "Cl",
+                                                                   "K", "Fe", "PM2.5", "OC"], axis=0)
         soil = (3.48 * concentration_matrix["Si"] +
                 1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
                 2.42 * concentration_matrix["Fe"])
@@ -2588,14 +2560,10 @@ def linear_estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False, d
             salt = 1.8* concentration_matrix["Cl"] 
         else:
             salt = 2.54 * concentration_matrix["Na sol"]
-        trace = (concentration_matrix['V'] + concentration_matrix['Cr'] +
-                 concentration_matrix['Mn'] + concentration_matrix['Ni'] + concentration_matrix['Cu'] +
-                 concentration_matrix['Zn'] + concentration_matrix['As'] + concentration_matrix['Se'] +
-                 concentration_matrix['Pb'] + 
-                 concentration_matrix['Sb'])
-        knon = concentration_matrix["K"] - 0.6 * concentration_matrix["Fe"]
+
+        knon = 1.2*(concentration_matrix["K"] - 0.6 * concentration_matrix["Fe"])
         
-        intercept_base = (concentration_matrix["EC"] + salt + knon + trace + soil.values +
+        intercept_base = (concentration_matrix["EC"] + salt + knon + soil.values +
                          concentration_matrix["SO4"] + concentration_matrix["NO3"] + 
                          concentration_matrix["NH4"])
         
@@ -2631,8 +2599,6 @@ def linear_estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False, d
                 1.63 * concentration_matrix["Ca"] + 1.94 * concentration_matrix["Ti"] +
                 2.42 * concentration_matrix["Fe"])
         
-        if method=="Hand_2011_mod":
-            soil= soil + concentration_matrix["Na no sol"]
         
         if not ssa_as_Na:
             salt = 1.8 * concentration_matrix["Cl"]
@@ -2965,7 +2931,7 @@ def estimation_om_oc(conc_matrix, method='Simon_2011', ssa_as_Na=False, display_
                 2.42 * concentration_matrix["Fe"])
         
         if method=="Hand_2011_mod":
-            soil= soil + concentration_matrix["Na no sol"]
+            soil= soil 
         
         if not ssa_as_Na:
             salt = 1.8 * concentration_matrix["Cl"]
@@ -3144,4 +3110,137 @@ class Equation:
         self.name = name
         self.ocEvents = ocEvents
         self.ocNevents = ocNoevents
+
+# grafico 3 paneles
+def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_reconst_mass, events,
+                event_columnname="Event_F", event_labels=["SI" ,"SF","SO"], method = 'Simon_2011'):
+   
+    organic_mass_per = percentage_with_err(
+        mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
+    inorganic_ions_per = percentage_with_err(
+        mass['inorganic_ions'], matrix['PM2.5'], uncertainty['uinorganic_ions'], unc['PM2.5'])
+    geological_minerals_per = percentage_with_err(
+        mass['geological_minerals'], matrix['PM2.5'], uncertainty['ugeological_minerals'], unc['PM2.5'])
+    EC_per = percentage_with_err(
+        mass['elemental_C'], matrix['PM2.5'], uncertainty['uelemental_C'], unc['PM2.5'])
+    ssa_per = percentage_with_err(
+        mass['salt'], matrix['PM2.5'], uncertainty['usalt'], unc['PM2.5'])
+    others_per = percentage_with_err(
+        mass['others'], matrix['PM2.5'], uncertainty['uothers'], unc['PM2.5']) 
+#     others_per = (mass['others']+mass['residual']+mass['trace_elements'])/ total_reconst_mass * 100
+    epsilon_per = (mass['others']+mass['residual']+mass['trace_elements'])/ matrix['PM2.5'] * 100
+
+    plt.style.use('seaborn-v0_8-paper')
+
+    reconst = percentage_with_err(val=total_reconst_mass, uval=utotal_reconst_mass,
+                                totalval=matrix['PM2.5'], utotalval=unc['PM2.5'])
+
+    width = 2.5
+    
+    fig, ax = plt.subplots(nrows=3, figsize=(7, 7.5), sharex=True, dpi=200)
+
+    ax[0].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
+                color='k', capsize=2, capthick=1, lw=1, marker='.', label='gravimetric mass', zorder=1)
+    ax[0].errorbar(matrix.index, total_reconst_mass, yerr=utotal_reconst_mass, color='#1f77b4',
+                capsize=2, capthick=1, lw=1, marker='.', label='reconstructed mass', zorder=0)
+    ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
+    ax[0].set_ylim(bottom=0, top=62)
+    ax[0].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)) * 0+2, 'd',
+
+            color='#d62728', label='smoke event', zorder=5)
+    handles, labels = ax[0].get_legend_handles_labels()
+    ax[0].legend(reversed(handles), reversed(labels),loc=9,ncol=3)
+
+    axvlines(ax=ax[0], xs=matrix.index.values, color='silver',
+            lw=0.5, linestyle='dotted', zorder=0)
+    axvlines(ax=ax[1], xs=matrix.index.values, color='silver',
+            lw=0.5, linestyle='dotted', zorder=0)
+    axvlines(ax=ax[2], xs=matrix.index.values, color='silver',
+            lw=0.5, linestyle='dotted', zorder=0)
+    
+    ##############################
+
+    # ax[1].errorbar(matrix.index, matrix['PM2.5'], yerr=unc['PM2.5'],
+    #                 color='k', capsize=2, capthick=1, lw=0.5, linestyle='--', marker='.', 
+    #                 label='gravimetric mass', zorder=4)
+    ax[1].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
+    # ax[1].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)), '.',
+    #            color='r', label='smoke events', zorder=8)
+    ax[1].errorbar(matrix.index, total_reconst_mass.where(events[event_columnname].isin(event_labels)), yerr=utotal_reconst_mass,
+                    color='k', capsize=2, capthick=1, lw=1, marker='.', linestyle='',
+                    label='smoke event', zorder=8)
+    axvlines(ax=ax[1], xs=matrix.index.values, color='silver',
+            lw=0.5, linestyle='dashed', zorder=0)
+    ax[1].bar(matrix.index.values, mass['organic_mass'].where(matrix['Na sol'].notna()).values, 
+            width,  label='OM')
+    ax[1].bar(matrix.index.values, mass['inorganic_ions'].values,
+            width,  bottom=mass['organic_mass'].values, label='II')
+    ax[1].bar(matrix.index.values, mass['geological_minerals'].values, width,
+            bottom=(mass['inorganic_ions'] + mass['organic_mass']).values, label='GM')
+    ax[1].bar(matrix.index.values, mass['elemental_C'].values, width,
+            bottom=(mass['inorganic_ions'] + mass['organic_mass'] + mass['geological_minerals']).values, 
+            label='EC')
+    ax[1].bar(matrix.index.values, mass['salt'].values, width,
+            bottom=(mass['elemental_C']+mass['inorganic_ions'] + mass['organic_mass'] + mass['geological_minerals']).values, 
+            label='SS')
+    ax[1].bar(matrix.index.values, mass['others'].values, width,
+            bottom=(mass['salt']+ mass['elemental_C']+mass['inorganic_ions'] + mass['organic_mass'] + mass['geological_minerals']).values,
+            label='KNON')
+    ax[1].bar(matrix.index.values, mass['residual'].values, width, yerr=utotal_reconst_mass,
+            error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
+                        'ecolor': '#696462', 'marker': 'o'},
+            bottom=(mass['salt']+ mass['elemental_C']+mass['inorganic_ions'] + mass['organic_mass'] + mass['geological_minerals']+ mass['others']).values,
+            label='others') 
+        ##################################################################
+
+    # ax[1].bar(matrix.index.values, organic_mass_per['perc'].where(matrix['Na sol'].notna()).values, 
+    #         width,  label='OM')
+    # ax[1].bar(matrix.index.values, inorganic_ions_per['perc'].values,
+    #         width,  bottom=organic_mass_per['perc'].values, label='II')
+    # ax[1].bar(matrix.index.values, geological_minerals_per['perc'].values, width,
+    #         bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc']).values, label='GM')
+    # ax[1].bar(matrix.index.values, EC_per['perc'].values, width,
+    #         bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + geological_minerals_per['perc']).values, 
+    #         label='EC')
+    # ax[1].bar(matrix.index.values, ssa_per['perc'].values, width,
+    #             bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] + 
+    #                     geological_minerals_per['perc'] + EC_per['perc']).values, 
+    #             label='SSA')
+    # ax[1].bar(matrix.index.values, others_per.values, width, yerr=reconst['uperc'],
+    #         error_kw={'lw': 1, 'capsize': 2, 'capthick': 1,
+    #                     'ecolor': 'gray', 'marker': '.'},
+    #         bottom=(inorganic_ions_per['perc'] + organic_mass_per['perc'] +
+    #                 geological_minerals_per['perc'] + EC_per['perc'] + ssa_per['perc']).values,
+    #         label='others')
+    # ax[1].axhline(100, linestyle=':', color='k')
+    # ax[1].axhline(100, linestyle=':', color='k')
+    # ax[1].axhspan(80, 120, alpha=0.3, color='y')
+    # ax[1].set_ylabel('reconstructed mass (%)')
+    ax[1].set_ylim(bottom=0, top=75)
+    handles, labels = ax[1].get_legend_handles_labels()
+    ax[1].legend(loc=9,ncol=6)
+
+    ax[2].axhline(0, color="gray")
+    ax[2].errorbar(matrix.index, total_reconst_mass - matrix['PM2.5'],
+                yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
+                color='tab:blue', capsize=2, capthick=1, elinewidth=1,
+                marker='o', label='no event', zorder=3)
+    ax[2].errorbar(matrix.index,
+                (total_reconst_mass - matrix['PM2.5']).where(
+                    events[event_columnname].isin(event_labels)),
+                yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
+                color='tab:red', capsize=2, capthick=1, elinewidth=1,
+                marker='o', label='smoke event', zorder=3)
+    ax[2].set_ylim(bottom=-15, top=17)
+    ax[2].set_xlabel("date")
+    ax[2].set_ylabel("residuals ($\mu$g/m$^3$)")
+    ax[2].legend(loc=9,ncol=2)
+    ax[0].text(0.01, 0.95, '(a)', transform=ax[0].transAxes, fontsize=12, verticalalignment='top')
+    ax[1].text(0.01, 0.95, '(b)', transform=ax[1].transAxes, fontsize=12, verticalalignment='top')
+    ax[2].text(0.01, 0.95, '(c)', transform=ax[2].transAxes, fontsize=12, verticalalignment='top')
+
+    fig.tight_layout()
+    plt.subplots_adjust(hspace=.0)
+    plt.subplots_adjust(wspace=.0)
+    fig.savefig(f'images/stacked_bar_3panels_{method}.png')
 # %%
