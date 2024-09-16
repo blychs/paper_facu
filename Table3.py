@@ -1,6 +1,6 @@
 # %% Table 3
 import os
-os.chdir('/home/mdiaz/Documents/paper_facu/')
+os.chdir('/home/usuario/mdiaz/Documents/paper_facu/')
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ plt.style.use('seaborn-v0_8-paper')
 matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv4.xlsx', 
                                               'data/PMF_BA_fullv4.xlsx',
                                               'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
-                                              'BA_events_testMnew.xlsx')
+                                              'BA_events_testMnew2.xlsx')
 
 
 # methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
@@ -33,34 +33,7 @@ methods = ['Simon_2011']
 
 event_columnname="Event_F"
 event_labels= ["SI" ,"SF","SO"] #,"SP", "SN" "SL", "S", "SC", "SO"
-#%% funciones extra
 
-# Vectores de nombres y eventos
-columns = ['slope', 'stderr', 'intercept', 'intercept_stderr']
-events = ['no event', 'event', 'all']
-
-# Función para generar ordered_columns basado en un criterio de ordenación
-def generate_ordered_columns(order):
-    if order == 'no_event_first':
-        # Orden: no event -> event -> all
-        return [(col, event) for event in events for col in columns if event == 'no event'] + \
-               [(col, event) for event in events for col in columns if event == 'event'] + \
-               [(col, event) for event in events for col in columns if event == 'all']
-    
-    elif order == 'event_first':
-        # Orden: event -> no event -> all
-        return [(col, event) for event in events for col in columns if event == 'event'] + \
-               [(col, event) for event in events for col in columns if event == 'no event'] + \
-               [(col, event) for event in events for col in columns if event == 'all']
-    
-    elif order == 'all_first':
-        # Orden: all -> no event -> event
-        return [(col, event) for event in events for col in columns if event == 'all'] + \
-               [(col, event) for event in events for col in columns if event == 'no event'] + \
-               [(col, event) for event in events for col in columns if event == 'event']
-    
-    else:
-        raise ValueError("Unknown order criteria")
 #%%
 
 # datesdrop=['2019-05-24','2019-05-27','2019-05-30','2019-06-02', '2020-03-01','2020-01-31','2019-08-04','2019-08-07','2019-08-10']
@@ -72,7 +45,7 @@ def generate_ordered_columns(order):
 # events=events.drop(datesdrop,axis=0)
 # unc=unc.drop(datesdrop,axis=0)
 
-matrix.describe().to_csv('description_statistics_allM.csv')
+# matrix.describe().to_csv('description_statistics_allM.csv')
 
 # event_columnname="Event_M"
 # event_labels= ["S", "SL" ,"SP", "SN","SC"] 
@@ -107,7 +80,7 @@ omoc_all=[]
 # plot_graph=True
 # plot_graphmodall = True
 # plot_graph1panel = True
-plot_graph=False 
+plot_graph=False
 plot_graphmodall = False
 plot_graph1panel = False
 slope={}

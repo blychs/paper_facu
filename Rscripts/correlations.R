@@ -16,7 +16,7 @@ MWMg=24.31
 MWNa=23
 MWCl=35.45
 
-setwd("~/Documents/paper_facu/Rscripts")
+setwd("~/mdiaz/Documents/paper_facu/Rscripts")
 BA_events_testM <- read_excel("../BA_events_testMnew.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 BA_events_testM$Event_F <- as.factor(BA_events_testM$Event_F)
@@ -55,6 +55,91 @@ corPlot(PMF_BA_full, dendrogram = TRUE,method = "spearman", main ="R spearman, m
 dev.off()
 
 colMeans(PMF_BA_full[,sapply(PMF_BA_full, is.numeric)], na.rm = TRUE)
+
+
+#GA ####
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(ggrepel)
+
+# Renaming categories in the DataFrame
+mean_data <- Simon_mass %>%
+  mutate(Event_F = PMF_BA_full$color) %>%
+  group_by(Event_F) %>%
+  summarise(across(c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others), mean, na.rm = TRUE)) %>%
+  pivot_longer(cols = c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others),
+               names_to = "category", values_to = "value") %>%
+  mutate(category = recode(category,
+                           "inorganic_ions" = "II",
+                           "organic_mass" = "OM",
+                           "elemental_C" = "EC",
+                           "geological_minerals" = "GM",
+                           "salt" = "SS",
+                           "others" = "others"))
+
+# Define categories to be shown outside the pie chart
+outside_labels <- c("EC","SS", "others")
+
+
+library(ggplot2)
+library(ggrepel)
+library(tidyverse)
+# Crear gráfico de barras de PM2.5
+bar_plot <- ggplot(PMF_BA_full, aes(x = date, y = `PM2,5`, fill = color)) +
+  geom_bar(stat = "identity", width = 0.95) +
+  scale_fill_manual(values = c("Event" = "red", "No Event" = "blue")) +
+  scale_x_discrete(breaks = levels(PMF_BA_full$date)[seq(1, length(levels(PMF_BA_full$date)), by = 4)]) +
+  labs(x = "Date", y = "PM2.5 (µg/m³)", fill = "Event Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+# Create pie chart for events
+event_pie <- ggplot(mean_data %>% filter(Event_F == "Event"), aes(x = "", y = value, fill = category)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y") +
+  # Text labels inside the pie chart for categories that fit
+  geom_text(data = filter(mean_data %>% filter(Event_F == "Event"), !category %in% outside_labels),
+            aes(label = category), 
+            position = position_stack(vjust = 0.5), size = 4, 
+            hjust = 0.5) +
+  # Labels outside the pie chart with lines indicating the segment
+  geom_label_repel(data = filter(mean_data %>% filter(Event_F == "Event"), category %in% outside_labels),
+                   aes(label = category, x = 1.1), size = 4, nudge_x = 0.5,
+                   box.padding = 0.5, point.padding = 0.5,
+                   segment.color = 'grey50', show.legend = FALSE,
+                   direction = "y") +  # Use direction "y" to ensure labels move along the y-axis
+  labs(title = "Event") +
+  theme_void() +
+  theme(legend.position = "none") # Hide legend
+
+# Crear gráfico de pastel para eventos sin etiquetas
+no_event_pie <- ggplot(mean_data %>% filter(Event_F == "No Event"), aes(x = "", y = value, fill = category)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y") +
+  # Etiquetas dentro del gráfico para categorías que caben
+  geom_text(data = filter(mean_data %>% filter(Event_F == "No Event")),
+            aes(label = category), 
+            position = position_stack(vjust = 0.5), size = 4, 
+            hjust = 0.5) +
+ labs(title = "No Event") +
+  theme_void() +
+  theme(legend.position = "none") # Ocultar leyenda
+
+# Combine plots: bars on the left, pies on the right
+combined_plot <- (bar_plot | (event_pie / no_event_pie))
+
+# Show combined plot
+print(combined_plot)
+
+
+# Combinar gráficos: barras a la izquierda, tortas a la derecha
+combined_plot <- (bar_plot / (event_pie | no_event_pie))
+
+# Mostrar gráfico combinado
+print(combined_plot)
+
 
 # 03 Mergeo con eventos ####
 PMF_BA_full=merge(PMF_BA_full,BA_events_testM, by="date")

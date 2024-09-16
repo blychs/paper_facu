@@ -3,7 +3,8 @@ library(readxl)
 library(openair)
 library(ggplot2)
 library(dplyr)
-setwd("~/Documents/paper_facu/Rscripts")
+# setwd("~/Documents/paper_facu/Rscripts")
+setwd("~/mdiaz/Documents/paper_facu/Rscripts")
 CEILAP_BA_hora <- read_csv("../data/DatosCEILAP/20190101_20200630_CEILAP-BA.lev20", 
                       col_types = cols(`Date(dd:mm:yyyy)` = col_datetime(format = "%d:%m:%Y")), 
                       skip = 6, na = "-999.000000")
@@ -12,7 +13,7 @@ CEILAP_BA_hora$date <- as.POSIXct(CEILAP_BA_hora$date, tz='UTC')
 CEILAP_BA_hora<-timeAverage(CEILAP_BA_hora,avg.time = "hour")
 CEILAP_BA_hora$filterday <- as.Date(CEILAP_BA_hora$date - 12*3600)
 
-BA_events_testM <- read_excel("../BA_events_testMnew.xlsx")
+BA_events_testM <- read_excel("../BA_events_testMnew2.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 BA_events_testM$filterday <- as.Date(BA_events_testM$date)
 BA_events_testM$Event_M <- as.factor(BA_events_testM$Event_M)

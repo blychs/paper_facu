@@ -3,7 +3,7 @@ library(openair)
 library(ggplot2)
 library(lubridate)
 library(readxl)
-setwd("~/Documents/paper_facu/Rscripts")
+setwd("~/mdiaz/Documents/paper_facu/Rscripts")
 Simon_mass <- read_csv("../Simon_2011_events_mass.csv",
                        col_types = cols(trace_elements = col_skip()))
 
@@ -15,7 +15,7 @@ Simon_mass$date <- as.POSIXct(Simon_mass$date, tz='UTC')
 # Lichtig_mass$date <- as.POSIXct(Lichtig_mass$date, tz='UTC')
 
 
-BA_events_testM <- read_excel("../BA_events_testMnew.xlsx")
+BA_events_testM <- read_excel("../BA_events_testMnew2.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 BA_events_testM$Event_F <- as.factor(BA_events_testM$Event_F)
 
@@ -39,6 +39,7 @@ PMF_BA_full <- read_excel("../data/PMF_BA_fullv4.xlsx",
                           na ='-999')
 
 Simon_mass$PM2.5=rowSums(Simon_mass[,2:8])
+summary(Simon_mass)
 # Lichtig_mass$PM2.5=rowSums(Lichtig_mass[,2:8])
 # Lichtig_mass$diff=Simon_mass$PM2.5-Lichtig_mass$PM2.5
 ggplot(Lichtig_mass)+geom_line(aes(x=date,y=inorganic_ions))+
