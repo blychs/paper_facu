@@ -69,12 +69,16 @@ df$ec_perc=df$elemental_C/df$PM2.5*100
 df$ss_perc=df$salt/df$PM2.5*100
 df$r_perc=df$residual/df$PM2.5*100
 # df=df[complete.cases(df),]
-summary(df[df$Event_F %in% c("SI","SF"),])
-summary(df[df$Event_F %in% c("no"),])
+df$OCEC=df$`C Orgánico`/df$`C Elemental`
+summary(df)
+summary(df[df$Event_F %in% c("SI","SF","SO"),]) # OM 13.88 # 5.6 OC
+summary(df[df$Event_F %in% c("no"),]) # OM 8.91 # 4.86 OC
 summary(selectByDate(df, start = "2019-12-01",end="2020-04-01")) #0.9177
 summary(selectByDate(df, start = "2019-06-01",end="2019-09-01")) #0.92
 summary(selectByDate(df, start = "2019-04-01",end="2019-06-01")) #1.2
 summary(selectByDate(df, start = "2019-09-01",end="2019-12-01")) #0.92
+
+
 
 timeVariation(df, pollutant = "organic_mass")
 Simon_2011_original_mass <- read_csv("Documents/paper_facu/Simon_2011_original_mass.csv")

@@ -565,12 +565,24 @@ ggplot(PMF_BA_full)+geom_line(aes(x=date,y=NO3,color="NO3"))+geom_point(aes(x=da
 ggplot(PMF_BA_full)+geom_line(aes(x=date,y=EC,color="EC"))+geom_point(aes(x=date,y=EC,color=OrigenTag))
 
 # meteo ####
-meteoobsday=timeAverage(meteoobs,avg.time = "day",statistic = "sum")
+meteoobs <- read_excel("/media/usuario/32b62ac8-a81b-4630-bf83-822c71ee0cad/mdiaz/Documents/paper_facu/data/200161 BUENOS AIRES OBSERVATORIO.xlsx")
+meteoobs$date=meteoobs$FECHA+meteoobs$HORA*3600
+meteoobsday=timeAverage(meteoobs[,c("date","PRECIP 6HS (mm)")],avg.time = "day",statistic = "sum")
 TVmeteo=timeVariation(meteoobs,pollutant = "PRECIP 6HS (mm)")
 ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=`PM2,5`))+
   geom_point(data=meteoobsday,aes(x=date,y=`PRECIP 6HS (mm)`*2, color="precip"))
 TVmeteoobs=timeVariation(meteoobsday, pollutant = "PRECIP 6HS (mm)", statistic = "median")
 print(TVmeteoobs$plot$month)
+meteoobsmonth=timeAverage(meteoobs[,c("date","PRECIP 6HS (mm)")],avg.time = "month",statistic = "sum")
+ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=`PM2,5`))+
+  geom_line(data=meteoobsday,aes(x=date,y=`PRECIP 6HS (mm)`*2, color="precip"))
+ggplot()+
+  geom_line(data=meteoobsmonth,aes(x=date,y=`PRECIP 6HS (mm)`, color="precip"))
+
+monthPM= timeAverage(PMF_BA_full[,c("date","PM2,5")], avg.time = "month", statistic="median")
+ggplot()+geom_line(data=monthPM,aes(x=date,y=`PM2,5`, color="PMmensual"))+
+  geom_line(data=meteoobsmonth,aes(x=date,y=`PRECIP 6HS (mm)`/10, color="acumuladamensual"))
+
 
 # otros relaciones ####
 

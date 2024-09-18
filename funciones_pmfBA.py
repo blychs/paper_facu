@@ -3113,7 +3113,7 @@ class Equation:
 
 # grafico 3 paneles
 def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_reconst_mass, events,
-                event_columnname="Event_F", event_labels=["SI" ,"SF","SO"], method = 'Simon_2011'):
+                event_columnname="Event_F", event_labels=["SI" ,"SF","SO"], method = 'Simon_2011', suffix=''):
    
     organic_mass_per = percentage_with_err(
         mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
@@ -3145,9 +3145,9 @@ def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_recon
                 capsize=2, capthick=1, lw=1, marker='.', label='reconstructed mass', zorder=0)
     ax[0].set_ylabel('PM$_{2.5}$ (µg/m$^3$)')
     ax[0].set_ylim(bottom=0, top=62)
-    ax[0].plot(matrix.index, matrix['PM2.5'].where(events[event_columnname].isin(event_labels)) * 0+2, 'd',
+    ax[0].plot(matrix.index, matrix['Pb'].where(events[event_columnname].isin(event_labels)) * 0+2, 'd',
 
-            color='#d62728', label='smoke event', zorder=5)
+            color='#d62728', label='BB event', zorder=5)
     handles, labels = ax[0].get_legend_handles_labels()
     ax[0].legend(reversed(handles), reversed(labels),loc=9,ncol=3)
 
@@ -3168,7 +3168,7 @@ def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_recon
     #            color='r', label='smoke events', zorder=8)
     ax[1].errorbar(matrix.index, total_reconst_mass.where(events[event_columnname].isin(event_labels)), yerr=utotal_reconst_mass,
                     color='k', capsize=2, capthick=1, lw=1, marker='.', linestyle='',
-                    label='smoke event', zorder=8)
+                    label='BB event', zorder=8)
     axvlines(ax=ax[1], xs=matrix.index.values, color='silver',
             lw=0.5, linestyle='dashed', zorder=0)
     ax[1].bar(matrix.index.values, mass['organic_mass'].where(matrix['Na sol'].notna()).values, 
@@ -3230,10 +3230,10 @@ def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_recon
                     events[event_columnname].isin(event_labels)),
                 yerr=(unc['PM2.5'] + utotal_reconst_mass), linewidth=0,
                 color='tab:red', capsize=2, capthick=1, elinewidth=1,
-                marker='o', label='smoke event', zorder=3)
+                marker='o', label='BB event', zorder=3)
     ax[2].set_ylim(bottom=-15, top=17)
     ax[2].set_xlabel("date")
-    ax[2].set_ylabel("residuals ($\mu$g/m$^3$)")
+    ax[2].set_ylabel("residual error ($\mu$g/m$^3$)")
     ax[2].legend(loc=9,ncol=2)
     ax[0].text(0.01, 0.95, '(a)', transform=ax[0].transAxes, fontsize=12, verticalalignment='top')
     ax[1].text(0.01, 0.95, '(b)', transform=ax[1].transAxes, fontsize=12, verticalalignment='top')
@@ -3242,5 +3242,33 @@ def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_recon
     fig.tight_layout()
     plt.subplots_adjust(hspace=.0)
     plt.subplots_adjust(wspace=.0)
-    fig.savefig(f'images/stacked_bar_3panels_{method}.png')
-# %%
+    fig.savefig(f'images/stacked_bar_3panels_{method}_{suffix}.png')
+
+
+
+# Función para generar ordered_columns basado en un criterio de ordenación
+def generate_ordered_columns(order):
+    # Vectores de nombres y eventos
+    columns = ['slope', 'stderr', 'intercept', 'intercept_stderr']
+    events = ['no event', 'event', 'all']
+    
+    if order == 'no_event_first':
+        # Orden: no event -> event -> all
+        return [(col, event) for event in events for col in columns if event == 'no event'] + \
+               [(col, event) for event in events for col in columns if event == 'event'] + \
+               [(col, event) for event in events for col in columns if event == 'all']
+    
+    elif order == 'event_first':
+        # Orden: event -> no event -> all
+        return [(col, event) for event in events for col in columns if event == 'event'] + \
+               [(col, event) for event in events for col in columns if event == 'no event'] + \
+               [(col, event) for event in events for col in columns if event == 'all']
+    
+    elif order == 'all_first':
+        # Orden: all -> no event -> event
+        return [(col, event) for event in events for col in columns if event == 'all'] + \
+               [(col, event) for event in events for col in columns if event == 'no event'] + \
+               [(col, event) for event in events for col in columns if event == 'event']
+    
+    else:
+        raise ValueError("Unknown order criteria")
