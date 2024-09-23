@@ -194,4 +194,34 @@ latex_table = latex_table.replace('\\bottomrule', '\\hline')
 print(latex_table)
 # print(method_quality)
 # print method method_quality y RMSE
+# %% Table 3 (chequeado al 18-09-2024)
+method = "Simon_2011"
+#Estimo beta para no evento
+resultNormal = linear_estimation_om_oc(matrix.where(events[event_columnname] == 'no'), method=method, ssa_as_Na=False, display_latex=False)
+# Estimo beta para evento
+resultEvent = linear_estimation_om_oc(matrix.where(events[event_columnname].isin(event_labels)), method=method,
+    ssa_as_Na=False, display_latex=False)
+
+[total_reconst_mass, mass, utotal_reconst_mass, uncertainty] = mass_reconstruction_all(matrix, unc, events, equation=method, 
+                                                                                       betas_event=[resultEvent.intercept,resultEvent.slope,1,1,1], 
+                                                                                       betas_noevent=[resultNormal.intercept, resultNormal.slope,1,1,1], 
+                                                                                       type_reconstruction="events")
+mass=pd.DataFrame.from_dict(mass)
+mass = mass.rename(columns={'organic_mass': 'Organic mass', 
+                            'geological_minerals': 'Geological minerals',
+                            'inorganic_ions': 'Inorganic ions', 
+                            'elemental_C':'Elemental carbon',
+                            'salt': 'Sea salt', 
+                            'others': 'KNON'})
+keys = ['Organic mass', 'Geological minerals','Inorganic ions','Elemental carbon','Sea salt','Others']
+print('Category & Total ($\mu$g/m$^{3}$) & No event ($\mu$g/m$^{3}$) & Event ($\mu$g/m$^{3}$) \\\\ \\hline')
+    
+for key in keys:
+    mass_events=mass[key].where(events[event_columnname].isin(event_labels))
+    mass_noevents=mass[key].where(~events[event_columnname].isin(event_labels))
+    print(f"{key} & {np.min(mass[key]):.2f} & {np.max(mass[key]):.2f} & {np.mean(mass[key]):.2f} & "
+      f"{np.min(mass_noevents):.2f} & {np.max(mass_noevents):.2f} & {np.mean(mass_noevents):.2f} & "
+      f"{np.min(mass_events):.2f} & {np.max(mass_events):.2f} &{np.mean(mass_events):.2f} \\\\")
+
+
 # %%

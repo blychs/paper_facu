@@ -3,12 +3,12 @@ library(openair)
 library(ggplot2)
 library(lubridate)
 library(readxl)
-setwd("~/Documents/paper_facu")
+setwd("~/mdiaz/Documents/paper_facu")
 pathgraphs="Figures"
 upper_windspeed=8.5
 colorset="plasma"
 # En data_every_hour_obs.csv solo estan actualizados los datos de meteo el resto del archivo es viejo
-data <- read.csv("data/data_every_hour_obsv4.csv")                 
+data <- read.csv("data_every_hour_obsv5.csv")                 
 data$date <- as.POSIXct(data$date, tz='UTC')
 data$temp[data$temp>900]=NA
 data$day<- format(data$date-12*3600, "%Y-%m-%d UTC")
@@ -22,7 +22,7 @@ mergeddata$nssK_EC=mergeddata$nssK/mergeddata$C.Elemental
 mergeddata$OC_EC=mergeddata$C.Orgánico/mergeddata$C.Elemental
 mergeddata=dplyr::rename(mergeddata,Event= Event_F)
 mergeddata=dplyr::rename(mergeddata,Na= Na.sol)
-BA_events_testM <- read_excel("BA_events_testMnew.xlsx")
+BA_events_testM <- read_excel("BA_events_testMnew2.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 
 
@@ -36,7 +36,7 @@ mergeddata$K_OC=mergeddata$K/mergeddata$`C.Orgánico`
 PPPM25<-polarPlot(mergeddata, pollutant = "PM2.5", statistic = "mean",  min.bin = 2, 
                   upper =upper_windspeed, key.footer="[ug/m3]",key.header = "PM2.5",mis.col = "transparent",
                   cols="inferno")
-#polarPlot(mergeddata, pollutant = "OC_EC", statistic = "mean",  min.bin = 2, main='OC/EC')
+polarPlot(mergeddata, pollutant = "OC_EC", statistic = "mean",  min.bin = 2, main='OC/EC')
 ppEC<-polarPlot(mergeddata, pollutant = "C.Elemental", statistic = "mean",  min.bin = 2, 
           upper =upper_windspeed, key.footer="[ug/m3]",key.header = "EC",mis.col = "transparent",
           cols=colorset)
@@ -56,7 +56,16 @@ png(paste0(pathgraphs,"/polarplotECOCenmug_",colorset,".png"), width = 717 * 5, 
 print(ppEC$plot,split=c(1, 1, 2, 1))
 print(ppOC$plot,split=c(2, 1, 2, 1), newpage=FALSE)
 dev.off()
-
+png(paste0(pathgraphs,"/polarplotSO4_",colorset,".png"), width =350 * 4, height = 350* 4, res = 300)
+polarPlot(mergeddata, pollutant = "SO4", statistic = "mean",  min.bin = 2, 
+                  upper =upper_windspeed, key.footer="[ug/m3]",key.header = "SO4",mis.col = "transparent",
+                  cols=colorset,auto.text = TRUE)
+dev.off()
+png(paste0(pathgraphs,"/polarplotV_",colorset,".png"), width =350 * 4, height = 350* 4, res = 300)
+polarPlot(mergeddata, pollutant = "V", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="[ug/m3]",key.header = "V",mis.col = "transparent",
+          cols=colorset,auto.text = TRUE)
+dev.off()
 # png(paste0(pathgraphs,"/polarplotECOCOM_",colorset,".png"), width = 900 * 4, height = 270* 4, res = 300)
 # print(ppEC$plot,split=c(1, 1, 3, 1))
 # print(ppOC$plot,split=c(2, 1, 3, 1), newpage=FALSE)
