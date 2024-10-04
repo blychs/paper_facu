@@ -48,17 +48,17 @@ PMF_BA_full$date2 <- as.Date(PMF_BA_full$date, format = "%Y-%m-%d")
 # Renaming categories in the DataFrame for pie charts
 mean_data <- Simon_mass %>%
   mutate(Event_F = PMF_BA_full$color) %>%
-  group_by(Event_F) %>%
+  # group_by(Event_F) %>%
   summarise(across(c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others),\(x) mean(x, na.rm = TRUE))) %>%
   pivot_longer(cols = c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others),
                names_to = "category", values_to = "value") %>%
   mutate(category = recode(category,
-                           "inorganic_ions" = "II",
-                           "organic_mass" = "OM",
-                           "elemental_C" = "EC",
-                           "geological_minerals" = "GM",
-                           "salt" = "SS",
-                           "others" = "others"))
+                           "inorganic_ions" = "Inorganic Ions",
+                           "organic_mass" = "Organic Matter",
+                           "elemental_C" = "Elemental Carbon",
+                           "geological_minerals" = "Geological Minerals",
+                           "salt" = "Sea Salt",
+                           "others" = "Others"))
 
 # Crear gráfico de barras de PM2.5
 bar_plot <- ggplot(PMF_BA_full, aes(x = date2, y = `PM2,5`, fill = color)) +
@@ -69,80 +69,76 @@ bar_plot <- ggplot(PMF_BA_full, aes(x = date2, y = `PM2,5`, fill = color)) +
   theme_minimal() 
 
 bar_plot
-# # Create pie chart for events
-# event_data <-mean_data %>%
-#   filter(Event_F == "Event") %>%
-#   arrange(desc(category)) %>%
-#   mutate(percentage = value / sum(value) * 100,
-#          ypos = cumsum(value) - 0.5 * value) 
-# event_pie <- ggplot(event_data, aes(x = "", y = value, fill = category)) +
-#   geom_bar(stat = "identity", width = 1) +
-#   coord_polar("y") +
-#   geom_label_repel(data = event_data,
-#                    aes(label = category, x = 1.1), size = 4, nudge_x = 0.5,
-#                    box.padding = 0.5, point.padding = 0.5,
-#                    segment.color = 'grey50', show.legend = FALSE,
-#                    direction = "y") +  # Use direction "y" to ensure labels move along the y-axis
-#   labs(title = "BB samples") +
-#   theme_void() +
-#   theme(legend.position = "none") # Hide legend
-# event_pie
-
-
-# Preparar los datos para eventos
-event_data <- mean_data %>%
-  filter(Event_F == "Event") %>%
+# Create pie chart for events
+mean_data <-mean_data %>%
+  # filter(Event_F == "BB samples") %>%
   arrange(desc(category)) %>%
   mutate(percentage = value / sum(value) * 100,
-         ypos = cumsum(value) - 0.5 * value)  # Calcular posiciones para las etiquetas
-
-# Crear gráfico de torta con geom_label_repel()
-event_pie <- ggplot(event_data, aes(x = "", y = value, fill = category)) +
+         ypos = cumsum(value) -  value)
+event_pie <- ggplot(data= mean_data, aes(x = "", y = value, fill = category)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y") +
-  
-  # Colocar las etiquetas utilizando ypos y ajustes específicos para "others" y "SS"
-  geom_label_repel(aes(y = ypos, label = category), 
-                   size = 4, 
-                   nudge_x = ifelse(event_data$category %in% c("others", "SS"), 1, 0.5),  # Ajuste mayor para others y SS
-                   nudge_y = ifelse(event_data$category %in% c("others", "SS"), 0.2, 0),  # Ajustar verticalmente si es necesario
-                   box.padding = 0.5, 
-                   point.padding = 0.5,
-                   segment.color = 'grey50', 
-                   show.legend = FALSE,
-                   direction = "y") +  # Coloca las etiquetas a lo largo del eje Y
-  
-  labs(title = "BB samples") +
+  geom_label_repel(data = mean_data,
+                   aes(label = category, x = 1.5), size = 4, nudge_x = 0.5,
+                   box.padding = 0.5, point.padding = 0.5,
+                   segment.color = 'grey50', show.legend = FALSE,
+                   direction = "x") +  # Use direction "y" to ensure labels move along the y-axis
+  labs(title = "Buenos Aires Aerosol Composition") +
   theme_void() +
-  theme(legend.position = "none")  # Ocultar leyenda
-
+  theme(legend.position = "none") # Hide legend
 event_pie
 
 
-
-
-# Crear gráfico de pastel para eventos sin etiquetas
-no_event_pie <- ggplot(mean_data %>% filter(Event_F == "No Event"), aes(x = "", y = value, fill = category)) +
-  geom_bar(stat = "identity", width = 1) +
-  coord_polar("y") +
-  # Etiquetas dentro del gráfico para categorías que caben
-  geom_text(data = filter(mean_data %>% filter(Event_F == "No Event")),
-            aes(label = category), 
-            position = position_stack(vjust = 0.5), size = 4, 
-            hjust = 0.5) +
-  labs(title = "No Event") +
-  theme_void() +
-  theme(legend.position = "none") # Ocultar leyenda
-
-# Combine plots: bars on the left, pies on the right
-combined_plot <- (bar_plot | (event_pie / no_event_pie))
-
-# Show combined plot
-print(combined_plot)
+# # Preparar los datos para eventos
+# event_data <- mean_data %>%
+#   filter(Event_F == "Event") %>%
+#   arrange(desc(category)) %>%
+#   mutate(percentage = value / sum(value) * 100,
+#          ypos = cumsum(value) - 0.5 * value)  # Calcular posiciones para las etiquetas
+# 
+# # Crear gráfico de torta con geom_label_repel()
+# event_pie <- ggplot(event_data) +
+#   geom_bar(stat = "identity", width = 1) +
+#   coord_polar("y") +
+#   # Colocar las etiquetas utilizando ypos y ajustes específicos para "others" y "SS"
+#   geom_label_repel(aes(y = ypos, label = category), 
+#                    size = 4, 
+#                    box.padding = 0.5, 
+#                    point.padding = 0.5,
+#                    segment.color = 'grey50', 
+#                    show.legend = FALSE,
+#                    direction = "y") +  # Coloca las etiquetas a lo largo del eje Y
+#   labs(title = "BB samples") +
+#   theme_void() +
+#   theme(legend.position = "none")  # Ocultar leyenda
+# 
+# event_pie
+# 
+# 
+# 
+# 
+# # Crear gráfico de pastel para eventos sin etiquetas
+# no_event_pie <- ggplot(mean_data %>% filter(Event_F == "No Event"), aes(x = "", y = value, fill = category)) +
+#   geom_bar(stat = "identity", width = 1) +
+#   coord_polar("y") +
+#   # Etiquetas dentro del gráfico para categorías que caben
+#   geom_text(data = filter(mean_data %>% filter(Event_F == "No Event")),
+#             aes(label = category), 
+#             position = position_stack(vjust = 0.5), size = 4, 
+#             hjust = 0.5) +
+#   labs(title = "No Event") +
+#   theme_void() +
+#   theme(legend.position = "none") # Ocultar leyenda
+# 
+# # Combine plots: bars on the left, pies on the right
+# combined_plot <- (bar_plot | (event_pie / no_event_pie))
+# combined_plot <- (bar_plot | (event_pie ))
+# # Show combined plot
+# print(combined_plot)
 
 
 # Combinar gráficos: barras a la izquierda, tortas a la derecha
-combined_plot <- (bar_plot / (event_pie | no_event_pie))
+combined_plot <- (bar_plot | (event_pie ))
 
 # Mostrar gráfico combinado
 print(combined_plot)
