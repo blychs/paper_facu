@@ -31,7 +31,38 @@ mergeddata$OC_EC = mergeddata$`C.Orgánico`/mergeddata$`C.Elemental`
 mergeddata$K_OC=mergeddata$K/mergeddata$`C.Orgánico`
 # datamergedcut=datamerged[,c(2:29,42:44,46:51,59:63)]
 
-
+mergeddata$lat= -34.5730
+mergeddata$lon=-58.5127
+# polar maps####
+library(openairmaps)
+polarMap(
+  mergeddata,
+  pollutant = "C.Orgánico",
+  x = "ws",
+  limits = "free",
+  upper = "fixed",
+  crs = 4326,
+  # type = NULL,
+  # popup = NULL,
+  # label = NULL,
+  provider = "OpenStreetMap",
+  cols="inferno",
+  alpha = 1,
+  key.footer="[ug/m3]",
+  key.header = "OC",
+  legend = TRUE,
+  # legend.position = NULL,
+  # legend.title = NULL,
+  legend.title.autotext = TRUE,
+  control.collapsed = FALSE,
+  control.position = "topright",
+  control.autotext = TRUE,
+  d.icon = 200,
+  d.fig = 3.5,
+  static = FALSE,
+  static.nrow = NULL,
+  progress = TRUE
+)
 # 01 EC OC ####
 PPPM25<-polarPlot(mergeddata, pollutant = "PM2.5", statistic = "mean",  min.bin = 2, 
                   upper =upper_windspeed, key.footer="[ug/m3]",key.header = "PM2.5",mis.col = "transparent",

@@ -5,7 +5,7 @@ library(lubridate)
 library(readxl)
 library(ggplot2)
 library(RColorBrewer)
-
+library(openairmaps)
 pathgraphs="Figures"
 MWNH4=18.04
 MWNO3=62.0049
@@ -20,8 +20,7 @@ setwd("~/mdiaz/Documents/paper_facu/Rscripts")
 BA_events_testM <- read_excel("../BA_events_testMnew.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 BA_events_testM$Event_F <- as.factor(BA_events_testM$Event_F)
-
-factor(BA_events_testM$Event_F)
+BA_events_testM$Event_F=factor(BA_events_testM$Event_F)
 
 PMF_BA_full <- read_excel("../data/PMF_BA_fullv4.xlsx",
                           sheet = "CONC", col_types = c("date",
@@ -79,40 +78,80 @@ mean_data <- Simon_mass %>%
                            "others" = "others"))
 
 # Define categories to be shown outside the pie chart
+
 outside_labels <- c("EC","SS", "others")
 
 
 library(ggplot2)
 library(ggrepel)
 library(tidyverse)
+library(patchwork)
 # Crear gráfico de barras de PM2.5
+PMF_BA_full$color <- ifelse(PMF_BA_full$Event_F %in% c("SI", "SF","SO"), "BB samples", "non-BB samples")
+
+PMF_BA_full$date=factor(PMF_BA_full$date)
 bar_plot <- ggplot(PMF_BA_full, aes(x = date, y = `PM2,5`, fill = color)) +
   geom_bar(stat = "identity", width = 0.95) +
-  scale_fill_manual(values = c("Event" = "red", "No Event" = "blue")) +
+  scale_fill_manual(values = c("BB samples" = "red", "non-BB samples" = "blue")) +
   scale_x_discrete(breaks = levels(PMF_BA_full$date)[seq(1, length(levels(PMF_BA_full$date)), by = 4)]) +
-  labs(x = "Date", y = "PM2.5 (µg/m³)", fill = "Event Type") +
+  labs(x = "Date", y = "PM2.5 (µg/m³)", fill = "Samples") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
-# Create pie chart for events
-event_pie <- ggplot(mean_data %>% filter(Event_F == "Event"), aes(x = "", y = value, fill = category)) +
+# # Create pie chart for events
+# event_data <-mean_data %>%
+#   filter(Event_F == "Event") %>%
+#   arrange(desc(category)) %>%
+#   mutate(percentage = value / sum(value) * 100,
+#          ypos = cumsum(value) - 0.5 * value) 
+# event_pie <- ggplot(event_data, aes(x = "", y = value, fill = category)) +
+#   geom_bar(stat = "identity", width = 1) +
+#   coord_polar("y") +
+#   geom_label_repel(data = event_data,
+#                    aes(label = category, x = 1.1), size = 4, nudge_x = 0.5,
+#                    box.padding = 0.5, point.padding = 0.5,
+#                    segment.color = 'grey50', show.legend = FALSE,
+#                    direction = "y") +  # Use direction "y" to ensure labels move along the y-axis
+#   labs(title = "BB samples") +
+#   theme_void() +
+#   theme(legend.position = "none") # Hide legend
+# event_pie
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+
+# Preparar los datos para eventos
+event_data <- mean_data %>%
+  filter(Event_F == "Event") %>%
+  arrange(desc(category)) %>%
+  mutate(percentage = value / sum(value) * 100,
+         ypos = cumsum(value) - 0.5 * value)  # Calcular posiciones para las etiquetas
+
+# Crear gráfico de torta con geom_label_repel()
+event_pie <- ggplot(event_data, aes(x = "", y = value, fill = category)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y") +
-  # Text labels inside the pie chart for categories that fit
-  geom_text(data = filter(mean_data %>% filter(Event_F == "Event"), !category %in% outside_labels),
-            aes(label = category), 
-            position = position_stack(vjust = 0.5), size = 4, 
-            hjust = 0.5) +
-  # Labels outside the pie chart with lines indicating the segment
-  geom_label_repel(data = filter(mean_data %>% filter(Event_F == "Event"), category %in% outside_labels),
-                   aes(label = category, x = 1.1), size = 4, nudge_x = 0.5,
-                   box.padding = 0.5, point.padding = 0.5,
-                   segment.color = 'grey50', show.legend = FALSE,
-                   direction = "y") +  # Use direction "y" to ensure labels move along the y-axis
-  labs(title = "Event") +
+  
+  # Colocar las etiquetas utilizando ypos y ajustes específicos para "others" y "SS"
+  geom_label_repel(aes(y = ypos, label = category), 
+                   size = 4, 
+                   nudge_x = ifelse(event_data$category %in% c("others", "SS"), 1, 0.5),  # Ajuste mayor para others y SS
+                   nudge_y = ifelse(event_data$category %in% c("others", "SS"), 0.2, 0),  # Ajustar verticalmente si es necesario
+                   box.padding = 0.5, 
+                   point.padding = 0.5,
+                   segment.color = 'grey50', 
+                   show.legend = FALSE,
+                   direction = "y") +  # Coloca las etiquetas a lo largo del eje Y
+  
+  labs(title = "BB samples") +
   theme_void() +
-  theme(legend.position = "none") # Hide legend
+  theme(legend.position = "none")  # Ocultar leyenda
+
+event_pie
+
+
+
 
 # Crear gráfico de pastel para eventos sin etiquetas
 no_event_pie <- ggplot(mean_data %>% filter(Event_F == "No Event"), aes(x = "", y = value, fill = category)) +
@@ -461,7 +500,11 @@ ggplot(PMF_BA_full)+
 corPlot(PMF_BA_full[,c("Cu","Mo","Sb","Zn","Ni","Pb")], dendrogram = TRUE,method = "pearson", main ="R pearson, matriz completa")
 ggplot(PMF_BA_full) + geom_point(aes(x=Pb ,y=Sb))
 ggplot(PMF_BA_full) + geom_point(aes(x=Cu ,y=Sb))
-ggplot(PMF_BA_full) + geom_point(aes(x=Mo ,y=Sb))
+
+png(file = "~/mdiaz/Documents/paper_facu/images/MoSb_scatterplot.png", res=300, height= 300*4, width = 4*400)
+ggplot(PMF_BA_full) + geom_point(aes(x=Mo ,y=Sb))+ xlim(0,0.003) 
+dev.off()
+
 ggplot(PMF_BA_full) + geom_point(aes(x=Zn ,y=Sb))
 ggplot(PMF_BA_full) + geom_point(aes(x=Cu ,y=Mo)) + ylim(0,0.003)
 

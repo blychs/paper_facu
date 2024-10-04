@@ -67,6 +67,8 @@ df$om_perc=df$organic_mass/df$PM2.5*100
 df$gm_perc=df$geological_minerals/df$PM2.5*100
 df$ec_perc=df$elemental_C/df$PM2.5*100
 df$ss_perc=df$salt/df$PM2.5*100
+df$others_perc=df$others/df$PM2.5*100
+
 df$r_perc=df$residual/df$PM2.5*100
 # df=df[complete.cases(df),]
 df$OCEC=df$`C Orgánico`/df$`C Elemental`

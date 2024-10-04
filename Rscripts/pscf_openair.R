@@ -7,7 +7,7 @@ library(openair)
 library(ggplot2)
 library(lubridate)
 library(readxl)
-setwd("~/Documents/paper_facu/Rscripts")
+setwd("~/mdiaz//Documents/paper_facu/Rscripts")
 source('opentrajutils.R')
 
 # Seteo de parametros ####
@@ -18,7 +18,7 @@ pscflims = c(0,1)
 colorset="plasma"
 pathtraj="../tdumps"
 pattern ="tdump*"
-bbpdatafile="../data/data_every_hour_obsv4.csv"
+bbpdatafile="../data_every_hour_obsv5.csv"
 
 # Load datasets ####
 bbpdata <- read.csv(bbpdatafile)
@@ -364,10 +364,14 @@ pscf<-trajPlot(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & 
 
 
 pscf<-trajPlot(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
-                            start = "2019-08-01", end = "2019-09-27"),
+                            start = "2019-08-12", end = "2019-08-30"),
                origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
                projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL)
 
+trajPlot(selectByDate(subset(traj500, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                      start = "2019-08-25", end = "2019-09-01"),
+         origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+         projection = "mercator",   orientation=c(0,-65,0), parameters = NULL)
 pscf<-trajLevel(selectByDate(subset(trajconchem, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
                              start = "2020-01-01", end = "2020-01-23"),
                 pollutant = "OC" , statistic = "pscf", limits = pscflims, percentile = 60,
