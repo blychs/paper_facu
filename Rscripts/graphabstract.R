@@ -12,7 +12,7 @@ library(lubridate)
 library(readxl)
 library(openairmaps)
 
-# load dataframes
+# load dataframes ####
 setwd("~/mdiaz/Documents/paper_facu/Rscripts")
 Simon_mass <- read_csv("../Simon_2011_events_mass.csv",
                        col_types = cols(trace_elements = col_skip()))
@@ -44,11 +44,8 @@ PMF_BA_full$datefactor=factor(PMF_BA_full$date)
 PMF_BA_full$date2 <- as.Date(PMF_BA_full$date, format = "%Y-%m-%d")
 
 # prepare data ####
-
-# Renaming categories in the DataFrame for pie charts
 mean_data <- Simon_mass %>%
   mutate(Event_F = PMF_BA_full$color) %>%
-  # group_by(Event_F) %>%
   summarise(across(c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others),\(x) mean(x, na.rm = TRUE))) %>%
   pivot_longer(cols = c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others),
                names_to = "category", values_to = "value") %>%
@@ -60,86 +57,42 @@ mean_data <- Simon_mass %>%
                            "salt" = "Sea Salt",
                            "others" = "Others"))
 
-# Crear gráfico de barras de PM2.5
+# Crear gráfico de barras de PM2.5 ####
 bar_plot <- ggplot(PMF_BA_full, aes(x = date2, y = `PM2,5`, fill = color)) +
-  geom_bar(stat = "identity", width = 2) +
+  geom_bar(stat = "identity", width = 2.5) +
   scale_fill_manual(values = c("BB samples" = "darkred", "non-BB samples" = "darkblue")) +
   scale_x_date(date_labels = "%B", date_breaks = "1 month") +
-  labs(x = "date", y = "PM2.5 (µg/m³)", fill = "samples") +
-  theme_minimal() 
+  labs(x = "", y = "PM2.5 (µg/m³)", fill = "samples") +
+  theme_minimal() +theme(legend.position = "top")
 
 bar_plot
-# Create pie chart for events
-mean_data <-mean_data %>%
-  # filter(Event_F == "BB samples") %>%
+
+# Create average pie chart 
+mean_data <-mean_data %>% 
   arrange(desc(category)) %>%
   mutate(percentage = value / sum(value) * 100,
-         ypos = cumsum(value) -  value)
-event_pie <- ggplot(data= mean_data, aes(x = "", y = value, fill = category)) +
+         ypos = cumsum(value) - 0.5* value)
+
+average_pie <- ggplot(data= mean_data, aes(x = "", y = value, fill = category)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y") +
   geom_label_repel(data = mean_data,
-                   aes(label = category, x = 1.5), size = 4, nudge_x = 0.5,
-                   box.padding = 0.5, point.padding = 0.5,
-                   segment.color = 'grey50', show.legend = FALSE,
-                   direction = "x") +  # Use direction "y" to ensure labels move along the y-axis
-  labs(title = "Buenos Aires Aerosol Composition") +
+                   aes(label = category, x = 1.3, y=ypos), size = 4, nudge_x = 0.7,
+                   box.padding = 0.5, point.padding = 0.9,
+                   segment.color = 'grey50', show.legend = TRUE,
+                   direction = "y") +  # Use direction "y" to ensure labels move along the y-axis
+  labs(title = "Chemical Profile") +
   theme_void() +
   theme(legend.position = "none") # Hide legend
-event_pie
-
-
-# # Preparar los datos para eventos
-# event_data <- mean_data %>%
-#   filter(Event_F == "Event") %>%
-#   arrange(desc(category)) %>%
-#   mutate(percentage = value / sum(value) * 100,
-#          ypos = cumsum(value) - 0.5 * value)  # Calcular posiciones para las etiquetas
-# 
-# # Crear gráfico de torta con geom_label_repel()
-# event_pie <- ggplot(event_data) +
-#   geom_bar(stat = "identity", width = 1) +
-#   coord_polar("y") +
-#   # Colocar las etiquetas utilizando ypos y ajustes específicos para "others" y "SS"
-#   geom_label_repel(aes(y = ypos, label = category), 
-#                    size = 4, 
-#                    box.padding = 0.5, 
-#                    point.padding = 0.5,
-#                    segment.color = 'grey50', 
-#                    show.legend = FALSE,
-#                    direction = "y") +  # Coloca las etiquetas a lo largo del eje Y
-#   labs(title = "BB samples") +
-#   theme_void() +
-#   theme(legend.position = "none")  # Ocultar leyenda
-# 
-# event_pie
-# 
-# 
-# 
-# 
-# # Crear gráfico de pastel para eventos sin etiquetas
-# no_event_pie <- ggplot(mean_data %>% filter(Event_F == "No Event"), aes(x = "", y = value, fill = category)) +
-#   geom_bar(stat = "identity", width = 1) +
-#   coord_polar("y") +
-#   # Etiquetas dentro del gráfico para categorías que caben
-#   geom_text(data = filter(mean_data %>% filter(Event_F == "No Event")),
-#             aes(label = category), 
-#             position = position_stack(vjust = 0.5), size = 4, 
-#             hjust = 0.5) +
-#   labs(title = "No Event") +
-#   theme_void() +
-#   theme(legend.position = "none") # Ocultar leyenda
-# 
-# # Combine plots: bars on the left, pies on the right
-# combined_plot <- (bar_plot | (event_pie / no_event_pie))
-# combined_plot <- (bar_plot | (event_pie ))
-# # Show combined plot
-# print(combined_plot)
-
+average_pie
 
 # Combinar gráficos: barras a la izquierda, tortas a la derecha
-combined_plot <- (bar_plot | (event_pie ))
+combined_plot <- (bar_plot | (average_pie )) + 
+  plot_layout(widths = c(3, 2)) 
 
 # Mostrar gráfico combinado
 print(combined_plot)
+png(filename="Graphicalabstractinprogress.png", res=300, height=3*5,width = 3*13, units = "cm" )
+print(combined_plot)
+dev.off()
 
