@@ -31,13 +31,37 @@ mergeddata$OC_EC = mergeddata$`C.Orgánico`/mergeddata$`C.Elemental`
 mergeddata$K_OC=mergeddata$K/mergeddata$`C.Orgánico`
 # datamergedcut=datamerged[,c(2:29,42:44,46:51,59:63)]
 
-mergeddata$lat= -34.5730
-mergeddata$lon=-58.5127
+mergeddata$lat= -34.5730+0.01
+mergeddata$lon=-58.5127-0.01
+mergeddata$Vng=mergeddata$V*1000
 # polar maps####
 library(openairmaps)
+customIcon <- makeIcon(
+  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/central.png",  # Cambia esto a la ruta de tu PNG
+  iconWidth = 60,  # Ajusta el tamaño según sea necesario
+  iconHeight = 60
+)
+leaflet(data = mergeddata) %>%
+  addTiles() %>%
+  addProviderTiles(providers$CartoDB.VoyagerNoLabels) %>% 
+  addPolarMarkers("Vng", 
+                  fun = openair::polarPlot,
+                  group = "Polar Plot",
+                  cols="inferno",
+                  alpha = 1,
+                  key = TRUE,
+                  key.position="top",
+                  key.footer="[ng/m3]",
+                  key.header = "V"
+  )%>%
+  addMarkers(lng = -58.344426375249924, lat = -34.64608663021544, 
+             popup = "Central Costanera", icon = customIcon) %>%
+  addMarkers(lng = -58.380487846322495, lat = -34.57504109311285, 
+             popup = "Central Puerto", icon = customIcon )
+
 polarMap(
   mergeddata,
-  pollutant = "C.Orgánico",
+  pollutant = "V",
   x = "ws",
   limits = "free",
   upper = "fixed",
@@ -48,13 +72,14 @@ polarMap(
   provider = "OpenStreetMap",
   cols="inferno",
   alpha = 1,
+  key = TRUE,
   key.footer="[ug/m3]",
-  key.header = "OC",
+  key.header = "V",
   legend = TRUE,
   # legend.position = NULL,
   # legend.title = NULL,
   legend.title.autotext = TRUE,
-  control.collapsed = FALSE,
+  control.collapsed = TRUE,
   control.position = "topright",
   control.autotext = TRUE,
   d.icon = 200,
@@ -63,6 +88,11 @@ polarMap(
   static.nrow = NULL,
   progress = TRUE
 )
+
+# Dock sud -34.648961551867856, -58.34236555984067
+# Central costanera -34.64608663021544, -58.344426375249924
+# Central Puerto -34.57504109311285, -58.380487846322495
+
 # 01 EC OC ####
 PPPM25<-polarPlot(mergeddata, pollutant = "PM2.5", statistic = "mean",  min.bin = 2, 
                   upper =upper_windspeed, key.footer="[ug/m3]",key.header = "PM2.5",mis.col = "transparent",
