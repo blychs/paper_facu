@@ -44,18 +44,20 @@ PMF_BA_full$datefactor=factor(PMF_BA_full$date)
 PMF_BA_full$date2 <- as.Date(PMF_BA_full$date, format = "%Y-%m-%d")
 
 # prepare data ####
+# Simon_mass$residual[Simon_mass$residual<0]=0
 mean_data <- Simon_mass %>%
   mutate(Event_F = PMF_BA_full$color) %>%
-  summarise(across(c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others),\(x) mean(x, na.rm = TRUE))) %>%
-  pivot_longer(cols = c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others),
+  summarise(across(c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others, residual),\(x) mean(x, na.rm = TRUE))) %>%
+  pivot_longer(cols = c(inorganic_ions, organic_mass, elemental_C, geological_minerals, salt, others,residual),
                names_to = "category", values_to = "value") %>%
   mutate(category = recode(category,
-                           "inorganic_ions" = "Inorganic Ions",
-                           "organic_mass" = "Organic Matter",
-                           "elemental_C" = "Elemental Carbon",
-                           "geological_minerals" = "Geological Minerals",
-                           "salt" = "Sea Salt",
-                           "others" = "Others"))
+                           "inorganic_ions" = "Inorganic Ions \n 10%",
+                           "organic_mass" = "Organic Matter \n 58%",
+                           "elemental_C" = "Elemental Carbon \n 6%",
+                           "geological_minerals" = "Geological Minerals \n 14%",
+                           "salt" = "Sea Salt \n 3%",
+                           "others" = "KNON \n 2%",
+                           "residual" ="Others \n 7%"))
 
 # Crear gráfico de barras de PM2.5 ####
 bar_plot <- ggplot(PMF_BA_full, aes(x = date2, y = `PM2,5`, fill = color)) +

@@ -31,16 +31,37 @@ mergeddata$OC_EC = mergeddata$`C.Orgánico`/mergeddata$`C.Elemental`
 mergeddata$K_OC=mergeddata$K/mergeddata$`C.Orgánico`
 # datamergedcut=datamerged[,c(2:29,42:44,46:51,59:63)]
 
-mergeddata$lat= -34.5730+0.01
+mergeddata$lat= -34.5730
 mergeddata$lon=-58.5127-0.01
 mergeddata$Vng=mergeddata$V*1000
 # polar maps####
 library(openairmaps)
+library(leaflet)
 customIcon <- makeIcon(
   iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/central.png",  # Cambia esto a la ruta de tu PNG
-  iconWidth = 60,  # Ajusta el tamaño según sea necesario
-  iconHeight = 60
+  iconWidth = 120,  # Ajusta el tamaño según sea necesario
+  iconHeight = 120
 )
+
+customIconships <- makeIcon(
+  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/ship-flat-boat-by-Vexels.svg",  # Cambia esto a la ruta de tu PNG
+  iconWidth = 120,  # Ajusta el tamaño según sea necesario
+  iconHeight = 120
+)
+
+customIcontree <- makeIcon(
+  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/tree.png",  # Cambia esto a la ruta de tu PNG
+  iconWidth = 120,  # Ajusta el tamaño según sea necesario
+  iconHeight = 120
+)
+
+
+customIconcars <- makeIcon(
+  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/car-fleet-12792.png",  # Cambia esto a la ruta de tu PNG
+  iconWidth = 120,  # Ajusta el tamaño según sea necesario
+  iconHeight = 120
+)
+
 leaflet(data = mergeddata) %>%
   addTiles() %>%
   addProviderTiles(providers$CartoDB.VoyagerNoLabels) %>% 
@@ -51,13 +72,42 @@ leaflet(data = mergeddata) %>%
                   alpha = 1,
                   key = TRUE,
                   key.position="top",
-                  key.footer="[ng/m3]",
-                  key.header = "V"
+                  key.footer="",
+                  key.header = "V [ng/m3]"
   )%>%
   addMarkers(lng = -58.344426375249924, lat = -34.64608663021544, 
              popup = "Central Costanera", icon = customIcon) %>%
   addMarkers(lng = -58.380487846322495, lat = -34.57504109311285, 
-             popup = "Central Puerto", icon = customIcon )
+             popup = "Central Puerto", icon = customIcon )%>%
+  addMarkers(lng = -58.37137834376634, lat = -34.51275959413225, 
+             popup = "Ships", icon = customIconships ) %>%
+  addMarkers(lng = -58.39237834376634, lat = -34.51075959413225, 
+             popup = "Ships", icon = customIconships ) %>%  
+  addMarkers(lng = -58.38137834376634, lat = -34.518275959413225, 
+            popup = "Ships", icon = customIconships ) %>%
+  addMarkers(lng = -58.48137834376634, lat = -34.54075959413225, 
+             popup = "Car", icon = customIconcars )
+
+# Generar el mapa de trayectorias ucustomIconcars# Generar el mapa de trayectorias usando trajMap
+trajMap(selectByDate(subset(traj500, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                     start = "2019-08-26", end = "2019-08-30"),
+        origin = TRUE,  
+        grid.col = "transparent", 
+        map.cols = "transparent",
+        projection = "stereographic", 
+        orientation = c(0, -65, 0), 
+        parameters = NULL)
+
+# Superponer el ícono personalizado con leaflet
+leafletProxy("map") %>%
+  addMarkers(lng = -58.344426375249924, lat = -34.64608663021544, 
+             popup = "Central Costanera", icon = customIcon) %>%
+  addMarkers(lng = -58.380487846322495, lat = -34.57504109311285, 
+             popup = "Central Puerto", icon = customIcon)
+
+trajMap(selectByDate(subset(traj500, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
+                       start = "2019-08-26", end = "2019-08-30"), origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
+                  projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL)
 
 polarMap(
   mergeddata,
