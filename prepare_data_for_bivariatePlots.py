@@ -25,7 +25,7 @@ data['date'] = pd.to_datetime(data['date'])+ dt.timedelta(hours=12)
 data.set_index(data['date'], inplace=True)
 data.drop('date', axis=1, inplace=True)
 
-events = pd.read_excel('BA_events_testMnew.xlsx')
+events = pd.read_excel('BA_events_testMnew2.xlsx')
 events['date'] = pd.to_datetime(events['date'] + dt.timedelta(hours=12))
 events.set_index(events['date'], inplace=True)
 events.drop('date', axis=1, inplace=True)
@@ -47,7 +47,7 @@ data = pd.concat([data, meteo[['ws', 'wd']]], axis=1)
 print(data)
 data[data.loc[:, data.columns!='Event_F'] < 0] = np.nan
 
-data.to_csv('data_every_hour_obsv4.csv')
+data.to_csv('data_every_hour_obsv5.csv')
 
 
 

@@ -31,8 +31,8 @@ mergeddata$OC_EC = mergeddata$`C.Orgánico`/mergeddata$`C.Elemental`
 mergeddata$K_OC=mergeddata$K/mergeddata$`C.Orgánico`
 # datamergedcut=datamerged[,c(2:29,42:44,46:51,59:63)]
 
-mergeddata$lat= -34.5730
-mergeddata$lon=-58.5127-0.01
+mergeddata$lat= -34.5730#-0.01
+mergeddata$lon=-58.5127#-0.01
 mergeddata$Vng=mergeddata$V*1000
 # polar maps####
 library(openairmaps)
@@ -64,14 +64,14 @@ customIconcars <- makeIcon(
 
 leaflet(data = mergeddata) %>%
   addTiles() %>%
-  addProviderTiles(providers$CartoDB.VoyagerNoLabels) %>% 
+  addProviderTiles(providers$OpenStreetMap) %>% 
   addPolarMarkers("Vng", 
                   fun = openair::polarPlot,
                   group = "Polar Plot",
                   cols="inferno",
                   alpha = 1,
-                  key = TRUE,
-                  key.position="top",
+                  key = FALSE,
+                  key.position="left",
                   key.footer="",
                   key.header = "V [ng/m3]"
   )%>%
@@ -87,6 +87,10 @@ leaflet(data = mergeddata) %>%
             popup = "Ships", icon = customIconships ) %>%
   addMarkers(lng = -58.48137834376634, lat = -34.54075959413225, 
              popup = "Car", icon = customIconcars )
+
+polarPlot(mergeddata,pollutant = "Vng",   cols="inferno",        key.position="left",
+          key.footer="",
+          key.header = "V [ng/m3]")
 
 # Generar el mapa de trayectorias ucustomIconcars# Generar el mapa de trayectorias usando trajMap
 trajMap(selectByDate(subset(traj500, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 

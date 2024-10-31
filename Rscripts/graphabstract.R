@@ -50,6 +50,7 @@ PMF_BA_full$color <- ifelse(BA_events_testM$Event_F %in% c("SI", "SF","SO"), "BB
 PMF_BA_full$datefactor=factor(PMF_BA_full$date)
 PMF_BA_full$date2 <- as.Date(PMF_BA_full$date, format = "%Y-%m-%d")
 
+
 # prepare data ####
 # Simon_mass$residual[Simon_mass$residual<0]=0
 mean_data <- Simon_mass %>%
@@ -65,6 +66,11 @@ mean_data <- Simon_mass %>%
                            "ss_perc" = "Sea Salt \n 3%",
                            "others_perc" = "KNON \n 2%",
                            "r_perc" = "Others \n 9%"))
+# Create average pie chart 
+mean_data <-mean_data %>% 
+  arrange(desc(category)) %>%
+  mutate(percentage = value ,
+         ypos = cumsum(value) - 0.5* value)
 
 # Crear gráfico de barras de PM2.5 ####
 bar_plot <- ggplot(PMF_BA_full, aes(x = date2, y = `PM2,5`, fill = color)) +
@@ -72,27 +78,27 @@ bar_plot <- ggplot(PMF_BA_full, aes(x = date2, y = `PM2,5`, fill = color)) +
   scale_fill_manual(values = c("BB samples" = "darkred", "non-BB samples" = "darkblue")) +
   scale_x_date(date_labels = "%B", date_breaks = "1 month") +
   labs(x = "", y = "PM2.5 (µg/m³)", fill = "samples") +
-  theme_minimal() +theme(legend.position = "top")
+  theme_minimal() +theme(legend.position = "top", 
+                         plot.title = element_text(size = 20, face = "bold"),  # Tamaño del título
+                         text = element_text(size = 16))
 
 bar_plot
 
-# Create average pie chart 
-mean_data <-mean_data %>% 
-  arrange(desc(category)) %>%
-  mutate(percentage = value ,
-         ypos = cumsum(value) - 0.5* value)
+
 
 average_pie <- ggplot(data= mean_data, aes(x = "", y = value, fill = category)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y") +
   geom_label_repel(data = mean_data,
-                   aes(label = category, x = 1.3, y=ypos), size = 4, nudge_x = 0.7,
+                   aes(label = category, x = 1.3, y=ypos), size = 6, nudge_x =.9,
                    box.padding = 0.5, point.padding = 0.9,
                    segment.color = 'grey50', show.legend = TRUE,
                    direction = "y") +  # Use direction "y" to ensure labels move along the y-axis
   labs(title = "Chemical Profile") +
   theme_void() +
-  theme(legend.position = "none") # Hide legend
+  theme(legend.position = "none", 
+        plot.title = element_text(size = 20, face = "bold"),  # Tamaño del título
+        text = element_text(size = 14)) # Hide legend
 average_pie
 
 # Combinar gráficos: barras a la izquierda, tortas a la derecha
