@@ -4,8 +4,8 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
-import seaborn as sns
 from load_data import load_data
+import os
 os.chdir('/home/usuario/mdiaz/Documents/paper_facu/')
 matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv4.xlsx', 'data/PMF_BA_fullv4.xlsx',
                                               'data/gases_mean.csv', 'data/datos_meteo_blhera5.csv',
@@ -60,7 +60,7 @@ for key in matrix_enriched.keys():
     plt.close()
 
 enrich_fact_desc = matrix_enriched.describe()
-display(enrich_fact_desc)
+print(enrich_fact_desc)
 
 fig, ax = plt.subplots()
 ax.bar(enrich_fact_desc.keys(), height=enrich_fact_desc.loc['mean'], yerr=enrich_fact_desc.loc['std'])
