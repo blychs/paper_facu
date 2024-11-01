@@ -1,4 +1,7 @@
 #%%
+directory='/home/usuario/mdiaz/Documents/paper_facu/python_scripts'
+os.chdir(directory)
+
 import cartopy
 import cartopy.crs as ccrs
 from cartopy.io.img_tiles import OSM
@@ -10,12 +13,16 @@ import numpy as np
 import datetime
 import geopandas as gpd
 from module_maps import scale_bar
+import os 
 
+
+directory='/home/usuario/mdiaz/Documents/paper_facu'
+os.chdir(directory)
 proyecto="CNEA"
 epsg="32721"
 utmzone=21
 
-directory="~/Documents/paper_facu"
+
 predioPath=directory+"/GIS/predioCNEA.csv"
 predio = gpd.read_file(predioPath)
 predio.crs = 'epsg:'+epsg
@@ -193,6 +200,6 @@ blank_axes(ax5)
 #plt.show()
 
 ## --------------------------Save figure -----------------------------
-plt.savefig('/home/mdiaz/Documents/paper_facu/plotUbicacion.png',dpi=300, bbox_inches = 'tight',pad_inches = 0.1)
+plt.savefig(directory+'/images/plotUbicacionv4.png',dpi=300, bbox_inches = 'tight',pad_inches = 0.1)
 plt.close()
 # %%
