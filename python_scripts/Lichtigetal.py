@@ -1,6 +1,6 @@
 # %% plot 3 paneles con funcion
 import os
-os.chdir('/home/usuario/mdiaz/Documents/paper_facu/')
+os.chdir('/home/usuario/mdiaz/Documents/paper_facu/python_scripts')
 import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -9,20 +9,20 @@ import pandas as pd
 import seaborn as sns
 from scipy.stats import linregress, spearmanr, zscore
 import statsmodels.api as sm
-from funciones_pmfBA import mass_reconstruction, mass_reconstruction_mod, mass_reconstruction_all
+from funciones_pmfBA import mass_reconstruction_all
 from funciones_pmfBA import percentage_with_err
 from funciones_pmfBA import estimation_om_oc, calculate_seasonal, linear_estimation_om_oc
-from funciones_pmfBA import average_mass_reconstruction, axvlines
-from funciones_pmfBA import plot3panels
+from funciones_pmfBA import axvlines
+from funciones_pmfBA import plot3panels, crear_carpeta
 from load_data import load_data
 from sklearn.metrics import mean_squared_error
 import pint
 
 plt.style.use('seaborn-v0_8-paper')
-matrix, unc, meteo, gases, events = load_data('data/PMF_BA_fullv4.xlsx', 
-                                              'data/PMF_BA_fullv4.xlsx',
-                                              'gases_mean.csv', 'data/datos_meteo_blhera5.csv',
-                                              'BA_events_testMnew2.xlsx')
+matrix, unc, meteo, gases, events = load_data('../data/PMF_BA_fullv4.xlsx', 
+                                              '../data/PMF_BA_fullv4.xlsx',
+                                              '../data/gases_mean.csv', '../data/datos_meteo_blhera5.csv',
+                                              '../data/BA_events_testMnew2.xlsx')
 
 
 # methods = ['Macias_1981', 'Solomon_1989', 'Chow_1994',
@@ -54,8 +54,8 @@ stderr={}
 intercept={}
 intercept_stderr={}
 
-path_graph=path_carpeta = crear_carpeta('Figures')
-path_csv=crear_carpeta('csvs')
+path_graph=path_carpeta = crear_carpeta('../Figures')
+path_csv=crear_carpeta('../methods_csvs_tesis')
 methods_column_names = ["Original","Modified all", "Modified disaggregated"]
 for method in methods:
     # print(method)
@@ -77,6 +77,17 @@ for method in methods:
     d_methodQuality_absolute[method] = np.logical_and(
     ((mass[0]-mass[2])< (matrix["PM2.5"]+unc["PM2.5"])),((mass[0] + mass[2]) > (matrix["PM2.5"]- unc["PM2.5"]))
     ).sum()
+    
+    if (plot_graphmodall==True):
+        uncertainty = mass[3]
+        total_reconst_mass = mass[0]
+        utotal_reconst_mass = mass[2]
+        mass = mass[1]
+        plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_reconst_mass, events,
+                event_columnname=event_columnname, event_labels=event_labels, method = method, suffix= 'orig_tesis',
+                label_gravimetric_mass='masa gravimétrica', label_reconstructed_mass='masa reconstruida',
+                label_BB_events='evento BB', label_nonBB='sin evento', label_categories=['OM','II','GM','EC','SS','KNON','otros'],
+                xlabel_2="fecha", ylabel_2="error residual ($\mu$g/m$^3$)",filename='../images/stacked_bar_3panels')
     
     # estimo beta para alltogether
     resultAll = linear_estimation_om_oc(matrix, method=method, ssa_as_Na=False, display_latex=False)
@@ -109,7 +120,10 @@ for method in methods:
         utotal_reconst_mass = mass[2]
         mass = mass[1]
         plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_reconst_mass, events,
-                event_columnname=event_columnname, event_labels=event_labels, method = method, suffix= 'modall')
+                event_columnname=event_columnname, event_labels=event_labels, method = method, suffix= 'modall_tesis',
+                label_gravimetric_mass='masa gravimétrica', label_reconstructed_mass='masa reconstruida',
+                label_BB_events='evento BB', label_nonBB='sin evento', label_categories=['OM','II','GM','EC','SS','KNON','otros'],
+                xlabel_2="fecha", ylabel_2="error residual ($\mu$g/m$^3$)",filename='../images/stacked_bar_3panels')
 
 
     #Estimo beta para no evento
@@ -167,7 +181,10 @@ for method in methods:
          utotal_reconst_mass = mass[2]
          mass = mass[1]
          plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_reconst_mass, events,
-                event_columnname=event_columnname, event_labels=event_labels, method = method, suffix= 'events')
+                event_columnname=event_columnname, event_labels=event_labels, method = method, suffix= 'events_tesis',
+                label_gravimetric_mass='masa gravimétrica', label_reconstructed_mass='masa reconstruida',
+                label_BB_events='evento BB', label_nonBB='sin evento', label_categories=['OM','II','GM','EC','SS','KNON','otros'],
+                xlabel_2="fecha", ylabel_2="error residual ($\mu$g/m$^3$)",filename='../images/stacked_bar_3panels')
 
 method_quality = pd.concat([pd.DataFrame([d]) for d in [d_methodQuality, d_methodQuality_modall, d_methodQuality_moddis]]).T
 method_quality.columns = methods_column_names

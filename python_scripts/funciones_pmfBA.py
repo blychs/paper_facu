@@ -1728,7 +1728,7 @@ def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_recon
                 event_columnname="Event_F", event_labels=["SI" ,"SF","SO"], method = 'Simon_2011', suffix='',
                 label_gravimetric_mass='gravimetric mass', label_reconstructed_mass='reconstructed mass',
                 label_BB_events='BB event', label_nonBB='no event', label_categories=['OM','II','GM','EC','SS','KNON','others'],
-                xlabel_2="date", ylabel_2="residual error ($\mu$g/m$^3$)"):
+                xlabel_2="date", ylabel_2="residual error ($\mu$g/m$^3$)",filename='../images/stacked_bar_3panels'):
    
     organic_mass_per = percentage_with_err(
         mass['organic_mass'], matrix['PM2.5'], uncertainty['uorganic_mass'], unc['PM2.5'])
@@ -1827,7 +1827,7 @@ def plot3panels(mass, matrix, uncertainty, unc, total_reconst_mass, utotal_recon
     fig.tight_layout()
     plt.subplots_adjust(hspace=.0)
     plt.subplots_adjust(wspace=.0)
-    fig.savefig(f'images/stacked_bar_3panels_{method}_{suffix}.png')
+    fig.savefig(f'{filename}_{method}_{suffix}.png')
 
 
 
