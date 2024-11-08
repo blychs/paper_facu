@@ -13,7 +13,7 @@ CEILAP_BA_hora$date <- as.POSIXct(CEILAP_BA_hora$date, tz='UTC')
 CEILAP_BA_hora<-timeAverage(CEILAP_BA_hora,avg.time = "hour")
 CEILAP_BA_hora$filterday <- as.Date(CEILAP_BA_hora$date - 12*3600)
 
-BA_events_testM <- read_excel("../BA_events_testMnew2.xlsx")
+BA_events_testM <- read_excel("../data/BA_events_testMnew2.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 BA_events_testM$filterday <- as.Date(BA_events_testM$date)
 BA_events_testM$Event_M <- as.factor(BA_events_testM$Event_M)
@@ -30,6 +30,25 @@ ggplot()+  geom_point(data = CEILAP_BA_hora2,
   geom_point(data = CEILAP_BA_hora2[(CEILAP_BA_hora2$Event_F %in% c("SI","SO")) & (CEILAP_BA_hora2$AOD_440nm>=0.16) ,], 
              aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=OrigenTag,fill=OrigenTag), shape=21, size=2)+
   scale_color_discrete(name = "Event Origin",na.translate = F)+scale_fill_discrete(name = "Event Origin",na.translate = F)+
+  labs(y=expression(alpha["440-880nm"]), x=expression(AOD["440nm"]))+
+  theme_bw()+ theme(legend.position="top")+ geom_vline(xintercept=0.1613,color="black",linetype="dashed")+
+  guides(color = guide_legend(nrow = 2)) + 
+  scale_x_continuous(
+    breaks = function(x) unique(c(0.1613, scales::pretty_breaks()(x))),
+    labels = function(x) {
+      ifelse(x == 0.1613, paste0("\n", format(x, nsmall = 2, digits = 2)), format(x, nsmall = 2, digits = 2))
+    }
+  )
+dev.off()
+
+CEILAP_BA_hora3=CEILAP_BA_hora2[,c("date","AOD_440nm","440-870_Angstrom_Exponent","ID","Event_F","OrigenTag")]
+
+png("../images/AOD_FIREOrigins_colors_tesis.png", res=300, height=1.5*800,width = 1.5*1000)
+ggplot()+  geom_point(data = CEILAP_BA_hora2, 
+                      aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`), color="grey50",fill="grey50",shape=21, size=2)+
+  geom_point(data = CEILAP_BA_hora2[(CEILAP_BA_hora2$Event_F %in% c("SI","SO")) & (CEILAP_BA_hora2$AOD_440nm>=0.16) ,], 
+             aes(x=AOD_440nm,y=`440-870_Angstrom_Exponent`,color=OrigenTag,fill=OrigenTag), shape=21, size=2)+
+  scale_color_discrete(name = "Origen",na.translate = F)+scale_fill_discrete(name = "Origen",na.translate = F)+
   labs(y=expression(alpha["440-880nm"]), x=expression(AOD["440nm"]))+
   theme_bw()+ theme(legend.position="top")+ geom_vline(xintercept=0.1613,color="black",linetype="dashed")+
   guides(color = guide_legend(nrow = 2)) + 

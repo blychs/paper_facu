@@ -17,7 +17,7 @@ MWNa=23
 MWCl=35.45
 
 setwd("~/mdiaz/Documents/paper_facu/Rscripts")
-BA_events_testM <- read_excel("../BA_events_testMnew.xlsx")
+BA_events_testM <- read_excel("../data/BA_events_testMnew2.xlsx")
 BA_events_testM$date <- as.POSIXct(BA_events_testM$date, tz='UTC')
 BA_events_testM$Event_F <- as.factor(BA_events_testM$Event_F)
 BA_events_testM$Event_F=factor(BA_events_testM$Event_F)
@@ -347,7 +347,81 @@ png(paste0("../",pathgraphs,"/ionesratiosblack.png"), width = 550 * 5, height = 
 print(combined_plot)
 dev.off()
 
+# molar ratio tesis ####
+library(patchwork)
+plot1 <- ggplot(PMF_BA_full) + 
+  geom_line(aes(x = date, y = NH4SO4, color = "NH4/SO4"), linewidth = 1.1 ) +
+  geom_line(aes(x = date, y = NH42SO4NO3, color = "NH4/(2SO4+NO3)"), linewidth = 1.1 ) +
+  geom_abline(aes(slope = 0, intercept = i1), linetype = "dashed") +
+  geom_abline(aes(slope = 0, intercept = i2), color = 'gray20', linetype = "dashed") +
+  labs(y = "relación en moles", x = "") +  
+  geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SO"), ], 
+             aes(x = date, y = NH4SO4), fill = "black", shape = 21, size = 2) +
+  scale_color_manual(name = "relación en moles", 
+                     values = c("NH4/SO4" = "blue", "NH4/(2SO4+NO3)" = "red"),
+                     labels = c(expression(NH[4]^"+" / SO[4]^"2-"), 
+                                expression(NH[4]^"+" / (2*SO[4]^"2-" + NO[3]^"-")))) +
+  guides(color = guide_legend(nrow = 1), fill = guide_legend(nrow = 1)) + 
+  scale_y_continuous(
+    breaks = function(x) unique(c(i1, i2, scales::pretty_breaks()(x))),
+    labels = function(x) format(x, nsmall = 0, digits = 2)
+  ) + 
+  theme_bw() + 
+  theme(
+    legend.position = "top",
+    axis.title = element_text(size = 14),  # Tamaño del título del eje
+    axis.text = element_text(size = 14),   # Tamaño del texto de los ticks del eje
+    legend.text = element_text(size = 14), # Tamaño del texto de la leyenda
+    legend.title = element_text(size = 14), # Tamaño del título de la leyenda
+    plot.margin=unit(c(0,0,0,0), "pt")
+  ) +
+  annotate("text", x = min(PMF_BA_full$date), y = Inf, label = "(a)", 
+           vjust = 1.5, hjust = 1.4, size = 5, fontface = "bold")+
+  scale_x_datetime(expand = c(0, 0),
+                   date_labels ="%m-%Y")
 
+plot2 <- ggplot(PMF_BA_full) + 
+  geom_line(aes(x = date, y = NH4, color = "NH4"), linewidth = 1.1 ) +
+  geom_line(aes(x = date, y = NO3, color = "NO3"), linewidth = 1.1 ) +
+  geom_line(aes(x = date, y = SO4, color = "SO4"), linewidth = 1.1 ) +
+  labs(y = expression(paste("concentración [", mu, "g/m"^3, "]")), x = "") +  
+  geom_point(data = PMF_BA_full[PMF_BA_full$Event_F %in% c("SI","SF","SO"), ], 
+             aes(x = date, y = NO3), fill="black", shape = 21, size = 2) +
+  scale_color_discrete(name = "iones", 
+                     labels = c(expression(NH[4]^"+"), expression(NO[3]^"-"), expression(SO[4]^"2-"))) +
+  guides(color = guide_legend(nrow = 1), fill = guide_legend(nrow = 2)) + 
+  scale_y_continuous(
+    breaks = function(x) unique(c(i1, i2, scales::pretty_breaks()(x))),
+    labels = function(x) format(x, nsmall = 0, digits = 2)
+  ) + 
+  theme_bw() + 
+  theme(
+    legend.position = "top",
+    axis.title = element_text(size = 14),  # Tamaño del título del eje
+    axis.text = element_text(size = 14),   # Tamaño del texto de los ticks del eje
+    legend.text = element_text(size = 14), # Tamaño del texto de la leyenda
+    legend.title = element_text(size = 14), # Tamaño del título de la leyenda
+    plot.margin=unit(c(0,0,0,0), "pt")
+  ) +
+  annotate("text", x = min(PMF_BA_full$date), y = Inf, label = "(b)", 
+           vjust = 1.5, hjust = 1.4, size = 5, fontface = "bold")+
+  scale_x_datetime(expand = c(0, 0),
+                   date_labels ="%m-%Y")
+
+# Usar patchwork para combinar los gráficos y conservar las tres leyendas
+combined_plot <- plot1 / plot2 + 
+  plot_layout(guides = 'collect') & 
+  theme(legend.position = "top",  legend.box.just = "top",legend.box = "vertical") &
+  guides(color = guide_legend(nrow = 1), fill = guide_legend(nrow = 2))
+
+# Mostrar el gráfico combinado
+print(combined_plot)
+# hasta aca ####
+
+png(paste0("../",pathgraphs,"/ionesratios_tesis.png"), width = 550 * 5, height = 700* 5, res = 300)
+print(combined_plot)
+dev.off()
+# neutralized ####
 
 png("../images/neutralizedSimon.png", res = 300, height = 3000, width = 3000)
 ggplot(PMF_BA_full)+geom_line(aes(x=date,y=NeutralizedSimon),color="magenta")+geom_abline(aes(slope=0,intercept=0),linetype="dashed")
