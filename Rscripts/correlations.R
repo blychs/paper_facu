@@ -684,8 +684,11 @@ ggplot(PMF_BA_full)+geom_line(aes(x=date,y=EC,color="EC"))+geom_point(aes(x=date
 # meteo ####
 meteoobs <- read_excel("/media/usuario/32b62ac8-a81b-4630-bf83-822c71ee0cad/mdiaz/Documents/paper_facu/data/200161 BUENOS AIRES OBSERVATORIO.xlsx")
 meteoobs$date=meteoobs$FECHA+meteoobs$HORA*3600
+meteoobs$date_puestadefiltro=meteoobs$date-12*3600
+meteoobs$dateorig=meteoobs$date
+meteoobs$date=meteoobs$date_puestadefiltro
 meteoobsday=timeAverage(meteoobs[,c("date","PRECIP 6HS (mm)")],avg.time = "day",statistic = "sum")
-TVmeteo=timeVariation(meteoobs,pollutant = "PRECIP 6HS (mm)")
+# TVmeteo=timeVariation(meteoobs,pollutant = "PRECIP 6HS (mm)")
 ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=`PM2,5`))+
   geom_point(data=meteoobsday,aes(x=date,y=`PRECIP 6HS (mm)`*2, color="precip"))
 TVmeteoobs=timeVariation(meteoobsday, pollutant = "PRECIP 6HS (mm)", statistic = "median")
@@ -693,14 +696,222 @@ print(TVmeteoobs$plot$month)
 meteoobsmonth=timeAverage(meteoobs[,c("date","PRECIP 6HS (mm)")],avg.time = "month",statistic = "sum")
 ggplot()+geom_line(data=PMF_BA_full,aes(x=date,y=`PM2,5`))+
   geom_line(data=meteoobsday,aes(x=date,y=`PRECIP 6HS (mm)`*2, color="precip"))
+observaciones = merge(meteoobsday, PMF_BA_full, by="date")
+observaciones = observaciones[,c("date", "PRECIP 6HS (mm)","PM2,5")]
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Crear DataFrame combinado
+observaciones <- merge(meteoobsday, PMF_BA_full, by = "date")
+observaciones <- observaciones[, c("date", "PRECIP 6HS (mm)", "PM2,5")]
+
+# Formatear y procesar el DataFrame
+observaciones <- observaciones %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d")) %>% # Asegurar formato de fecha
+  rename(PP = `PRECIP 6HS (mm)`) %>%                   # Renombrar columna
+  # mutate(PP = replace_na(PP, 0)) %>%                   # Reemplazar NA por 0
+  mutate(mes_ano = format(date, "%m-%Y")) %>%          # Crear columna mes-año
+  arrange(date) %>%                                    # Ordenar por fecha
+  mutate(mes_ano = factor(mes_ano, levels = unique(mes_ano))) # Orden cronológico
+
+# Reorganizar los datos para ggplot
+observaciones_long <- observaciones %>%
+  pivot_longer(
+    cols = c(`PP`, `PM2,5`),
+    names_to = "variable",
+    values_to = "value"
+  )
+
+# Crear el boxplot agrupado por mes-año
+ggplot(observaciones_long, aes(x = mes_ano, y = value, fill = variable)) +
+  geom_boxplot(position = position_dodge(width = 0.8),outliers = FALSE) +
+  labs(
+    title = "Boxplot de Precipitación y PM2.5 por Mes-Año",
+    x = "Mes-Año",
+    y = "Valor",
+    fill = "Variable"
+  ) +
+  scale_fill_manual(values = c("lightblue", "lightgreen")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Rotar etiquetas del eje x
+
+# observaciones = rename(observaciones, `PP`=`PRECIP 6HS (mm)`)library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Crear DataFrame combinado
+observaciones <- merge(meteoobsday, PMF_BA_full, by = "date")
+observaciones <- observaciones[, c("date", "PRECIP 6HS (mm)", "PM2,5")]
+
+# Procesar y formatear datos
+observaciones <- observaciones %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d")) %>% # Asegurar formato de fecha
+  rename(PP = `PRECIP 6HS (mm)`) %>%                   # Renombrar columna
+  mutate(PP = replace_na(PP, 0)) %>%                   # Reemplazar NA por 0
+  mutate(mes_ano = format(date, "%m-%Y")) %>%          # Crear columna mes-año
+  arrange(date) %>%                                    # Ordenar por fecha
+  mutate(mes_ano = factor(mes_ano, levels = unique(mes_ano))) # Orden cronológico
+
+# Reorganizar los datos para gráfico de líneas
+observaciones_long <- observaciones %>%
+  pivot_longer(
+    cols = c(`PP`, `PM2,5`),
+    names_to = "variable",
+    values_to = "value"
+  )
+
+# Crear gráfico de líneas
+ggplot(observaciones_long, aes(x = date, y = value, color = variable, group = variable)) +
+  geom_line(size = 1) + # Líneas
+  geom_point(size = 2) + # Puntos para destacar valores
+  labs(
+    title = "Gráfico de Líneas de Precipitación y PM2.5",
+    x = "Fecha",
+    y = "Valor",
+    color = "Variable"
+  ) +
+  scale_color_manual(values = c("lightblue", "darkgreen")) + # Colores personalizados
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1), # Rotar etiquetas del eje x
+    legend.position = "top" # Leyenda en la parte superior
+  )
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Asegurarse de que la columna 'date' esté en formato Date y extraer el mes
+observaciones <- observaciones %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+  mutate(month = factor(format(date, "%m"), levels = sprintf("%02d", 1:12)))
+
+# Renombrar la columna y reemplazar NA por 0
+observaciones <- observaciones %>%
+  rename(PP = `PRECIP 6HS (mm)`) %>%
+  mutate(PP = replace_na(PP, 0))
+
+# Reorganizar los datos para ggplot
+observaciones_long <- observaciones %>%
+  pivot_longer(
+    cols = c(`PP`, `PM2,5`),
+    names_to = "variable",
+    values_to = "value"
+  )
+
+# Crear el boxplot con las dos variables
+ggplot(observaciones_long, aes(x = month, y = value, fill = variable)) +
+  geom_boxplot(position = position_dodge(width = 0.8),outliers = FALSE) +
+  labs(
+    title = "Boxplot de Precipitación y PM2.5 por Mes",
+    x = "Mes",
+    y = "Valor",
+    fill = "Variable"
+  ) +
+  scale_fill_manual(values = c("lightblue", "lightgreen")) +
+  theme_minimal()
+
+
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+
+# Crear una columna con el mes
+# Asegurarse de que 'date' esté en formato Date
+observaciones <- observaciones %>%
+  mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+  mutate(month = factor(format(date, "%m"), levels = sprintf("%02d", 1:12)))
+
+# Crear el boxplot
+ggplot(observaciones, aes(x = month, y = `PM2,5`)) +
+  geom_boxplot(fill = "lightblue", color = "darkblue") +
+  labs(
+    title = "Boxplot de PM2.5 por Mes",
+    x = "Mes (número)",
+    y = "PM2.5 (µg/m³)"
+  ) +
+  theme_minimal()
 ggplot()+
   geom_line(data=meteoobsmonth,aes(x=date,y=`PRECIP 6HS (mm)`, color="precip"))
+
+
 
 monthPM= timeAverage(PMF_BA_full[,c("date","PM2,5")], avg.time = "month", statistic="median")
 ggplot()+geom_line(data=monthPM,aes(x=date,y=`PM2,5`, color="PMmensual"))+
   geom_line(data=meteoobsmonth,aes(x=date,y=`PRECIP 6HS (mm)`/10, color="acumuladamensual"))
 
+observaciones <- observaciones %>%
+  mutate(precip_rango = case_when(
+    `PRECIP 6HS (mm)` == 0 ~ "Sin precipitación",
+    `PRECIP 6HS (mm)` > 0 & `PRECIP 6HS (mm)` <= 10 ~ "Baja",
+    `PRECIP 6HS (mm)` > 10 & `PRECIP 6HS (mm)` <= 50 ~ "Moderada",
+    `PRECIP 6HS (mm)` > 50 ~ "Alta"
+  ))
 
+ggplot(observaciones, aes(x = month, y = `PM2,5`, fill = precip_rango)) +
+  geom_boxplot() +
+  facet_wrap(~ precip_rango, ncol = 2) +
+  labs(
+    title = "PM2.5 por Rango de Precipitación y Mes",
+    x = "Mes",
+    y = "PM2.5 (µg/m³)",
+    fill = "Rango de Precipitación"
+  ) +
+  theme_minimal()
+
+
+
+library(ggplot2)
+library(dplyr)
+
+# Calcular precipitación promedio por mes
+precip_avg <- observaciones %>%
+  group_by(month) %>%
+  summarise(precip_promedio = mean(`PRECIP 6HS (mm)`, na.rm = TRUE))
+
+# Combinar datos
+observaciones <- observaciones %>%
+  left_join(precip_avg, by = "month")
+
+# Crear el boxplot con color por precipitación promedio
+ggplot(observaciones, aes(x = month, y = `PM2,5`, fill = precip_promedio)) +
+  geom_boxplot(color = "black") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(
+    title = "Relación entre PM2.5 y Precipitación por Mes",
+    x = "Mes",
+    y = "PM2.5 (µg/m³)",
+    fill = "Precipitación Promedio (mm)"
+  ) +
+  theme_minimal()
+
+library(ggplot2)
+library(patchwork)
+
+# Gráfico de precipitación promedio
+g1 <- ggplot(precip_avg, aes(x = month, y = precip_promedio)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(
+    title = "Precipitación Promedio por Mes",
+    x = "Mes",
+    y = "Precipitación (mm)"
+  ) +
+  theme_minimal()
+
+# Gráfico de boxplot para PM2.5
+g2 <- ggplot(observaciones, aes(x = month, y = `PM2,5`)) +
+  geom_boxplot(fill = "lightblue", color = "darkblue") +
+  labs(
+    title = "PM2.5 por Mes",
+    x = "Mes",
+    y = "PM2.5 (µg/m³)"
+  ) +
+  theme_minimal()
+
+# Combinar los gráficos
+g1 / g2
 # otros relaciones ####
 
 ggplot(PMF_BA_full[PMF_BA_full$Ni!=0,])+geom_point(aes(x=Ni,y=V))+
@@ -724,3 +935,17 @@ X2C5f_base <- read_excel("~/Documents/paper_facu/data/2C5f_base.xlsx",
                          sheet = "Contributions", range = "B108:H208")
 X2C5f_base <- dplyr::rename(X2C5f_base, date = '...1')
 TV=timeVariation(X2C5f_base,pollutant = "Factor 2")
+
+
+library(readr)
+blhERA5 <- read_csv("/media/usuario/32b62ac8-a81b-4630-bf83-822c71ee0cad/mdiaz/Documents/paper_facu/data/DatosCNEAgases/blh20192020CNEACent.txt")
+blhERA5$date=blhERA5$date-3600*12
+blhERA5day <- timeAverage(blhERA5,avg.time = "day")
+mergeblhPm2.5=merge(blhERA5day,PMF_BA_full, by="date")
+mergeblhPm2.5=merge(mergeblhPm2.5,BA_events_testM, by="date")
+ggplot(mergeblhPm2.5, aes(x=`PM2,5`,y=blh))+geom_point()
+mergeblhPm2.5$wspd=sqrt(mergeblhPm2.5$u10^2+mergeblhPm2.5$v10^2)
+mergeblhPm2.5$ventcoeff=mergeblhPm2.5$blh*mergeblhPm2.5$wspd
+ggplot(mergeblhPm2.5, aes(x=`PM2,5`,y=ventcoeff,color=Event_F))+geom_point()
+ggplot(mergeblhPm2.5, aes(x=`PM2,5`,y=blh,color=Event_F))+geom_point()
+ggplot(mergeblhPm2.5, aes(x=`PM2,5`,y=wspd,color=Event_F))+geom_point()
