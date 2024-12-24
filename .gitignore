@@ -2,7 +2,6 @@
 *.tex
 *.zip
 *.ods
-*.xlsx
 elsarticle*
 *.ipynb
 *.docx
@@ -27,4 +26,94 @@ S_BsAs.csv
 .RData
 .Rhistory
 .gitignore
-.gitignore
+.Rproj.user
+.RDataTmp
+.~lock.BA_events_testMnew.xlsx#
+.~lock.BA_events_testMnew2.xlsx#
+.~lock.nanosol.csv#
+AODFigure2.py
+Andrews_2000_alltogether_mass.csv
+Andrews_2000_events_mass.csv
+Andrews_2000_original_mass.csv
+BA_events_testM2.xlsx
+Blancoenug.csv
+Blancopararestarenug.csv
+Blancosenug.csv
+Chow_1994_alltogether_mass.csv
+Chow_1994_events_mass.csv
+Chow_1994_original_mass.csv
+Chow_1996_alltogether_mass.csv
+Chow_1996_events_mass.csv
+Chow_1996_original_mass.csv
+DeBell_2006_alltogether_mass.csv
+DeBell_2006_events_mass.csv
+DeBell_2006_original_mass.csv
+Doctor FGF.pdf
+Filtrosenug.csv
+GIS/
+Hand_2011_alltogether_mass.csv
+Hand_2011_events_mass.csv
+Hand_2011_original_mass.csv
+Lichtig_2024_alltogether_mass.csv
+Lichtig_2024_events_mass.csv
+Lichtig_2024_original_mass.csv
+Lot Belgrano 2024 -02 - PRS Desarrollos.pdf
+Macias_1981_alltogether_mass.csv
+Macias_1981_events_mass.csv
+Macias_1981_original_mass.csv
+Maenhaut_2002_alltogether_mass.csv
+Maenhaut_2002_events_mass.csv
+Maenhaut_2002_original_mass.csv
+Malm_1994_alltogether_mass.csv
+Malm_1994_events_mass.csv
+Malm_1994_original_mass.csv
+Malm_2000_alltogether_mass.csv
+Malm_2000_events_mass.csv
+Malm_2000_original_mass.csv
+PMF_BA_fullCA3200.xlsx
+Pedido de Trabajo - Servicios CAC CNEA.pdf
+PythonScripts/
+Rscripts/.RDataTmp
+Simon_2011_alltogether_mass.csv
+Simon_2011_original_mass.csv
+Simon_mass.csv
+Solomon_1989_alltogether_mass.csv
+Solomon_1989_events_mass.csv
+Solomon_1989_original_mass.csv
+anovaanalisis.R
+data/.~lock.AODyALPHA12a12 y analisis MAR 2022CR-FB-2.xlsx#
+data/.~lock.PMF_BA_fullv4.xlsx#
+data/.~lock.Perfil de Puesto.xlsx#
+data/.~lock.info_compuestos.csv#
+data/.~lock.info_compuestos2.csv#
+data/200161 BUENOS AIRES OBSERVATORIO.xlsx
+data/4to%20Informe%20Bienal%20de%20la%20Rep%C3%BAblica%20Argentina.pdf
+data/7pgrw-datacite.json
+data/Annex I time-series (1).xlsx
+data/Annex I time-series (2).xlsx
+data/Annex I time-series.xlsx
+data/DatosCEILAP/20100101_20201231_CEILAP-BA.tot_lev20
+data/EXP_158704PP.csv
+data/EXP_158704T2.csv
+data/Factura C 0002-00090124.pdf
+data/Inventario_Insumos.xlsx
+data/Matriz_incertidumbres_cuentas_JGC_v2.xlsx
+data/PMF_BA_full.xlsx
+data/PMF_BA_full_nanosol.xlsx
+data/PV-2024-49749739-APN-GASNYA%CNEA.pdf
+data/PV-2024-52097495-APN-GASNYA%CNEA.pdf
+data/Perfil de Puesto.xlsx
+data/Template_ PLANILLA DE EROGACIONES.xlsx
+data/atmosphere-14-01073.pdf
+data/data_every_hour_obsv4.csv
+data/info_compuestos2.csv
+data/previsualizacion (1).pdf
+data/previsualizacion.pdf
+mass_reconstruction_plot.py
+module_metales.R
+myfile_c.pickle
+myfile_u.pickle
+nanosol.csv
+pmf.py
+seasonSimon.py
+

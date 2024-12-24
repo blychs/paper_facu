@@ -1,0 +1,234 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(openair)
+library(readr)
+CNEA_CAC <- read_csv("/home/usuario/mdiaz/Documents/paper_facu/data/DatosCNEAgases/CNEA-CAC-AQdata20192020.csv")
+CNEA_CAC$date=CNEA_CAC$date+3600*3
+CNEA_CAC$NO=CNEA_CAC$NO*1000
+CNEA_CAC$NO2=CNEA_CAC$NO2*1000
+CNEA_CAC$O3=CNEA_CAC$O3*1000
+
+datosAPRA <- read_csv("/home/usuario/mdiaz/Documents/paper_facu/data/DatosAPRA/datosAPRAlimpios.csv")
+datosAPRA$date = datosAPRA$date+3600*3
+
+library(readxl)
+PMF_BA_fullv4 <- read_excel("/home/usuario/mdiaz/Documents/paper_facu/data/PMF_BA_fullv4.xlsx",
+                          sheet = "CONC", col_types = c("date",
+                                                        "numeric", "numeric", "numeric",
+                                                        "numeric", "numeric", "numeric",
+                                                        "skip", "skip", "numeric", "numeric",
+                                                        "numeric", "numeric", "numeric",
+                                                        "numeric", "numeric", "numeric",
+                                                        "numeric", "numeric", "numeric",
+                                                        "numeric", "numeric", "numeric",
+                                                        "numeric", "numeric", "numeric",
+                                                        "numeric", "numeric", "numeric",
+                                                        "numeric", "skip", "skip", "skip",
+                                                        "skip", "skip", "skip", "skip",
+                                                        "skip", "skip", "skip", "skip", "skip",
+                                                        "numeric", "numeric", "numeric"), na ='-999')
+PMF_BA_fullv4$date <- as.POSIXct(PMF_BA_fullv4$date, tz='UTC')
+```
+
+
+```{r cac julio}
+JUL2019CNEA=selectByDate(CNEA_CAC,start = "2019-07-01","2019-07-31")
+timeVariation(JUL2019CNEA, pollutant = "CO")
+timeVariation(JUL2019CNEA, pollutant = "NO")
+timeVariation(JUL2019CNEA, pollutant = "NO2")
+timeVariation(JUL2019CNEA, pollutant = "NOx")
+timeVariation(JUL2019CNEA, pollutant = "O3")
+```
+```{r Cac septiembre}
+JUL2019CNEA=selectByDate(CNEA_CAC,start = "2019-09-01","2019-09-30")
+timeVariation(JUL2019CNEA, pollutant = "CO")
+timeVariation(JUL2019CNEA, pollutant = "NO")
+timeVariation(JUL2019CNEA, pollutant = "NO2")
+timeVariation(JUL2019CNEA, pollutant = "NOx")
+timeVariation(JUL2019CNEA, pollutant = "O3")
+```
+
+```{r Centenario Julio}
+JUL2019APRA=selectByDate(datosAPRA[datosAPRA$estacion=="Centenario",],start = "2019-07-01","2019-07-31")
+timeVariation(JUL2019APRA, pollutant = "CO")
+timeVariation(JUL2019APRA, pollutant = "NO")
+timeVariation(JUL2019APRA, pollutant = "NO2")
+timeVariation(JUL2019APRA, pollutant = "PM10")
+```
+```{r}
+library(ggplot2)
+ggplot(selectByDate(PMF_BA_fullv4, start = "2019-09-01",end = "2019-09-30"))+geom_point(aes(x=date,y=`PM2,5`))
+```
+
+```{r Centenario Septiembre}
+JUL2019APRA=selectByDate(datosAPRA[datosAPRA$estacion=="Centenario",],start = "2019-09-01","2019-09-30")
+timeVariation(JUL2019APRA, pollutant = "CO")
+timeVariation(JUL2019APRA, pollutant = "NO")
+timeVariation(JUL2019APRA, pollutant = "NO2")
+timeVariation(JUL2019APRA, pollutant = "PM10")
+```
+```{r Centenario Enero}
+JUL2019APRA=selectByDate(datosAPRA[datosAPRA$estacion=="Centenario",],start = "2019-01-01","2019-01-31")
+timeVariation(JUL2019APRA, pollutant = "CO")
+timeVariation(JUL2019APRA, pollutant = "NO")
+timeVariation(JUL2019APRA, pollutant = "NO2")
+timeVariation(JUL2019APRA, pollutant = "PM10")
+```
+```{r load CHILE}
+# Librerías necesarias
+library(dplyr)
+library(readr)
+
+# Cargar los datos de las estaciones
+stations <- read_csv("/home/usuario/Downloads/CHI/Stations.csv")
+
+# Inicializar una lista para guardar los datos de cada archivo
+data_list <- list()
+all_columns <- c("ID", "Nombre", "Latitud", "Longitud")
+# Loop para leer cada archivo basado en el ID de las estaciones
+for (i in 1:nrow(stations)) {
+  # Obtener el ID y otros detalles de la estación
+  station_id <- stations$`ID-Stored`[i]
+  station_name <- stations$Nombre[i]
+  lat <- stations$Latitud[i]
+  lon <- stations$Longitud[i]
+  
+  # Construir el nombre del archivo
+  file_name <- paste0("/home/usuario/Downloads/CHI/ID-", station_id, "--Cal_HH.csv")
+  print(file_name)
+  
+  # Verificar si el archivo existe antes de leerlo
+  if (file.exists(file_name)) {
+    # Leer el archivo de datos de la estación
+    data <- read_csv(file_name, na = "NA")
+    
+    # Agregar las columnas de metadatos
+    data <- data %>%
+      mutate(ID = station_id,
+             Nombre = station_name,
+             Latitud = lat,
+             Longitud = lon)
+    all_columns <- unique(c(all_columns, colnames(data)))
+    # Añadir a la lista
+    data_list[[i]] <- data
+  } else {
+    message(paste("Archivo no encontrado:", file_name))
+  }
+}
+
+
+# Combinar todos los datos en un único DataFrame, alineando las columnas
+data_list <- lapply(data_list, function(df) {
+  # Identificar las columnas que faltan en el DataFrame actual
+  missing_cols <- setdiff(all_columns, colnames(df))
+  
+  # Agregar las columnas faltantes con NA
+  df[missing_cols] <- NA
+  
+  # Ordenar las columnas para que coincidan con all_columns
+  df <- df[all_columns]
+  
+  return(df)
+})
+
+# Combinar todos los datos en un único DataFrame
+all_data <- do.call(rbind, data_list)
+
+# Visualizar el DataFrame combinado
+print(head(all_data))
+all_data <- all_data %>%
+  mutate_at(vars(6:14), as.numeric)
+all_data=rename(all_data, date=Fecha)
+# Guardar el DataFrame combinado en un archivo CSV
+write_csv(all_data, "/home/usuario/Downloads/CHI/Estaciones_Combinadas.csv")
+
+```
+```{r}
+library(openair)
+data012019=selectByDate(all_data,start = "2019-01-01",end = "2019-01-31")
+TV=timeVariation(data012019,pollutant = "CO",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,1))
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "O3",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,70))
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "NO",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "NO2",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "PM25",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "PM10",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+```
+```{r estaciones filtradas}
+library(openair)
+data012019=selectByDate(all_data,start = "2019-01-01",end = "2019-01-31")
+data012019=data012019[data012019$ID %in% c("D12","D16","D18","D30,D31"),]
+TV=timeVariation(data012019,pollutant = "O3",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "NO",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "NO2",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "PM25",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data012019,pollutant = "PM10",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+```
+```{r}
+
+data072019=selectByDate(all_data,start = "2019-07-01",end = "2019-07-31")
+TV=timeVariation(data072019,pollutant = "CO",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,1))
+TV$plot$hour
+TV=timeVariation(data072019,pollutant = "O3",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,70))
+TV$plot$hour
+TV=timeVariation(data072019,pollutant = "NO",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data072019,pollutant = "NO2",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data072019,pollutant = "PM25",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data072019,pollutant = "PM10",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+
+```
+
+```{r}
+
+data092019=selectByDate(all_data,start = "2019-09-01",end = "2019-09-30")
+TV=timeVariation(data092019,pollutant = "CO",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,1))
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "O3",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,70))
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "NO",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "NO2",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "PM25",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "PM10",group = "Nombre", key.columns = 2,key = TRUE,ylim=c(0,50))
+TV$plot$hour
+```
+```{r}
+data092019=all_data
+TV=timeVariation(data092019,pollutant = "CO",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "O3",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "NO",group = "Nombre", key.columns = 2,key = TRUE,)
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "NO2",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "PM25",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+TV=timeVariation(data092019,pollutant = "PM10",group = "Nombre", key.columns = 2,key = TRUE)
+TV$plot$hour
+```
+
