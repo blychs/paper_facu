@@ -8,14 +8,16 @@ pathgraphs="Figures"
 upper_windspeed=8.5
 colorset="plasma"
 # En data_every_hour_obs.csv solo estan actualizados los datos de meteo el resto del archivo es viejo
-data <- read.csv("data_every_hour_obsv5.csv")                 
+data <- read.csv("data_every_hour_meteo.csv")                 
 data$date <- as.POSIXct(data$date, tz='UTC')
 data$temp[data$temp>900]=NA
 data$day<- format(data$date-12*3600, "%Y-%m-%d UTC")
 data$day <- as.POSIXct(data$day, tz='UTC')
-mergeddata <- data[,-c(8,9,31:42)]
+# mergeddata <- data[,-c(8,9,31:42)]
 mergeddata$Sb_ng=mergeddata$Sb*1000
 mergeddata$As_ng=mergeddata$As*1000
+mergeddata$NH4_SO4=mergeddata$NH4/MWNH4/(mergeddata$SO4/MWSO4)
+
 mergeddata$nssK=mergeddata$K-0.6*mergeddata$Fe-0.037*mergeddata$Na
 mergeddata$nssK_OC=mergeddata$nssK/mergeddata$C.Orgánico
 mergeddata$nssK_EC=mergeddata$nssK/mergeddata$C.Elemental
@@ -34,119 +36,44 @@ mergeddata$K_OC=mergeddata$K/mergeddata$`C.Orgánico`
 mergeddata$lat= -34.5730#-0.01
 mergeddata$lon=-58.5127#-0.01
 mergeddata$Vng=mergeddata$V*1000
-# polar maps####
-library(openairmaps)
-library(leaflet)
-customIcon <- makeIcon(
-  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/central.png",  # Cambia esto a la ruta de tu PNG
-  iconWidth = 120,  # Ajusta el tamaño según sea necesario
-  iconHeight = 120
-)
 
-customIconships <- makeIcon(
-  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/ship-flat-boat-by-Vexels.svg",  # Cambia esto a la ruta de tu PNG
-  iconWidth = 120,  # Ajusta el tamaño según sea necesario
-  iconHeight = 120
-)
+polarPlot(mergeddata, pollutant = "NH4_SO4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="todo el periodo",key.header = "NH4/SO4",mis.col = "transparent",
+          cols="inferno")
 
-customIcontree <- makeIcon(
-  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/tree.png",  # Cambia esto a la ruta de tu PNG
-  iconWidth = 120,  # Ajusta el tamaño según sea necesario
-  iconHeight = 120
-)
+polarPlot(selectByDate(mergeddata,start = "2019-05-25",end = "2019-10-01"), pollutant = "NH4_SO4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="May a Oct",key.header = "NH4/SO4",mis.col = "transparent",
+          cols="inferno")
+polarPlot(selectByDate(mergeddata,start = "2019-05-25",end = "2019-10-01"), 
+          pollutant = "SO4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="May a Oct",key.header = "SO4",mis.col = "transparent",
+          cols="inferno")
+polarPlot(selectByDate(mergeddata,start = "2019-10-01"), 
+          pollutant = "SO4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="Oct en adelante",key.header = "SO4",mis.col = "transparent",
+          cols="inferno")
+polarPlot(selectByDate(mergeddata,end = "2019-05-25"), 
+          pollutant = "SO4", statistic = "mean",  min.bin = 2, k=70,
+          upper =upper_windspeed, key.footer="hasta Mayo",key.header = "SO4",mis.col = "transparent",
+          cols="inferno")
 
-
-customIconcars <- makeIcon(
-  iconUrl = "/home/usuario/mdiaz/Documents/paper_facu/car-fleet-12792.png",  # Cambia esto a la ruta de tu PNG
-  iconWidth = 120,  # Ajusta el tamaño según sea necesario
-  iconHeight = 120
-)
-
-leaflet(data = mergeddata) %>%
-  addTiles() %>%
-  addProviderTiles(providers$OpenStreetMap) %>% 
-  addPolarMarkers("Vng", 
-                  fun = openair::polarPlot,
-                  group = "Polar Plot",
-                  cols="inferno",
-                  alpha = 1,
-                  key = FALSE,
-                  key.position="left",
-                  key.footer="",
-                  key.header = "V [ng/m3]"
-  )%>%
-  addMarkers(lng = -58.344426375249924, lat = -34.64608663021544, 
-             popup = "Central Costanera", icon = customIcon) %>%
-  addMarkers(lng = -58.380487846322495, lat = -34.57504109311285, 
-             popup = "Central Puerto", icon = customIcon )%>%
-  addMarkers(lng = -58.37137834376634, lat = -34.51275959413225, 
-             popup = "Ships", icon = customIconships ) %>%
-  addMarkers(lng = -58.39237834376634, lat = -34.51075959413225, 
-             popup = "Ships", icon = customIconships ) %>%  
-  addMarkers(lng = -58.38137834376634, lat = -34.518275959413225, 
-            popup = "Ships", icon = customIconships ) %>%
-  addMarkers(lng = -58.48137834376634, lat = -34.54075959413225, 
-             popup = "Car", icon = customIconcars )
-
-polarPlot(mergeddata,pollutant = "Vng",   cols="inferno",        key.position="left",
-          key.footer="",
-          key.header = "V [ng/m3]")
-
-# Generar el mapa de trayectorias ucustomIconcars# Generar el mapa de trayectorias usando trajMap
-trajMap(selectByDate(subset(traj500, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
-                     start = "2019-08-26", end = "2019-08-30"),
-        origin = TRUE,  
-        grid.col = "transparent", 
-        map.cols = "transparent",
-        projection = "stereographic", 
-        orientation = c(0, -65, 0), 
-        parameters = NULL)
-
-# Superponer el ícono personalizado con leaflet
-leafletProxy("map") %>%
-  addMarkers(lng = -58.344426375249924, lat = -34.64608663021544, 
-             popup = "Central Costanera", icon = customIcon) %>%
-  addMarkers(lng = -58.380487846322495, lat = -34.57504109311285, 
-             popup = "Central Puerto", icon = customIcon)
-
-trajMap(selectByDate(subset(traj500, lon >= minlon & lon <= maxlon & lat >= minlat & lat <= maxlat), 
-                       start = "2019-08-26", end = "2019-08-30"), origin = TRUE,  grid.col = "transparent", map.cols = "transparent",
-                  projection = "stereographic",   orientation=c(0,-65,0), parameters = NULL)
-
-polarMap(
-  mergeddata,
-  pollutant = "V",
-  x = "ws",
-  limits = "free",
-  upper = "fixed",
-  crs = 4326,
-  # type = NULL,
-  # popup = NULL,
-  # label = NULL,
-  provider = "OpenStreetMap",
-  cols="inferno",
-  alpha = 1,
-  key = TRUE,
-  key.footer="[ug/m3]",
-  key.header = "V",
-  legend = TRUE,
-  # legend.position = NULL,
-  # legend.title = NULL,
-  legend.title.autotext = TRUE,
-  control.collapsed = TRUE,
-  control.position = "topright",
-  control.autotext = TRUE,
-  d.icon = 200,
-  d.fig = 3.5,
-  static = FALSE,
-  static.nrow = NULL,
-  progress = TRUE
-)
-
-# Dock sud -34.648961551867856, -58.34236555984067
-# Central costanera -34.64608663021544, -58.344426375249924
-# Central Puerto -34.57504109311285, -58.380487846322495
-
+polarPlot(selectByDate(mergeddata,end = polarPlot(selectByDate(mergeddata,start = "2019-05-25",end = "2019-10-01"), 
+          pollutant = "NH4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="May a Oct",key.header = "NH4",mis.col = "transparent",
+          cols="inferno")
+polarPlot(selectByDate(mergeddata,start = "2019-05-25",end = "2019-10-01"), 
+          pollutant = "NO3", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="May a Oct",key.header = "NO3",mis.col = "transparent",
+          cols="inferno")
+polarPlot(selectByDate(mergeddata,start = "2019-05-25",end = "2019-10-01"), pollutant = "NH4_SO4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="May a Oct",key.header = "NH4/SO4",mis.col = "transparent",
+          cols="inferno")
+polarPlot(selectByDate(mergeddata,start = "2019-10-01"), pollutant = "NH4_SO4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="",key.header = "NH4/SO4",mis.col = "transparent",
+          cols="inferno")
+polarPlot(selectByDate(mergeddata,end = "2019-05-25"), pollutant = "NH4_SO4", statistic = "mean",  min.bin = 2, 
+          upper =upper_windspeed, key.footer="",key.header = "NH4/SO4",mis.col = "transparent",
+          cols="inferno",k=60)
 # 01 EC OC ####
 PPPM25<-polarPlot(mergeddata, pollutant = "PM2.5", statistic = "mean",  min.bin = 2, 
                   upper =upper_windspeed, key.footer="[ug/m3]",key.header = "PM2.5",mis.col = "transparent",

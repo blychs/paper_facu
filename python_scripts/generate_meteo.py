@@ -20,7 +20,7 @@ import datetime as dt
 #Carga meteorologia
 obsbaires = pd.read_csv('../../doctorado/paper_laura/ARCAL_ISH/obsbaires.csv', delimiter=';') # obsbaires2 es abrir y volver a cerrar en excel para que ponga bien los delimiters, si no mezcla ; y ,
 obsbaires = obsbaires[(obsbaires['date[yyyymmddHHMM]'] >= 201904031200)]
-fechas = df['Date']
+# fechas = df['Date'] esto lo comente porque df no existe.
 # Reemplazo los valores que son nan
 obsbaires['wdir'] = obsbaires['wdir'].where(obsbaires['wdir'] < 999)
 obsbaires['wspd[m/s]'] = obsbaires['wspd[m/s]'].where(obsbaires['wspd[m/s]'] < 999)
